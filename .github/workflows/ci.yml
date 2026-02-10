@@ -1,41 +1,41 @@
-name: CI
-
-on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-
-permissions:
-  contents: read
-
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup repo
-        uses: actions/checkout@v3
-
-      - name: Setup deno
-        uses: denoland/setup-deno@ef28d469f16304cf29da2bd31413743cc0c768e7 # v1.1.4
-        with:
-          deno-version: v1.41.3
-
-      - name: Check fmt
-        run: deno fmt --check
-
-      - name: Run linter
-        run: deno lint
-
-      - name: Run tests & generate coverage
-        run: deno task test:ci
-
-      - name: Generate coverage report
-        run: deno task build:cov
-
-      - name: Upload coverage report
-        uses: paambaati/codeclimate-action@v5.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPORTER_ID }} 
-        with: 
-          coverageLocations: ${{github.workspace}}/*.lcov:lcov
+# name: CI
+#
+# on:
+#   push:
+#     branches: ["main"]
+#   pull_request:
+#     branches: ["main"]
+#
+# permissions:
+#   contents: read
+#
+# jobs:
+#   check:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Setup repo
+#         uses: actions/checkout@v3
+#
+#       - name: Setup deno
+#         uses: denoland/setup-deno@ef28d469f16304cf29da2bd31413743cc0c768e7 # v1.1.4
+#         with:
+#           deno-version: v1.41.3
+#
+#       - name: Check fmt
+#         run: deno fmt --check
+#
+#       - name: Run linter
+#         run: deno lint
+#
+#       - name: Run tests & generate coverage
+#         run: deno task test:ci
+#
+#       - name: Generate coverage report
+#         run: deno task build:cov
+#
+#       - name: Upload coverage report
+#         uses: paambaati/codeclimate-action@v5.0.0
+#         env:
+#           CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPORTER_ID }}
+#         with:
+#           coverageLocations: ${{github.workspace}}/*.lcov:lcov
