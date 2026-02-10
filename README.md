@@ -1,21 +1,21 @@
 # aetherway
 
-> Safe abstractions for fallible flows — designed for humans and agents alike.
+> Safe abstractions for fallible flows — for humans and clankers alike.
 
-**aetherway** is a fork of [eitherway](https://github.com/realpha/eitherway) by [realpha](https://github.com/realpha), enhanced for seamless collaboration between humans and AI coding agents.
+This is a fork of the now stale project [eitherway](https://github.com/realpha/eitherway).
+
+**MANDATORY AI DISCLAIMER:** LLMs are/were used for parts of the refactoring and documentation.
 
 ---
 
 ## Why aetherway?
 
-Modern software development increasingly involves collaboration between human developers and AI agents. This creates unique challenges:
+This is for now mostly an experiment in human - agent collaboration and in-context learning. The basic assumptions are:
 
 - **Explicit error handling** makes code behavior predictable for both humans and agents
 - **Composable abstractions** allow agents to reason about data flow without hidden exceptions
 - **Type-safe operations** catch mistakes at compile time rather than runtime
-- **Inline documentation** provides context that agents can leverage for better assistance
-
-aetherway embraces the "errors are values" philosophy, making error paths explicit and composable — a pattern that benefits human readability and agent predictability equally.
+- **Callibrated documentation** provides context that agents can leverage for better performance
 
 ---
 
@@ -33,6 +33,8 @@ aetherway embraces the "errors are values" philosophy, making error paths explic
 
 ### Installation
 
+-- WORK IN PROGRESS --
+
 **Deno:**
 ```typescript
 import { Option, Result, Task, Ok, Err, Some, None } from "https://deno.land/x/aetherway/mod.ts";
@@ -49,6 +51,7 @@ import { Option, Result, Task, Ok, Err, Some, None } from "aetherway";
 
 ### Runtime Requirements
 
+- Bun: tbd
 - **Deno:** ≥1.14
 - **Node.js:** ≥17.0.0
 - **Browsers:** Support for `Error.cause` and `structuredClone`
@@ -93,7 +96,7 @@ const result = divide(10, 2)
 
 // Unwrap with type narrowing
 if (result.isOk()) {
-  console.log(result.unwrap()); // TypeScript knows this is number
+  console.log(result.unwrap()); // this is inferred as number
 }
 ```
 
@@ -111,7 +114,7 @@ const fetchUser = Task.fromPromise(
 // Compose async operations with the same API as Result
 const userName = fetchUser
   .map(user => user.name)
-  .andThen(name => validateName(name))
+  .andThen(validateName)
   .mapErr(e => ({ code: "USER_ERROR", message: e.message }));
 
 // Tasks are awaitable
@@ -227,7 +230,7 @@ Result(value); // Ok<string> or Err<TypeError> based on runtime type
 
 // Lift sync functions
 const safeDivide = Result.fromFallible(
-  () => riskyDivision(),
+  riskyDivision,
   (e) => new MathError("Division failed", { cause: e })
 );
 ```
@@ -267,12 +270,12 @@ const mustParse = Result.fromFallible(
 | `Results.any(results)` | `Result<T, E[]>` | First `Ok` found, or all `Err`s collected |
 
 ```typescript
-// Validate multiple fields, fail on first error
+// Validate multiple fields, fail on first error. Supports tuples!
 const validated = Results.all([
   validateName(input.name),
   validateEmail(input.email),
   validateAge(input.age),
-]);
+] as const);
 // Result<[string, string, number], ValidationError>
 
 // Try multiple strategies, succeed on first
@@ -281,7 +284,7 @@ const config = Results.any([
   loadFromFile(),
   loadDefaults(),
 ]);
-// Result<Config, [EnvError, FileError, DefaultError]>
+// Result<Config, EnvError|FileError|DefaultError[]>
 ```
 
 ---
@@ -308,7 +311,7 @@ const fetchJson = <T>(url: string): Task<T, FetchError> =>
     (e) => new FetchError(url, { cause: e })
   );
 
-// Deferred task for callback-based APIs
+// Deferred task for callback or push based APIs
 const { task, succeed, fail } = Task.deferred<Data, TimeoutError>();
 setTimeout(() => fail(new TimeoutError()), 5000);
 legacyApi.fetch((err, data) => err ? fail(err) : succeed(data));
@@ -347,12 +350,13 @@ Task.succeed("/api/users")
 | `Tasks.any(tasks)` | `Task<T, E[]>` | First success, or all failures collected |
 
 ```typescript
+// These work for all iterables
 // Parallel fetch with combined results
 const allData = await Tasks.all([
   fetchUsers(),
   fetchProducts(),
   fetchOrders(),
-]);
+] as const);
 // Result<[User[], Product[], Order[]], ApiError>
 
 // Race multiple sources
@@ -360,7 +364,7 @@ const fastestResponse = await Tasks.any([
   fetchFromPrimary(),
   fetchFromReplica(),
   fetchFromCache(),
-]);
+] as const);
 // Result<Data, [PrimaryError, ReplicaError, CacheError]>
 ```
 
@@ -409,13 +413,14 @@ function saveFile(path: string): Result<void, Error> {
 
 ## Performance
 
-These abstractions have **virtually no overhead** compared to traditional exception handling. In benchmarks, the linear return path often performs slightly better than try/catch chains:
+These abstractions have **virtually no overhead** compared to traditional exception handling. In benchmarks, the linear return path often performs slightly better than nested try/catch blocks:
 
 ```
-Synchronous:  Result flow ~1.8x faster than exceptions
+Synchronous:  Result flow ~1.3x faster than exceptions
 Asynchronous: Task flow   ~1.0x (equivalent performance)
 ```
 
+Your mileage will vary though.
 Run benchmarks yourself: `deno bench`
 
 ---
@@ -424,7 +429,6 @@ Run benchmarks yourself: `deno bench`
 
 **aetherway** is a fork of [eitherway](https://github.com/realpha/eitherway), originally created by [realpha](https://github.com/realpha) (0xrealpha@proton.me).
 
-This project extends eitherway with modifications focused on human-agent collaboration patterns while maintaining API compatibility.
 
 ### License
 
