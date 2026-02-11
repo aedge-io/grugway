@@ -137,7 +137,7 @@ async function main(): Promise<Result<number, TypeError>> {
   return Task.of(result); // You can return Task<T, E> as Promise<Result<T, E>>
 }
 
-main()
+await main()
   .then((result) => {
     result // Result<number, TypeError>
       .inspect(console.log)
@@ -357,7 +357,7 @@ code which is often even more pleasant to read.
 
 Synchronous:
 
-```typescript
+```typescript ignore
 /* Classic exception style */
 
 declare function toUpperCase(input: string | undefined): string;
@@ -379,7 +379,7 @@ function processString(input: string | undefined): number {
 }
 ```
 
-```typescript
+```typescript ignore
 /* Equivalent Result flow */
 
 import { Result } from "../lib/mod.ts";
@@ -400,7 +400,7 @@ function processString(input: string | undefined): Result<number, TypeError> {
 
 Asynchronous:
 
-```typescript
+```typescript ignore
 /* Classic exception style */
 
 declare function toUpperCase(input: string | undefined): Promise<string>;
@@ -422,7 +422,7 @@ async function processString(input: string | undefined): Promise<number> {
 }
 ```
 
-```typescript
+```typescript ignore
 /* Equivalent Task flow */
 
 import { Result, Task } from "../lib/mod.ts";

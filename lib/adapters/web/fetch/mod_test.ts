@@ -2,6 +2,7 @@ import { Task } from "../../../async/task.ts";
 import { Err, Ok } from "../../../core/result.ts";
 
 import {
+  assert,
   assertEquals,
   assertExists,
   assertInstanceOf,
@@ -198,9 +199,10 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
     await t.step(
       "() -> propagates errors correctly via the Err path",
       async () => {
-        async function getUserNotFound(_id: number): Promise<UserResponse> {
-          await new Promise((resolve) => setTimeout(resolve, 10));
-          return new Response(null, { status: 404, statusText: "Not Found" });
+        function getUserNotFound(_id: number): Promise<UserResponse> {
+          return Promise.resolve(
+            new Response(null, { status: 404, statusText: "Not Found" }),
+          );
         }
 
         const lifted = liftFetch(getUserNotFound);
@@ -219,9 +221,16 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
             >
           >
         >(true);
-        assertStrictEquals(result.isErr(), true);
-        assertInstanceOf(result.unwrap(), FailedRequest);
-        assertEquals(result.unwrap(), FailedRequest.with(404, "Not Found"));
+        if (result.isOk()) {
+          assert(false);
+        }
+        const err = result.unwrap();
+        if (isFetchException(err)) {
+          assert(false);
+        }
+        assertInstanceOf(err, FailedRequest);
+        assertStrictEquals(err.status, 404);
+        assertStrictEquals(err.statusText, "Not Found");
       },
     );
 

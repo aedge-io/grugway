@@ -21,7 +21,8 @@ import { Task } from "./task.ts";
  *
  * @example
  * ```typescript
- * import { Task, Tasks } from "./mod.ts";
+ * import { Task } from "./task.ts";
+ * import * as Tasks from "./tasks.ts";
  * import { Result } from "../core/result.ts";
  *
  * const str = "thing" as string | TypeError;
@@ -66,7 +67,8 @@ export function all(tasks: any): any {
  *
  * @example
  * ```typescript
- * import { Task, Tasks } from "./mod.ts";
+ * import { Task } from "./task.ts";
+ * import * as Tasks from "./tasks.ts";
  * import { Result } from "../core/result.ts";
  *
  * const str = "thing" as string | TypeError;

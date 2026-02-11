@@ -79,7 +79,7 @@ export interface IResult<T, E> {
    *
    * const flattened: Result<number, Error> = res.andThen(res => res.id());
    *
-   * assert(res.isErr() === true);
+   * assert(flattened.isErr() === true);
    * ```
    */
   id(): Result<T, E>;
@@ -631,7 +631,7 @@ export interface IResult<T, E> {
    * const err = Err("Oh no") as Result<number, string>;
    *
    * const num = ok.unwrapOrElse(() => 0);
-   * const zero = err.unwrapOr(() => 0);
+   * const zero = err.unwrapOrElse(() => 0);
    *
    * assert(num === 42);
    * assert(zero === 0);
@@ -910,7 +910,7 @@ export interface IResult<T, E> {
    * const errTag = Err(Error()).toString();
    *
    * assert(okTag === "[object aetherway.Result.Ok<thing>]");
-   * assert(errTag === "[object aetherway.Result.Err<[object Error]>");
+   * assert(errTag === "[object aetherway.Result.Err<[object Error]>]");
    * ```
    */
   toString(): string;
@@ -1443,7 +1443,7 @@ export namespace Result {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Err, Ok, Result } from "./mod.ts";
+   * import { Err, Ok, Result } from "./result.ts";
    *
    * const produceArr = () => [1,2,3];
    * const res = Result.from(produceArr);
@@ -1464,7 +1464,7 @@ export namespace Result {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Err, Ok, Result } from "./mod.ts";
+   * import { Err, Ok, Result } from "./result.ts";
    *
    * const castToErr = <E>(e: unknown): E => e as E;
    * const produceArr = () => [1,2,3];
@@ -1499,7 +1499,7 @@ export namespace Result {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Err, Ok, Result } from "./mod.ts";
+   * import { Err, Ok, Result } from "./result.ts";
    *
    * function powerOfTwo(n: number): number {
    *   return Math.pow(2, n);
@@ -1540,7 +1540,7 @@ export namespace Result {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Err, Ok, Result } from "./mod.ts";
+   * import { Err, Ok, Result } from "./result.ts";
    *
    * function toSpecialString(s: string): string {
    *   if (s.length % 3 === 0) return s;
@@ -1595,7 +1595,7 @@ export namespace Results {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Result, Results } from "./mod.ts";
+   * import { Result, Results } from "./result.ts";
    *
    * const str = "thing" as string | TypeError;
    * const num = 5 as number | RangeError;
@@ -1643,7 +1643,7 @@ export namespace Results {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Result, Results } from "./mod.ts";
+   * import { Result, Results } from "./result.ts";
    *
    * const str = "thing" as string | TypeError;
    * const num = 5 as number | RangeError;

@@ -616,13 +616,13 @@ Deno.test("eitherway::Task", async (t) => {
       await t.step(".toString() -> returns the full string tag", () => {
         const tag = Task.succeed(42).toString();
 
-        assertStrictEquals(tag, "[object eitherway::Task]");
+        assertStrictEquals(tag, "[object aetherway.Task]");
       });
 
       await t.step("[Symbol.toStringTag] -> returns the FQN", () => {
         const fqn = Task.succeed(42)[Symbol.toStringTag];
 
-        assertStrictEquals(fqn, "eitherway::Task");
+        assertStrictEquals(fqn, "aetherway.Task");
       });
 
       await t.step(

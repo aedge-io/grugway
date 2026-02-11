@@ -1436,7 +1436,7 @@ class _Some<T> implements IOption<T> {
  * assert(some.unwrap() === str);
  * assert(String(some) === str);
  * assert(arr.join("") === str);
- * assert(JSON.stringify(some) === JSON.stringify({ some: "thing" }));
+ * assert(JSON.stringify(rec) === JSON.stringify({ some: "thing" }));
  * ```
  */
 export type Some<T> = _Some<T>;
@@ -1664,7 +1664,7 @@ export namespace Option {
    *
    * type Bit = 1 | 0;
    * type Maybe = "thing" | "";
-   * const str = "" as Maybe;
+   * const str = "thing" as Maybe;
    * const bit = 0 as Bit;
    *
    * const some: Option<"thing"> = Option.fromCoercible(str);

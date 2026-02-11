@@ -129,12 +129,15 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * const { task, succeed, fail } = Task.deferred<number, TimeoutError>();
    *
-   * setTimeout(() => succeed(42), Math.random() * 1000);
-   * setTimeout(() => fail(new TimeoutError()), 500);
+   * const t1 = setTimeout(() => succeed(42), Math.random() * 1000);
+   * const t2 = setTimeout(() => fail(new TimeoutError()), 500);
    *
    * await task
    *   .inspect(console.log)
    *   .inspectErr(console.error);
+   *
+   * clearTimeout(t1);
+   * clearTimeout(t2);
    * ```
    */
   static deferred<T, E>(): DeferredTask<T, E> {
@@ -193,14 +196,14 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * ```typescript
    * import { asInfallible, Task } from "../mod.ts";
    *
-   * const willBeString = new Promise<string>((resolve) => {
-   *   setTimeout(() => resolve("42"), 500);
-   * });
+   * const willBeString = Promise.resolve("42");
    *
    * const task: Task<string, never> = Task.fromPromise(
    *   willBeString,
    *   asInfallible,
    * );
+   *
+   * await task;
    * ```
    */
   static fromPromise<T, E>(

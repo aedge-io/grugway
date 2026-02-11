@@ -36,7 +36,7 @@ This is for now mostly an experiment in human - agent collaboration and in-conte
 -- WORK IN PROGRESS --
 
 **Deno:**
-```typescript
+```typescript ignore
 import { Option, Result, Task, Ok, Err, Some, None } from "https://deno.land/x/aetherway/mod.ts";
 ```
 
@@ -45,7 +45,7 @@ import { Option, Result, Task, Ok, Err, Some, None } from "https://deno.land/x/a
 npm add aetherway
 ```
 
-```typescript
+```typescript ignore
 import { Option, Result, Task, Ok, Err, Some, None } from "aetherway";
 ```
 
@@ -62,7 +62,7 @@ import { Option, Result, Task, Ok, Err, Some, None } from "aetherway";
 
 ### Option — Handling Optional Values
 
-```typescript
+```typescript ignore
 import { Option, Some, None } from "aetherway";
 
 // Nullish values become None
@@ -81,7 +81,7 @@ const userResult = maybeUser.okOrElse(() => new Error("User not found"));
 ### Result — Explicit Error Handling
 
 ```typescript
-import { Ok, Err, Result } from "aetherway";
+import { Ok, Err, Result } from "./lib/mod.ts";
 
 function divide(a: number, b: number): Result<number, Error> {
   if (b === 0) return Err(new Error("Division by zero"));
@@ -102,7 +102,7 @@ if (result.isOk()) {
 
 ### Task — Async Operations
 
-```typescript
+```typescript ignore
 import { Task, Ok, Err } from "aetherway";
 
 // Create tasks from promises
@@ -126,7 +126,7 @@ result.inspect(console.log).inspectErr(console.error);
 
 Integrate third-party libraries without manual wrapping:
 
-```typescript
+```typescript ignore
 import { Result, Task } from "aetherway";
 import * as semver from "semver";
 
@@ -169,6 +169,8 @@ Each abstraction provides multiple constructors and composability helpers for di
 | `Some.empty()` | `Some<Empty>` | Signal success without a meaningful value |
 
 ```typescript
+import { Option } from "./lib/mod.ts";
+
 // Choose based on what should be "absent"
 Option(0);              // Some(0) — zero is a valid number
 Option.fromCoercible(0); // None   — zero is "empty" in this context
@@ -187,6 +189,8 @@ Option.fromFallible(new Error()); // None    — errors mean absence
 | `Option.id(opt)` | Identity — useful for flattening `Option<Option<T>>` |
 
 ```typescript
+import { Option } from "./lib/mod.ts";
+
 // Lift a parser that might return undefined
 const parseIntSafe = Option.lift(parseInt, Option.fromCoercible);
 parseIntSafe("42");  // Some(42)
@@ -223,7 +227,7 @@ parseJSON('invalid'); // None
 | `Ok.empty()` | `Ok<Empty>` | Signal success without a value |
 | `Err.empty()` | `Err<Empty>` | Signal failure without details |
 
-```typescript
+```typescript ignore
 // Auto-detection for union types
 const value: string | TypeError = getString();
 Result(value); // Ok<string> or Err<TypeError> based on runtime type
@@ -243,7 +247,7 @@ const safeDivide = Result.fromFallible(
 | `Result.liftFallible(fn, errMapFn, ctor?)` | Wrap function, map exceptions to `Err<E>` |
 | `asInfallible` | Error mapper that re-throws — marks function as "should never fail" |
 
-```typescript
+```typescript ignore
 // Integrate a library function that throws
 import * as semver from "semver";
 
@@ -269,7 +273,7 @@ const mustParse = Result.fromFallible(
 | `Results.all(results)` | `Result<T[], E>` | All `Ok` → `Ok<T[]>`, first `Err` short-circuits |
 | `Results.any(results)` | `Result<T, E[]>` | First `Ok` found, or all `Err`s collected |
 
-```typescript
+```typescript ignore
 // Validate multiple fields, fail on first error. Supports tuples!
 const validated = Results.all([
   validateName(input.name),
@@ -303,7 +307,7 @@ const config = Results.any([
 | `Task.fromFallible(fn, errMapFn)` | `Task<T, E>` | From async function that might throw |
 | `Task.deferred()` | `DeferredTask<T, E>` | For push-based APIs (callbacks, events) |
 
-```typescript
+```typescript ignore
 // Wrap fetch with proper error handling
 const fetchJson = <T>(url: string): Task<T, FetchError> =>
   Task.fromPromise(
@@ -324,7 +328,7 @@ await task; // Resolves when either callback fires
 |--------|---------|
 | `Task.liftFallible(fn, errMapFn, ctor?)` | Wrap async function, map exceptions to `Err<E>` |
 
-```typescript
+```typescript ignore
 // Lift an async library function
 const tryFetch = Task.liftFallible(
   async (url: string) => {
@@ -349,7 +353,7 @@ Task.succeed("/api/users")
 | `Tasks.all(tasks)` | `Task<T[], E>` | All succeed → `Ok<T[]>`, first failure short-circuits |
 | `Tasks.any(tasks)` | `Task<T, E[]>` | First success, or all failures collected |
 
-```typescript
+```typescript ignore
 // These work for all iterables
 // Parallel fetch with combined results
 const allData = await Tasks.all([
@@ -376,7 +380,7 @@ const fastestResponse = await Tasks.any([
 
 Build pipelines where success flows forward and errors short-circuit:
 
-```typescript
+```typescript ignore
 function processOrder(orderId: string): Task<Receipt, OrderError> {
   return getOrder(orderId)           // Task<Order, NotFoundError>
     .andThen(validateOrder)          // Task<Order, ValidationError>
@@ -390,7 +394,7 @@ function processOrder(orderId: string): Task<Receipt, OrderError> {
 
 Validate without consuming the value:
 
-```typescript
+```typescript ignore
 function saveFile(path: string): Result<void, Error> {
   return Ok(path)
     .andEnsure(validatePath)    // Validate, but keep original path
