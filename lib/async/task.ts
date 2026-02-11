@@ -622,7 +622,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * assert(tag === "[object eitherway::Task]");
    * ```
    */
-  toString(): string {
+  override toString(): string {
     return Object.prototype.toString.call(this);
   }
 
@@ -651,11 +651,11 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * assert(toString.call(Task) === "[object eitherway::Task]");
    * ```
    */
-  get [Symbol.toStringTag](): string {
-    return "eitherway::Task";
+  override get [Symbol.toStringTag](): string {
+    return "aetherway.Task";
   }
   static get [Symbol.toStringTag](): string {
-    return "eitherway::Task";
+    return "aetherway.Task";
   }
 
   /**
