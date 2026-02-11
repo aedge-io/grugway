@@ -8,6 +8,7 @@ import type {
   Infallible,
   JsonRepr,
   NonNullish,
+  Nullish,
   StringRepr,
   Truthy,
   ValueRepr,
@@ -22,7 +23,6 @@ import {
 } from "./type_utils.ts";
 import { Err, Ok, Result } from "./result.ts";
 import { assertNotNullish } from "./assert.ts";
-import { Nullish } from "./mod.ts";
 
 /**
  * ==============
