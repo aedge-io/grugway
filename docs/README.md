@@ -82,7 +82,7 @@ productivity by focusing on the following goals:
 ## `eitherway` in Action
 
 ```typescript
-import { Option, Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+import { Option, Result, Task } from "../lib/mod.ts";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -192,11 +192,6 @@ import {
 import { Err, None, Ok, Option, Result, Some, Task } from "npm:eitherway";
 ```
 
-`cjs`:
-
-```javascript
-const { Err, Ok, Option, None, Result, Some, Task } = require("eitherway");
-```
 
 ## API
 
@@ -225,7 +220,7 @@ with most parts already. A couple of things are handled differently though:
   or `unchecked` variants for methods like `.unwrap()`.
 
 ```typescript
-import { Ok, Option, Result } from "https://deno.land/x/eitherway/mod.ts";
+import { Ok, Option, Result } from "../lib/mod.ts";
 
 const opt: Option<string> = Option("foo");
 const res: Result<number, TypeError> = Ok(1);
@@ -331,8 +326,8 @@ Some notable additions, which you may have been missing in other libraries:
    They really reduce noise and speed up integrating external code a lot.
 
 ```typescript
-import { Option, Result } from "https://deno.land/x/eitherway/mod.ts";
-import * as semver from "https://deno.land/std@0.206.0/semver/mod.ts";
+import { Option, Result } from "../lib/mod.ts";
+import * as semver from "jsr:@std/semver";
 
 const noInputProvidedError = Error("No input provided");
 const toParseError = (e: unknown) =>
@@ -387,7 +382,7 @@ function processString(input: string | undefined): number {
 ```typescript
 /* Equivalent Result flow */
 
-import { Result } from "https://deno.land/x/eitherway/mod.ts";
+import { Result } from "../lib/mod.ts";
 
 declare function toUpperCase(
   input: string | undefined,
@@ -430,7 +425,7 @@ async function processString(input: string | undefined): Promise<number> {
 ```typescript
 /* Equivalent Task flow */
 
-import { Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+import { Result, Task } from "../lib/mod.ts";
 
 declare function toUpperCase(
   input: string | undefined,
@@ -579,7 +574,7 @@ Since `Task<T, E>` is a subclass of `Promise<Result<T, E>>`, it's possible to
 return it as such from an async function though or just await it.
 
 ```typescript
-import { Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+import { Result, Task } from "../lib/mod.ts";
 
 async function toTask(str: string): Promise<Result<string, never>> {
   return Task.succeed(str);
