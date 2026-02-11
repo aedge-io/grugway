@@ -292,7 +292,8 @@ export interface IResult<T, E> {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Err, Ok, Option, Result } from "./mod.ts";
+   * import { Option } from "./option.ts";
+   * import { Err, Ok, Result } from "./result.ts"
    *
    * function recover(e: Error): Result<string, Error> {
    *   return Option(e.cause)
@@ -344,7 +345,7 @@ export interface IResult<T, E> {
    * @example
    * ```typescript
    * import { assert } from "./assert.ts";
-   * import { Empty, Err, Ok, Result } from "./mod.ts";
+   * import { Err, Ok, Result } from "./result.ts";
    * import { emptyDirSync } from "https://deno.land/std@0.207.0/fs/empty_dir.ts";
    *
    * const { BadResource, NotFound, PermissionDenied } = Deno.errors;
@@ -366,15 +367,15 @@ export interface IResult<T, E> {
    *   castTo<PermissionDenied>,
    * );
    *
-   * const writeBlobs = function(path: string): Result<Empty, BadResource> {
+   * const writeBlobs = function(path: string): Result<number, BadResource> {
    *   // create files and write something to them...
-   *   return Ok.empty();
+   *   return Ok(0);
    * }
    *
    * const res = getPath()  // here we try get a path...
    *   .andEnsure(prepareDir)    // ...and if THIS works, we pass it on...
    *   .andThen(writeBlobs) // ...so that we can process it here.
-   *   .inspect((_) => console.log("done"))
+   *   .inspect(() => console.log("done"))
    *   .inspectErr(console.error);
    *
    * assert(res.unwrap() != null);
