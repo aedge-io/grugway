@@ -1,5 +1,5 @@
-import { Err, Ok } from "../core/mod.ts";
-import type { Result } from "../core/mod.ts";
+import { Err, Ok } from "../core/result.ts";
+import type { Result } from "../core/result.ts";
 
 /**
  * These are only used internally to save some chars
