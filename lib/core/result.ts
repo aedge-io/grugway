@@ -21,7 +21,7 @@ export interface IResult<T, E> {
   /**
    * Type predicate - use this to narrow `Result<T, E>` to `Ok<T>`
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -43,7 +43,7 @@ export interface IResult<T, E> {
   /**
    * Type predicate - use this to narrow `Result<T, E>` to `Err<E>`
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -68,7 +68,7 @@ export interface IResult<T, E> {
    * Canonical identity function. Mainly useful for flattening instances of
    * `Result<Result<T, E>, E>` in combination with `.andThen()`
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -101,7 +101,7 @@ export interface IResult<T, E> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -129,7 +129,7 @@ export interface IResult<T, E> {
    * In case of `Err<E>` this method short-circuits. See {@linkcode IResult#mapErr}
    * for the opposite case.
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -155,7 +155,7 @@ export interface IResult<T, E> {
    * Same as `.map()` but in case of `Err<E>, a new instance
    * of `Ok`, wrapping the provided `orValue` will be returned.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -184,7 +184,7 @@ export interface IResult<T, E> {
    *
    * Use this if the fallback value is expensive to produce.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -212,7 +212,7 @@ export interface IResult<T, E> {
    * `Ok<T>`, this method short-circuits. See {@linkcode IResult#map}
    * for the opposite case.
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -246,7 +246,7 @@ export interface IResult<T, E> {
    *
    * Canonical `.flatMap()` or `.chain()` method.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -287,7 +287,7 @@ export interface IResult<T, E> {
    *
    * See {@linkcode IResult#andThen} for the opposite case.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -339,7 +339,7 @@ export interface IResult<T, E> {
    * |  **LHS: Ok<T>**     |     Ok<T>     |     Err<E2>    |
    * |  **LHS: Err<E>**    |     Err<E>    |     Err<E>     |
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -410,7 +410,7 @@ export interface IResult<T, E> {
    * |  **LHS: Ok<T>**    |     Ok<T>     |     Ok<T>      |
    * |  **LHS: Err<E>**   |     Ok<T2>    |     Err<E>     |
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -463,7 +463,7 @@ export interface IResult<T, E> {
    * |**LHS: Ok<T>** |     Ok<T2>    |     Err<E2>    |
    * |**LHS: Err<E>**|     Err<E>    |     Err<E>     |
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -491,7 +491,7 @@ export interface IResult<T, E> {
    * |**LHS: Ok<T>** |     Ok<T>     |     Ok<T>      |
    * |**LHS: Err<E>**|     Ok<T2>    |     Err<E2>    |
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -525,7 +525,7 @@ export interface IResult<T, E> {
    * This is not only useful to produce tuples, but also to collect
    * arguments to be passed to a function down the line.
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -562,7 +562,7 @@ export interface IResult<T, E> {
    * In contrast to other implementations, this method NEVER throws an
    * exception
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -594,7 +594,7 @@ export interface IResult<T, E> {
   /**
    * Same as `.unwrap()` but returns a default value in case of `Err<E>`
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -619,7 +619,7 @@ export interface IResult<T, E> {
    *
    * Use this if the fallback value is expensive to produce
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -647,7 +647,7 @@ export interface IResult<T, E> {
    * where an already narrowed instance would result in one of the variants
    * being inferred as `unknown` otherwise.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -668,7 +668,7 @@ export interface IResult<T, E> {
   /**
    * Use this to obtain a tuple representation of `Result<T, E>`
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -690,7 +690,7 @@ export interface IResult<T, E> {
    *
    * See {@linkcode IResult#err} for the opposite case.
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -711,7 +711,7 @@ export interface IResult<T, E> {
    *
    * See {@linkcode IResult#ok} for the opposite case.
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -733,7 +733,7 @@ export interface IResult<T, E> {
    *
    * This is mostly useful to push the instance into an async context.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -760,7 +760,7 @@ export interface IResult<T, E> {
    *
    * In case of `Err`, an empty iterator is returned
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -813,7 +813,7 @@ export interface IResult<T, E> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -844,7 +844,7 @@ export interface IResult<T, E> {
    * In case of `Err<E>`, this method short-cuits and returns the `Err<E>`
    * instance. See {@linkcode IResult#inspectErr} for the opposite case;
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -872,7 +872,7 @@ export interface IResult<T, E> {
    * In case of `Ok<T>`, this method short-cuits and returns the `Ok<T>`
    * instance. See {@linkcode IResult#inspect} for the opposite case;
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -898,7 +898,7 @@ export interface IResult<T, E> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -908,8 +908,8 @@ export interface IResult<T, E> {
    * const okTag = Ok("thing").toString();
    * const errTag = Err(Error()).toString();
    *
-   * assert(okTag === "[object eitherway::Result::Ok<thing>]");
-   * assert(errTag === "[object eitherway::Result::Err<[object Error]>");
+   * assert(okTag === "[object aetherway.Result.Ok<thing>]");
+   * assert(errTag === "[object aetherway.Result.Err<[object Error]>");
    * ```
    */
   toString(): string;
@@ -924,7 +924,7 @@ export interface IResult<T, E> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator)
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -981,7 +981,7 @@ export interface IResult<T, E> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag)
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -994,12 +994,12 @@ export interface IResult<T, E> {
    *
    * const toString = Object.prototype.toString;
    *
-   * assert(toString.call(rec) === "[object eitherway::Result::Ok<[object Object]>]");
-   * assert(toString.call(str) === "[object eitherway::Result::Ok<abc>]");
-   * assert(toString.call(err) === "[object eitherway::Result::Err<[object Error]>]");
-   * assert(toString.call(Result) === "[object eitherway::Result]");
-   * assert(toString.call(Ok) === "[object eitherway::Result::Ok]");
-   * assert(toString.call(Err) === "[object eitherway::Result::Err]");
+   * assert(toString.call(rec) === "[object aetherway.Result.Ok<[object Object]>]");
+   * assert(toString.call(str) === "[object aetherway.Result.Ok<abc>]");
+   * assert(toString.call(err) === "[object aetherway.Result.Err<[object Error]>]");
+   * assert(toString.call(Result) === "[object aetherway.Result]");
+   * assert(toString.call(Ok) === "[object aetherway.Result.Ok]");
+   * assert(toString.call(Err) === "[object aetherway.Result.Err]");
    * ```
    */
   [Symbol.toStringTag]: string;
@@ -1127,7 +1127,7 @@ class _Ok<T> implements IResult<T, never> {
     const innerTag = typeof this.#value === "object"
       ? Object.prototype.toString.call(this.#value)
       : String(this.#value);
-    return `eitherway::Result::Ok<${innerTag}>`;
+    return `aetherway.Result.Ok<${innerTag}>`;
   }
 }
 
@@ -1238,7 +1238,7 @@ class _Err<E> implements IResult<never, E> {
     const innerTag = typeof this.#err === "object"
       ? Object.prototype.toString.call(this.#err)
       : String(this.#err);
-    return `eitherway::Result::Err<${innerTag}>`;
+    return `aetherway.Result.Err<${innerTag}>`;
   }
   toString(): string {
     return Object.prototype.toString.call(this);
@@ -1259,7 +1259,7 @@ class _Err<E> implements IResult<never, E> {
  *
  * The success variant of a `Result<T, E>`
  *
- * @category Result::Basic
+ * @category Result#Basic
  * @implements {IResult<T, never>}
  * @property {() => Ok<Empty>} empty - returns `Ok<Empty>`
  *
@@ -1273,7 +1273,7 @@ class _Err<E> implements IResult<never, E> {
  *
  * assert(ok instanceof Ok);
  * assert(ok instanceof Result);
- * assert(tag === "[object eitherway::Result::Ok]");
+ * assert(tag === "[object aetherway.Result.Ok]");
  * ```
  */
 export type Ok<T> = _Ok<T>;
@@ -1286,7 +1286,7 @@ export function Ok<T>(value: T): Ok<T> {
  *
  * This is useful in combination with `Option<T>`, where a variant of `Ok<void>` would produce `None`.
  *
- * @category Result::Basic
+ * @category Result#Basic
  *
  * @example
  * ```typescript
@@ -1309,7 +1309,7 @@ Object.defineProperty(Ok, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Ok, Symbol.toStringTag, {
-  value: "eitherway::Result::Ok",
+  value: "aetherway.Result.Ok",
 });
 
 /**
@@ -1317,7 +1317,7 @@ Object.defineProperty(Ok, Symbol.toStringTag, {
  *
  * The failure variant of a `Result<T, E>`
  *
- * @category Result::Basic
+ * @category Result#Basic
  * @implements {IResult<never, E>}
  * @property {() => Err<Empty>} empty - returns `Err<Empty>`
  *
@@ -1331,7 +1331,7 @@ Object.defineProperty(Ok, Symbol.toStringTag, {
  *
  * assert(err instanceof Err);
  * assert(err instanceof Result);
- * assert(tag === "[object eitherway::Result::Err]");
+ * assert(tag === "[object aetherway.Result.Err]");
  * ```
  */
 export type Err<E> = _Err<E>;
@@ -1344,7 +1344,7 @@ export function Err<E>(err: E): Err<E> {
  *
  * This is useful in combination with `Option<T>`, where a variant of `Err<void>` would produce `None`.
  *
- * @category Result::Basic
+ * @category Result#Basic
  *
  * @example
  * ```typescript
@@ -1367,7 +1367,7 @@ Object.defineProperty(Err, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Err, Symbol.toStringTag, {
-  value: "eitherway::Result::Err",
+  value: "aetherway.Result.Err",
 });
 
 /**
@@ -1383,7 +1383,7 @@ Object.defineProperty(Err, Symbol.toStringTag, {
  * Iterables)
  *
  * @implements {IResult<T, E>}
- * @category Result::Basic
+ * @category Result#Basic
  * @namespace
  *
  * @example
@@ -1407,7 +1407,7 @@ Object.defineProperty(Err, Symbol.toStringTag, {
  * assert(ok.isOk());
  * assert(err instanceof Result);
  * assert(err.isErr());
- * assert(tag === "[object eitherway::Result]");
+ * assert(tag === "[object aetherway.Result]");
  * ```
  */
 export type Result<T, E> = Ok<T> | Err<E>;
@@ -1423,7 +1423,7 @@ Object.defineProperty(Result, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Result, Symbol.toStringTag, {
-  value: "eitherway::Result",
+  value: "aetherway.Result",
 });
 
 //deno-lint-ignore no-namespace
@@ -1437,7 +1437,7 @@ export namespace Result {
    *
    * @throws {Panic}
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -1458,7 +1458,7 @@ export namespace Result {
    * Use this to lift the result of a fallible function into a `Result`
    * context.
    *
-   * @category Result::Basic
+   * @category Result#Basic
    *
    * @example
    * ```typescript
@@ -1493,7 +1493,7 @@ export namespace Result {
    * This is useful for integrating 3rd party code without the need to manually
    * wrap it.
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -1534,7 +1534,7 @@ export namespace Result {
    * This is useful for integrating 3rd party code without the need to manually
    * wrap it.
    *
-   * @category Result::Advanced
+   * @category Result#Advanced
    *
    * @example
    * ```typescript
@@ -1577,7 +1577,7 @@ export namespace Result {
 /**
  * Utilities to work with collections of Result<T, E>
  *
- * @category Result::Intermediate
+ * @category Result#Intermediate
  */
 //deno-lint-ignore no-namespace
 export namespace Results {
@@ -1589,7 +1589,7 @@ export namespace Results {
    * This function also works on variadic tuples and preserves the individual
    * types of the tuple members.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -1637,7 +1637,7 @@ export namespace Results {
    * This function also works on variadic tuples and preserves the individual
    * types of the tuple members.
    *
-   * @category Result::Intermediate
+   * @category Result#Intermediate
    *
    * @example
    * ```typescript
@@ -1680,7 +1680,7 @@ export namespace Results {
 /**
  * Use this to infer the encapsulated `Ok<T>` types from a `Result<T,E>`
  *
- * @category Result::Basic
+ * @category Result#Basic
  */
 export type InferredOkType<R> = R extends Readonly<Result<infer T, unknown>> ? T
   : never;
@@ -1688,7 +1688,7 @@ export type InferredOkType<R> = R extends Readonly<Result<infer T, unknown>> ? T
 /**
  * Use this to infer the encapsulated `Err<E>` types from a `Result<T,E>`
  *
- * @category Result::Basic
+ * @category Result#Basic
  */
 export type InferredErrType<R> = R extends Readonly<Result<unknown, infer E>>
   ? E
@@ -1697,7 +1697,7 @@ export type InferredErrType<R> = R extends Readonly<Result<unknown, infer E>>
 /**
  * Use this to infer the encapsulated `Ok<T>` types from a tuple of `Result<T,E>`
  *
- * @category Result::Intermediate
+ * @category Result#Intermediate
  */
 export type InferredOkTuple<
   R extends Readonly<ArrayLike<Result<unknown, unknown>>>,
@@ -1708,7 +1708,7 @@ export type InferredOkTuple<
 /**
  * Use this to infer the encapsulated `Err<E>` types from a tuple of `Result<T,E>`
  *
- * @category Result::Intermediate
+ * @category Result#Intermediate
  */
 export type InferredErrTuple<
   R extends Readonly<ArrayLike<Result<unknown, unknown>>>,
@@ -1719,7 +1719,7 @@ export type InferredErrTuple<
 /**
  * Use this to infer a union of all encapsulated `Ok<T>` types from a tuple of `Result<T,E>`
  *
- * @category Result::Intermediate
+ * @category Result#Intermediate
  */
 export type InferredOkUnion<
   R extends Readonly<ArrayLike<Result<unknown, unknown>>>,
@@ -1728,7 +1728,7 @@ export type InferredOkUnion<
 /**
  * Use this to infer a union of all encapsulated `Err<E>` types from a tuple of `Result<T,E>`
  *
- * @category Result::Intermediate
+ * @category Result#Intermediate
  */
 export type InferredErrUnion<
   R extends Readonly<ArrayLike<Result<unknown, unknown>>>,
@@ -1743,7 +1743,7 @@ export type InferredErrUnion<
  *
  * @throws {Panic}
  *
- * @category Result::Intermediate
+ * @category Result#Intermediate
  *
  * @example
  * ```typescript
