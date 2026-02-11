@@ -1,4 +1,4 @@
-import { Err, Ok, Result, Task } from "../mod.ts";
+import { Err, Ok, Result, Task } from "../lib/mod.ts";
 import {
   dirIsEmpty,
   parseVersion,

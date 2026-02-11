@@ -1,4 +1,4 @@
-import { Option, Result, Task } from "../mod.ts";
+import { Option, Result, Task } from "../lib/mod.ts";
 import { emptyDir, semver } from "../dev_deps.ts";
 
 export type SemVer = semver.SemVer;
