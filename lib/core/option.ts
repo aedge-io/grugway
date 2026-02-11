@@ -1510,7 +1510,7 @@ Object.defineProperty(Some, Symbol.toStringTag, {
  *
  * const encode = JSON.stringify;
  *
- * assert(none instanceof None === true);
+ * assert(none instanceof Option === true);
  * assert(none.isNone() === true);
  * assert(none.isSome() === false);
  * assert(none.unwrap() === undefined);
@@ -1544,14 +1544,7 @@ Object.freeze(None);
  *
  * Not only is it useful for representing a value OR the absence of it,
  * but also representing a value and communicating a certain fact
- * about it. As in the following example:
- *
- * ```typescript
- * import { Option } from "./option.ts";
- *
- * type Prime = number;
- * declare function toPrime(n: number): Option<Prime>;
- * ```
+ * about it.
  *
  * Furthermore, it's important to note that the encapsulated vaule must not
  * be nullish
