@@ -3,7 +3,6 @@
  * NOTE: the "no-unused-vars" lint rule is ignored in order to ensure
  * method parameter names are symetrical
  */
-import { assert } from "./assert.ts";
 import type {
   Empty,
   Infallible,
@@ -23,6 +22,7 @@ import {
 } from "./type_utils.ts";
 import { Err, Ok, Result } from "./result.ts";
 import { assertNotNullish } from "./assert.ts";
+import { Nullish } from "./mod.ts";
 
 /**
  * ==============
@@ -1256,7 +1256,7 @@ class _Some<T> implements IOption<T> {
     return this;
   }
   clone(): Some<T> {
-    return Some(structuredClone(this.#value));
+    return Some(structuredClone(this.#value as Exclude<T, Nullish>));
   }
   map<U>(mapFn: (arg: T) => NonNullish<U>): Some<NonNullish<U>> {
     return Some(mapFn(this.#value));
