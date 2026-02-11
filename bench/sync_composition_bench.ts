@@ -1,5 +1,6 @@
 //deno-lint-ignore-file
-import { Option, Result } from "../lib/core/mod.ts";
+import { Option } from "../lib/core/option.ts";
+import { Result } from "../lib/core/result.ts";
 
 const INPUTS = [
   undefined,

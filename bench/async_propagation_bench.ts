@@ -1,5 +1,5 @@
 //deno-lint-ignore-file
-import { Task } from "../lib/async/mod.ts";
+import { Task } from "../lib/async/task.ts";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
