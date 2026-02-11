@@ -29,13 +29,13 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
       type RL = typeof responseLike;
 
       const error = FailedRequest.from(responseLike);
-      type Inner = ReturnType<typeof error.getResponse>;
+      type Inner = typeof error.response;
 
       assertType<IsExact<Inner, RL>>(true);
       assertStrictEquals(error.name, "FailedRequest");
       assertStrictEquals(error.status, responseLike.status);
       assertStrictEquals(error.statusText, responseLike.statusText);
-      assertStrictEquals(error.getResponse(), responseLike);
+      assertStrictEquals(error.response, responseLike);
     });
 
     await t.step(
@@ -45,7 +45,7 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
         const statusText = "Internal Server Error";
 
         const error = FailedRequest.with(status, statusText);
-        const internalResponse = error.getResponse();
+        const internalResponse = error.response;
 
         assertType<IsExact<typeof error, FailedRequest<Response>>>(true);
         assertType<IsExact<typeof internalResponse, Response>>(true);
