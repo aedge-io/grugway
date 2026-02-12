@@ -5,9 +5,8 @@ import {
   assertNotStrictEquals,
   assertObjectMatch,
   assertStrictEquals,
-  assertType,
-  IsExact,
-} from "../../dev_deps.ts";
+} from "@std/assert";
+import { assertType, type IsExact } from "@std/testing/types";
 import { None, Option, Options, Some } from "./option.ts";
 
 /**
