@@ -5,7 +5,8 @@ import {
   ScriptErrors,
   SemVer,
 } from "./build_helpers.ts";
-import { build, semver } from "../dev_deps.ts";
+import { build } from "@deno/dnt";
+import * as semver from "@std/semver";
 
 const PKG_NAME = "eitherway";
 const ENTRY_POINT = "./mod.ts";
