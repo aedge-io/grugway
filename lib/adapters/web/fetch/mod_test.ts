@@ -8,9 +8,8 @@ import {
   assertInstanceOf,
   assertObjectMatch,
   assertStrictEquals,
-  assertType,
-  IsExact,
-} from "../../../../dev_deps.ts";
+} from "@std/assert";
+import { assertType, type IsExact } from "@std/testing/types";
 import {
   FailedRequest,
   FetchException,
@@ -71,11 +70,12 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
   await t.step("FetchException", async (t) => {
     await t.step(".from() -> produces new instance", () => {
       const cause = "Something went wrong";
-      const expectedCause = Error("Unknown exception", { cause });
 
       const exception = FetchException.from(cause);
 
-      assertEquals(exception.cause, expectedCause);
+      assertInstanceOf(exception.cause, Error);
+      assertStrictEquals((exception.cause as Error).message, "Unknown exception");
+      assertStrictEquals((exception.cause as Error).cause, cause);
       assertStrictEquals(exception.name, "FetchException");
     });
 
@@ -108,7 +108,9 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
           IsExact<typeof unwrapped, Response | FailedRequest<Response>>
         >(true);
         assertStrictEquals(err.isErr(), true);
-        assertEquals(unwrapped, FailedRequest.from(errorResponse));
+        assertInstanceOf(unwrapped, FailedRequest);
+        assertStrictEquals((unwrapped as FailedRequest<Response>).status, 0);
+        assertStrictEquals((unwrapped as FailedRequest<Response>).response, errorResponse);
       },
     );
 
@@ -260,10 +262,9 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
         >(true);
         assertStrictEquals(result.isErr(), true);
         assertInstanceOf(result.unwrap(), FetchException);
-        assertEquals(
-          result.unwrap(),
-          FetchException.from(Error("Network error")),
-        );
+        assertStrictEquals((result.unwrap() as FetchException).name, "FetchException");
+        assertInstanceOf((result.unwrap() as FetchException).cause, Error);
+        assertStrictEquals(((result.unwrap() as FetchException).cause as Error).message, "Network error");
       },
     );
 
