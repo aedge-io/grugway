@@ -5,15 +5,15 @@ import type {
 } from "./option.ts";
 import { None, Option, Options, Some } from "./option.ts";
 import type { NonNullish } from "./type_utils.ts";
+import { assertStrictEquals } from "@std/assert";
 import {
-  AssertFalse,
-  assertStrictEquals,
-  AssertTrue,
+  type AssertFalse,
+  type AssertTrue,
   assertType,
-  Has,
-  IsExact,
-  IsNullable,
-} from "../../dev_deps.ts";
+  type Has,
+  type IsExact,
+  type IsNullable,
+} from "@std/testing/types";
 
 type IsOption<O> = O extends Option<unknown> ? true : false;
 type OptionType<O> = O extends Readonly<Option<infer T>> ? T : never;
