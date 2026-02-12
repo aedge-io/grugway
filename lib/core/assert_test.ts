@@ -2,7 +2,7 @@ import {
   assertInstanceOf,
   assertStrictEquals,
   assertThrows,
-} from "../../dev_deps.ts";
+} from "@std/assert";
 import { assert, AssertionError } from "./assert.ts";
 
 Deno.test("eitherway::core::assert", async (t) => {

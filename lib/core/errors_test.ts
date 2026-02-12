@@ -2,9 +2,8 @@ import {
   assertInstanceOf,
   assertStrictEquals,
   assertThrows,
-  assertType,
-  IsExact,
-} from "../../dev_deps.ts";
+} from "@std/assert";
+import { assertType, type IsExact } from "@std/testing/types";
 import { isEitherwayPanic, Panic, panic } from "./errors.ts";
 
 Deno.test("eitherway::core::errors", async (t) => {
