@@ -1,13 +1,9 @@
 //deno-lint-ignore-file require-await
 import { asInfallible, Err, Ok, Result } from "../core/result.ts";
 import { Task } from "./task.ts";
-import {
-  assertInstanceOf,
-  assertStrictEquals,
-  assertType,
-} from "../../dev_deps.ts";
+import { assertInstanceOf, assertStrictEquals } from "@std/assert";
+import { assertType, type IsExact } from "@std/testing/types";
 import type { Empty } from "../core/type_utils.ts";
-import type { IsExact } from "../../dev_deps.ts";
 
 Deno.test("eitherway::Task", async (t) => {
   await t.step("Task<T, E> -> Constructors", async (t) => {
@@ -495,7 +491,7 @@ Deno.test("eitherway::Task", async (t) => {
           assertType<
             IsExact<
               typeof okTask,
-              Task<number | bigint, TypeError | RangeError>
+              Task<number | bigint, TypeError>
             >
           >(true);
 

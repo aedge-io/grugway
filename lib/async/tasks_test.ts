@@ -12,9 +12,8 @@ import { Err, Ok } from "../core/result.ts";
 import {
   assertEquals,
   assertStrictEquals,
-  assertType,
-} from "../../dev_deps.ts";
-import type { IsExact } from "../../dev_deps.ts";
+} from "@std/assert";
+import { assertType, type IsExact } from "@std/testing/types";
 
 Deno.test("eitherway::Task::InferredTypes", async (t) => {
   await t.step(
