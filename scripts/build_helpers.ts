@@ -1,5 +1,6 @@
 import { Option, Result, Task } from "../lib/mod.ts";
-import { emptyDir, semver } from "../dev_deps.ts";
+import { emptyDir } from "@deno/dnt";
+import * as semver from "@std/semver";
 
 export type SemVer = semver.SemVer;
 export const ScriptErrors = {
