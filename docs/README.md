@@ -192,7 +192,6 @@ import {
 import { Err, None, Ok, Option, Result, Some, Task } from "npm:eitherway";
 ```
 
-
 ## API
 
 ### Overview

@@ -2,30 +2,36 @@
 
 > Safe abstractions for fallible flows — for humans and clankers alike.
 
-This is a fork of the now stale project [eitherway](https://github.com/realpha/eitherway).
+This is a fork of the now stale project
+[eitherway](https://github.com/realpha/eitherway).
 
-**MANDATORY AI DISCLAIMER:** LLMs are/were used for parts of the refactoring and documentation.
+**MANDATORY AI DISCLAIMER:** LLMs are/were used for parts of the refactoring and
+documentation.
 
 ---
 
 ## Why aetherway?
 
-This is for now mostly an experiment in human - agent collaboration and in-context learning. The basic assumptions are:
+This is for now mostly an experiment in human - agent collaboration and
+in-context learning. The basic assumptions are:
 
-- **Explicit error handling** makes code behavior predictable for both humans and agents
-- **Composable abstractions** allow agents to reason about data flow without hidden exceptions
+- **Explicit error handling** makes code behavior predictable for both humans
+  and agents
+- **Composable abstractions** allow agents to reason about data flow without
+  hidden exceptions
 - **Type-safe operations** catch mistakes at compile time rather than runtime
-- **Callibrated documentation** provides context that agents can leverage for better performance
+- **Callibrated documentation** provides context that agents can leverage for
+  better performance
 
 ---
 
 ## Core Abstractions
 
-| Abstraction | Purpose | Equivalent |
-|-------------|---------|------------|
-| `Option<T>` | Handle presence/absence of values | `T \| undefined` |
-| `Result<T, E>` | Handle success/failure explicitly | `T \| E` |
-| `Task<T, E>` | Async operations with explicit errors | `Promise<Result<T, E>>` |
+| Abstraction    | Purpose                               | Equivalent              |
+| -------------- | ------------------------------------- | ----------------------- |
+| `Option<T>`    | Handle presence/absence of values     | `T \| undefined`        |
+| `Result<T, E>` | Handle success/failure explicitly     | `T \| E`                |
+| `Task<T, E>`   | Async operations with explicit errors | `Promise<Result<T, E>>` |
 
 ---
 
@@ -36,17 +42,27 @@ This is for now mostly an experiment in human - agent collaboration and in-conte
 -- WORK IN PROGRESS --
 
 **Deno:**
+
 ```typescript ignore
-import { Option, Result, Task, Ok, Err, Some, None } from "https://deno.land/x/aetherway/mod.ts";
+import {
+  Err,
+  None,
+  Ok,
+  Option,
+  Result,
+  Some,
+  Task,
+} from "https://deno.land/x/aetherway/mod.ts";
 ```
 
 **Node.js:**
+
 ```bash
 npm add aetherway
 ```
 
 ```typescript ignore
-import { Option, Result, Task, Ok, Err, Some, None } from "aetherway";
+import { Err, None, Ok, Option, Result, Some, Task } from "aetherway";
 ```
 
 ### Runtime Requirements
@@ -63,15 +79,15 @@ import { Option, Result, Task, Ok, Err, Some, None } from "aetherway";
 ### Option — Handling Optional Values
 
 ```typescript ignore
-import { Option, Some, None } from "aetherway";
+import { None, Option, Some } from "aetherway";
 
 // Nullish values become None
 const maybeUser = Option(getUserById(id)); // Option<User>
 
 // Chain operations safely
 const email = maybeUser
-  .filter(user => user.isActive)
-  .map(user => user.email)
+  .filter((user) => user.isActive)
+  .map((user) => user.email)
   .unwrapOr("no-email@example.com");
 
 // Convert to Result for error handling
@@ -81,7 +97,7 @@ const userResult = maybeUser.okOrElse(() => new Error("User not found"));
 ### Result — Explicit Error Handling
 
 ```typescript
-import { Ok, Err, Result } from "./lib/mod.ts";
+import { Err, Ok, Result } from "./lib/mod.ts";
 
 function divide(a: number, b: number): Result<number, Error> {
   if (b === 0) return Err(new Error("Division by zero"));
@@ -90,9 +106,9 @@ function divide(a: number, b: number): Result<number, Error> {
 
 // Compose operations
 const result = divide(10, 2)
-  .map(n => n * 2)           // Only runs on Ok
-  .andThen(n => divide(n, 3)) // Chain fallible operations
-  .mapErr(e => new TypeError(e.message)); // Transform errors
+  .map((n) => n * 2) // Only runs on Ok
+  .andThen((n) => divide(n, 3)) // Chain fallible operations
+  .mapErr((e) => new TypeError(e.message)); // Transform errors
 
 // Unwrap with type narrowing
 if (result.isOk()) {
@@ -103,19 +119,19 @@ if (result.isOk()) {
 ### Task — Async Operations
 
 ```typescript ignore
-import { Task, Ok, Err } from "aetherway";
+import { Err, Ok, Task } from "aetherway";
 
 // Create tasks from promises
 const fetchUser = Task.fromPromise(
-  fetch("/api/user").then(r => r.json()),
-  (e) => new Error("Failed to fetch user", { cause: e })
+  fetch("/api/user").then((r) => r.json()),
+  (e) => new Error("Failed to fetch user", { cause: e }),
 );
 
 // Compose async operations with the same API as Result
 const userName = fetchUser
-  .map(user => user.name)
+  .map((user) => user.name)
   .andThen(validateName)
-  .mapErr(e => ({ code: "USER_ERROR", message: e.message }));
+  .mapErr((e) => ({ code: "USER_ERROR", message: e.message }));
 
 // Tasks are awaitable
 const result = await userName;
@@ -133,13 +149,13 @@ import * as semver from "semver";
 // Lift sync functions
 const tryParse = Result.liftFallible(
   semver.parse,
-  (e) => new TypeError("Invalid version", { cause: e })
+  (e) => new TypeError("Invalid version", { cause: e }),
 );
 
 // Lift async functions
 const tryFetch = Task.liftFallible(
-  (url: string) => fetch(url).then(r => r.json()),
-  (e) => new Error("Fetch failed", { cause: e })
+  (url: string) => fetch(url).then((r) => r.json()),
+  (e) => new Error("Fetch failed", { cause: e }),
 );
 
 // Use in pipelines
@@ -152,64 +168,65 @@ const version = Option(Deno.args[0])
 
 ## API Reference: Constructors & Helpers
 
-Each abstraction provides multiple constructors and composability helpers for different scenarios.
+Each abstraction provides multiple constructors and composability helpers for
+different scenarios.
 
 ### Option<T>
 
 #### Constructors
 
-| Constructor | Returns | Use When |
-|-------------|---------|----------|
-| `Option(value)` | `Option<T>` | General use — `null`/`undefined` → `None` |
-| `Option.from(value)` | `Option<T>` | Alias for `Option()` |
-| `Option.fromCoercible(value)` | `Option<T>` | Falsy values (`0`, `""`, `false`) → `None` |
-| `Option.fromFallible(value)` | `Option<T>` | `Error` instances → `None` |
-| `Some(value)` | `Some<T>` | Explicitly wrap a non-nullish value |
-| `None` | `None` | The absent value singleton |
-| `Some.empty()` | `Some<Empty>` | Signal success without a meaningful value |
+| Constructor                   | Returns       | Use When                                   |
+| ----------------------------- | ------------- | ------------------------------------------ |
+| `Option(value)`               | `Option<T>`   | General use — `null`/`undefined` → `None`  |
+| `Option.from(value)`          | `Option<T>`   | Alias for `Option()`                       |
+| `Option.fromCoercible(value)` | `Option<T>`   | Falsy values (`0`, `""`, `false`) → `None` |
+| `Option.fromFallible(value)`  | `Option<T>`   | `Error` instances → `None`                 |
+| `Some(value)`                 | `Some<T>`     | Explicitly wrap a non-nullish value        |
+| `None`                        | `None`        | The absent value singleton                 |
+| `Some.empty()`                | `Some<Empty>` | Signal success without a meaningful value  |
 
 ```typescript
 import { Option } from "./lib/mod.ts";
 
 // Choose based on what should be "absent"
-Option(0);              // Some(0) — zero is a valid number
+Option(0); // Some(0) — zero is a valid number
 Option.fromCoercible(0); // None   — zero is "empty" in this context
 
-Option(new Error());           // Some(Error) — errors are values too
+Option(new Error()); // Some(Error) — errors are values too
 Option.fromFallible(new Error()); // None    — errors mean absence
 ```
 
 #### Composability Helpers
 
-| Helper | Purpose |
-|--------|---------|
-| `Option.lift(fn, ctor?)` | Wrap a function to return `Option` (default ctor: `Option.from`) |
-| `Option.liftFallible(fn, ctor?)` | Same as `lift`, but exceptions → `None` |
-| `Option.apply(fn, arg)` | Apply `Option<Fn>` to `Option<Arg>` (applicative) |
-| `Option.id(opt)` | Identity — useful for flattening `Option<Option<T>>` |
+| Helper                           | Purpose                                                          |
+| -------------------------------- | ---------------------------------------------------------------- |
+| `Option.lift(fn, ctor?)`         | Wrap a function to return `Option` (default ctor: `Option.from`) |
+| `Option.liftFallible(fn, ctor?)` | Same as `lift`, but exceptions → `None`                          |
+| `Option.apply(fn, arg)`          | Apply `Option<Fn>` to `Option<Arg>` (applicative)                |
+| `Option.id(opt)`                 | Identity — useful for flattening `Option<Option<T>>`             |
 
 ```typescript
 import { Option } from "./lib/mod.ts";
 
 // Lift a parser that might return undefined
 const parseIntSafe = Option.lift(parseInt, Option.fromCoercible);
-parseIntSafe("42");  // Some(42)
+parseIntSafe("42"); // Some(42)
 parseIntSafe("abc"); // None (NaN is falsy)
 
 // Lift a function that throws
 const parseJSON = Option.liftFallible(JSON.parse);
 parseJSON('{"a":1}'); // Some({a: 1})
-parseJSON('invalid'); // None
+parseJSON("invalid"); // None
 ```
 
 #### Collection Helpers (`Options` namespace)
 
-| Helper | Returns | Behavior |
-|--------|---------|----------|
-| `Options.all(opts)` | `Option<T[]>` | All `Some` → `Some<T[]>`, any `None` → `None` |
-| `Options.any(opts)` | `Option<T>` | First `Some` found, or `None` |
-| `Options.areSome(opts)` | `boolean` | Type predicate: all are `Some` |
-| `Options.areNone(opts)` | `boolean` | Type predicate: all are `None` |
+| Helper                  | Returns       | Behavior                                      |
+| ----------------------- | ------------- | --------------------------------------------- |
+| `Options.all(opts)`     | `Option<T[]>` | All `Some` → `Some<T[]>`, any `None` → `None` |
+| `Options.any(opts)`     | `Option<T>`   | First `Some` found, or `None`                 |
+| `Options.areSome(opts)` | `boolean`     | Type predicate: all are `Some`                |
+| `Options.areNone(opts)` | `boolean`     | Type predicate: all are `None`                |
 
 ---
 
@@ -217,15 +234,15 @@ parseJSON('invalid'); // None
 
 #### Constructors
 
-| Constructor | Returns | Use When |
-|-------------|---------|----------|
-| `Ok(value)` | `Ok<T>` | Explicit success |
-| `Err(error)` | `Err<E>` | Explicit failure |
-| `Result(value)` | `Result<T, E>` | Auto-detect — `Error` instances → `Err` |
-| `Result.from(fn)` | `Result<T, never>` | Lift infallible function (throws → propagate) |
-| `Result.fromFallible(fn, errMapFn)` | `Result<T, E>` | Lift fallible function (throws → `Err`) |
-| `Ok.empty()` | `Ok<Empty>` | Signal success without a value |
-| `Err.empty()` | `Err<Empty>` | Signal failure without details |
+| Constructor                         | Returns            | Use When                                      |
+| ----------------------------------- | ------------------ | --------------------------------------------- |
+| `Ok(value)`                         | `Ok<T>`            | Explicit success                              |
+| `Err(error)`                        | `Err<E>`           | Explicit failure                              |
+| `Result(value)`                     | `Result<T, E>`     | Auto-detect — `Error` instances → `Err`       |
+| `Result.from(fn)`                   | `Result<T, never>` | Lift infallible function (throws → propagate) |
+| `Result.fromFallible(fn, errMapFn)` | `Result<T, E>`     | Lift fallible function (throws → `Err`)       |
+| `Ok.empty()`                        | `Ok<Empty>`        | Signal success without a value                |
+| `Err.empty()`                       | `Err<Empty>`       | Signal failure without details                |
 
 ```typescript ignore
 // Auto-detection for union types
@@ -235,17 +252,17 @@ Result(value); // Ok<string> or Err<TypeError> based on runtime type
 // Lift sync functions
 const safeDivide = Result.fromFallible(
   riskyDivision,
-  (e) => new MathError("Division failed", { cause: e })
+  (e) => new MathError("Division failed", { cause: e }),
 );
 ```
 
 #### Composability Helpers
 
-| Helper | Purpose |
-|--------|---------|
-| `Result.lift(fn, ctor?)` | Wrap function to return `Result` (panics propagate) |
-| `Result.liftFallible(fn, errMapFn, ctor?)` | Wrap function, map exceptions to `Err<E>` |
-| `asInfallible` | Error mapper that re-throws — marks function as "should never fail" |
+| Helper                                     | Purpose                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------- |
+| `Result.lift(fn, ctor?)`                   | Wrap function to return `Result` (panics propagate)                 |
+| `Result.liftFallible(fn, errMapFn, ctor?)` | Wrap function, map exceptions to `Err<E>`                           |
+| `asInfallible`                             | Error mapper that re-throws — marks function as "should never fail" |
 
 ```typescript ignore
 // Integrate a library function that throws
@@ -253,33 +270,35 @@ import * as semver from "semver";
 
 const tryParse = Result.liftFallible(
   semver.parse,
-  (e) => new TypeError("Invalid semver", { cause: e })
+  (e) => new TypeError("Invalid semver", { cause: e }),
 );
 
 Ok("1.2.3").andThen(tryParse); // Ok<SemVer>
-Ok("bad").andThen(tryParse);   // Err<TypeError>
+Ok("bad").andThen(tryParse); // Err<TypeError>
 
 // Mark a function as infallible (will throw if it actually fails)
 const mustParse = Result.fromFallible(
   () => JSON.parse(trustedInput),
-  asInfallible // "I promise this won't throw"
+  asInfallible, // "I promise this won't throw"
 );
 ```
 
 #### Collection Helpers (`Results` namespace)
 
-| Helper | Returns | Behavior |
-|--------|---------|----------|
+| Helper                 | Returns          | Behavior                                         |
+| ---------------------- | ---------------- | ------------------------------------------------ |
 | `Results.all(results)` | `Result<T[], E>` | All `Ok` → `Ok<T[]>`, first `Err` short-circuits |
-| `Results.any(results)` | `Result<T, E[]>` | First `Ok` found, or all `Err`s collected |
+| `Results.any(results)` | `Result<T, E[]>` | First `Ok` found, or all `Err`s collected        |
 
 ```typescript ignore
 // Validate multiple fields, fail on first error. Supports tuples!
-const validated = Results.all([
-  validateName(input.name),
-  validateEmail(input.email),
-  validateAge(input.age),
-] as const);
+const validated = Results.all(
+  [
+    validateName(input.name),
+    validateEmail(input.email),
+    validateAge(input.age),
+  ] as const,
+);
 // Result<[string, string, number], ValidationError>
 
 // Try multiple strategies, succeed on first
@@ -297,22 +316,22 @@ const config = Results.any([
 
 #### Constructors
 
-| Constructor | Returns | Use When |
-|-------------|---------|----------|
-| `Task.succeed(value)` | `Task<T, never>` | Immediate success |
-| `Task.fail(error)` | `Task<never, E>` | Immediate failure |
-| `Task.of(result)` | `Task<T, E>` | From `Result<T,E>` or `Promise<Result<T,E>>` |
-| `Task.from(fn)` | `Task<T, E>` | From function returning `Result` or `Promise<Result>` |
-| `Task.fromPromise(promise, errMapFn)` | `Task<T, E>` | From `Promise<T>`, map rejections to `Err` |
-| `Task.fromFallible(fn, errMapFn)` | `Task<T, E>` | From async function that might throw |
-| `Task.deferred()` | `DeferredTask<T, E>` | For push-based APIs (callbacks, events) |
+| Constructor                           | Returns              | Use When                                              |
+| ------------------------------------- | -------------------- | ----------------------------------------------------- |
+| `Task.succeed(value)`                 | `Task<T, never>`     | Immediate success                                     |
+| `Task.fail(error)`                    | `Task<never, E>`     | Immediate failure                                     |
+| `Task.of(result)`                     | `Task<T, E>`         | From `Result<T,E>` or `Promise<Result<T,E>>`          |
+| `Task.from(fn)`                       | `Task<T, E>`         | From function returning `Result` or `Promise<Result>` |
+| `Task.fromPromise(promise, errMapFn)` | `Task<T, E>`         | From `Promise<T>`, map rejections to `Err`            |
+| `Task.fromFallible(fn, errMapFn)`     | `Task<T, E>`         | From async function that might throw                  |
+| `Task.deferred()`                     | `DeferredTask<T, E>` | For push-based APIs (callbacks, events)               |
 
 ```typescript ignore
 // Wrap fetch with proper error handling
 const fetchJson = <T>(url: string): Task<T, FetchError> =>
   Task.fromPromise(
-    fetch(url).then(r => r.json()),
-    (e) => new FetchError(url, { cause: e })
+    fetch(url).then((r) => r.json()),
+    (e) => new FetchError(url, { cause: e }),
   );
 
 // Deferred task for callback or push based APIs
@@ -324,8 +343,8 @@ await task; // Resolves when either callback fires
 
 #### Composability Helpers
 
-| Helper | Purpose |
-|--------|---------|
+| Helper                                   | Purpose                                         |
+| ---------------------------------------- | ----------------------------------------------- |
 | `Task.liftFallible(fn, errMapFn, ctor?)` | Wrap async function, map exceptions to `Err<E>` |
 
 ```typescript ignore
@@ -336,39 +355,43 @@ const tryFetch = Task.liftFallible(
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
-  (e) => new ApiError("Request failed", { cause: e })
+  (e) => new ApiError("Request failed", { cause: e }),
 );
 
 // Use in pipelines
 Task.succeed("/api/users")
   .andThen(tryFetch)
-  .map(users => users.filter(u => u.active))
+  .map((users) => users.filter((u) => u.active))
   .inspectErr(console.error);
 ```
 
 #### Collection Helpers (`Tasks` namespace)
 
-| Helper | Returns | Behavior |
-|--------|---------|----------|
+| Helper             | Returns        | Behavior                                              |
+| ------------------ | -------------- | ----------------------------------------------------- |
 | `Tasks.all(tasks)` | `Task<T[], E>` | All succeed → `Ok<T[]>`, first failure short-circuits |
-| `Tasks.any(tasks)` | `Task<T, E[]>` | First success, or all failures collected |
+| `Tasks.any(tasks)` | `Task<T, E[]>` | First success, or all failures collected              |
 
 ```typescript ignore
 // These work for all iterables
 // Parallel fetch with combined results
-const allData = await Tasks.all([
-  fetchUsers(),
-  fetchProducts(),
-  fetchOrders(),
-] as const);
+const allData = await Tasks.all(
+  [
+    fetchUsers(),
+    fetchProducts(),
+    fetchOrders(),
+  ] as const,
+);
 // Result<[User[], Product[], Order[]], ApiError>
 
 // Race multiple sources
-const fastestResponse = await Tasks.any([
-  fetchFromPrimary(),
-  fetchFromReplica(),
-  fetchFromCache(),
-] as const);
+const fastestResponse = await Tasks.any(
+  [
+    fetchFromPrimary(),
+    fetchFromReplica(),
+    fetchFromCache(),
+  ] as const,
+);
 // Result<Data, [PrimaryError, ReplicaError, CacheError]>
 ```
 
@@ -382,11 +405,11 @@ Build pipelines where success flows forward and errors short-circuit:
 
 ```typescript ignore
 function processOrder(orderId: string): Task<Receipt, OrderError> {
-  return getOrder(orderId)           // Task<Order, NotFoundError>
-    .andThen(validateOrder)          // Task<Order, ValidationError>
-    .andThen(processPayment)         // Task<Payment, PaymentError>
-    .andThen(generateReceipt)        // Task<Receipt, ReceiptError>
-    .inspectErr(logError);           // Log any error transparently
+  return getOrder(orderId) // Task<Order, NotFoundError>
+    .andThen(validateOrder) // Task<Order, ValidationError>
+    .andThen(processPayment) // Task<Payment, PaymentError>
+    .andThen(generateReceipt) // Task<Receipt, ReceiptError>
+    .inspectErr(logError); // Log any error transparently
 }
 ```
 
@@ -397,9 +420,9 @@ Validate without consuming the value:
 ```typescript ignore
 function saveFile(path: string): Result<void, Error> {
   return Ok(path)
-    .andEnsure(validatePath)    // Validate, but keep original path
+    .andEnsure(validatePath) // Validate, but keep original path
     .andEnsure(checkPermissions) // Check permissions, keep path
-    .andThen(writeFile);         // Finally use the path
+    .andThen(writeFile); // Finally use the path
 }
 ```
 
@@ -407,9 +430,11 @@ function saveFile(path: string): Result<void, Error> {
 
 ## Best Practices
 
-1. **Computations, not data** — Use these abstractions for operation results, not data models
+1. **Computations, not data** — Use these abstractions for operation results,
+   not data models
 2. **Embrace immutability** — Don't mutate wrapped values
-3. **Unwrap at the edges** — Keep Result/Task types in your domain logic; unwrap at API boundaries
+3. **Unwrap at the edges** — Keep Result/Task types in your domain logic; unwrap
+   at API boundaries
 4. **Some errors are fatal** — It's okay to throw for truly unrecoverable states
 5. **Lift external code** — Use `liftFallible` to integrate libraries cleanly
 
@@ -417,22 +442,24 @@ function saveFile(path: string): Result<void, Error> {
 
 ## Performance
 
-These abstractions have **virtually no overhead** compared to traditional exception handling. In benchmarks, the linear return path often performs slightly better than nested try/catch blocks:
+These abstractions have **virtually no overhead** compared to traditional
+exception handling. In benchmarks, the linear return path often performs
+slightly better than nested try/catch blocks:
 
 ```
 Synchronous:  Result flow ~1.3x faster than exceptions
 Asynchronous: Task flow   ~1.0x (equivalent performance)
 ```
 
-Your mileage will vary though.
-Run benchmarks yourself: `deno bench`
+Your mileage will vary though. Run benchmarks yourself: `deno bench`
 
 ---
 
 ## Attribution
 
-**aetherway** is a fork of [eitherway](https://github.com/realpha/eitherway), originally created by [realpha](https://github.com/realpha) (0xrealpha@proton.me).
-
+**aetherway** is a fork of [eitherway](https://github.com/realpha/eitherway),
+originally created by [realpha](https://github.com/realpha)
+(0xrealpha@proton.me).
 
 ### License
 
