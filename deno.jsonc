@@ -8,5 +8,11 @@
     "test:ci": "deno test -A --doc --coverage=./cov",
     "test:cov": "deno test -A --coverage=./cov",
     "test": "deno test -A --doc"
+  },
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.42.3", //dev
+    "@std/assert": "jsr:@std/assert@^1.0.18", //dev
+    "@std/semver": "jsr:@std/semver@^1.0.8", //dev
+    "@std/testing": "jsr:@std/testing@^1.0.17" //dev
   }
 }
