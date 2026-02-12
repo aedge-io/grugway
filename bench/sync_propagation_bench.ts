@@ -1,5 +1,5 @@
 //deno-lint-ignore-file
-import { Err } from "../lib/core/mod.ts";
+import { Err } from "../lib/core/result.ts";
 
 Deno.bench({
   name: "Sync Exception Propagation",

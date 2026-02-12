@@ -57,7 +57,9 @@ export type NonReadonly<T> = T extends Readonly<infer U> ? U : T;
  * @example
  * ```typescript
  * import { assert } from "./assert.ts";
- * import { Empty, Ok, Option, Result, Some } from "./mod.ts";
+ * import { Option, Some } from "./option.ts";
+ * import { Ok, Result } from "./result.ts";
+ * import type { Empty } from "./type_utils.ts";
  *
  * const voidResult: Result<void, never> = Ok(undefined);
  * const emptyResult: Result<Empty, never> = Ok.empty();

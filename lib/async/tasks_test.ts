@@ -6,8 +6,9 @@ import type {
   InferredSuccessType,
   InferredSuccessUnion,
 } from "./tasks.ts";
-import { Task, Tasks } from "./mod.ts";
-import { Err, Ok } from "../core/mod.ts";
+import * as Tasks from "./tasks.ts";
+import { Task } from "./task.ts";
+import { Err, Ok } from "../core/result.ts";
 import {
   assertEquals,
   assertStrictEquals,
@@ -17,7 +18,7 @@ import type { IsExact } from "../../dev_deps.ts";
 
 Deno.test("eitherway::Task::InferredTypes", async (t) => {
   await t.step(
-    "InferredSuccessType<P> -> inferres encapsulated type <T> correctly",
+    "InferredSuccessType<P> -> infers encapsulated type <T> correctly",
     () => {
       const task = Task.succeed("str");
 
@@ -26,7 +27,7 @@ Deno.test("eitherway::Task::InferredTypes", async (t) => {
   );
 
   await t.step(
-    "InferredFailureType<P> -> inferres encapsulated type <E> correctly",
+    "InferredFailureType<P> -> infers encapsulated type <E> correctly",
     () => {
       const task = Task.fail(TypeError("This is the one"));
 

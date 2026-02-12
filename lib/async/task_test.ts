@@ -1,12 +1,12 @@
 //deno-lint-ignore-file require-await
-import { asInfallible, Err, Ok, Result } from "../core/mod.ts";
+import { asInfallible, Err, Ok, Result } from "../core/result.ts";
 import { Task } from "./task.ts";
 import {
   assertInstanceOf,
   assertStrictEquals,
   assertType,
 } from "../../dev_deps.ts";
-import type { Empty } from "../core/mod.ts";
+import type { Empty } from "../core/type_utils.ts";
 import type { IsExact } from "../../dev_deps.ts";
 
 Deno.test("eitherway::Task", async (t) => {
@@ -616,13 +616,13 @@ Deno.test("eitherway::Task", async (t) => {
       await t.step(".toString() -> returns the full string tag", () => {
         const tag = Task.succeed(42).toString();
 
-        assertStrictEquals(tag, "[object eitherway::Task]");
+        assertStrictEquals(tag, "[object aetherway.Task]");
       });
 
       await t.step("[Symbol.toStringTag] -> returns the FQN", () => {
         const fqn = Task.succeed(42)[Symbol.toStringTag];
 
-        assertStrictEquals(fqn, "eitherway::Task");
+        assertStrictEquals(fqn, "aetherway.Task");
       });
 
       await t.step(

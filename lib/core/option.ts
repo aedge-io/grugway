@@ -3,12 +3,12 @@
  * NOTE: the "no-unused-vars" lint rule is ignored in order to ensure
  * method parameter names are symetrical
  */
-import { assert } from "./assert.ts";
 import type {
   Empty,
   Infallible,
   JsonRepr,
   NonNullish,
+  Nullish,
   StringRepr,
   Truthy,
   ValueRepr,
@@ -37,7 +37,7 @@ export interface IOption<T> {
   /**
    * Type predicate - use this to narrow an `Option<T>` to `Some<T>`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -62,7 +62,7 @@ export interface IOption<T> {
   /**
    * Type predicate - use this to narrow an `Option<T>` to `None`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -93,7 +93,7 @@ export interface IOption<T> {
    * Mainly useful for flattening types of `Option<Option<T>>` togehter
    * with `.andThen()`,
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -131,7 +131,7 @@ export interface IOption<T> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -171,7 +171,7 @@ export interface IOption<T> {
    *
    * In case of `None`, this method short-circuits and returns `None`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -196,7 +196,7 @@ export interface IOption<T> {
    * Same as `.map()`, but in case of `None`, a new instance of `Some` wrapping
    * the provided `orValue` of type `<U>` will be returned
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -228,7 +228,7 @@ export interface IOption<T> {
    *
    * Use this if the fallback value is expensive to produce
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -261,7 +261,7 @@ export interface IOption<T> {
    *
    * In case of `None`, this method short-circuits and returns `None`
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -293,7 +293,7 @@ export interface IOption<T> {
    * functional idioms, thus it can be used to flatten instances of
    * `Option<Option<T>>` to `Option<T>`
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -341,7 +341,7 @@ export interface IOption<T> {
    * Use this if you want to recover from `None` or lazily initialize a
    * fallback `Option<U>` in case of `None`
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -379,7 +379,7 @@ export interface IOption<T> {
    * In contrast to other implementations, this method NEVER throws an
    * exception
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -416,7 +416,7 @@ export interface IOption<T> {
    * Returns the wrapped value of type `<T>` or returns a fallback value of
    * type `<U>` in case of `None`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -442,7 +442,7 @@ export interface IOption<T> {
    *
    * Use this if the fallback value is expensive to produce
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -464,7 +464,7 @@ export interface IOption<T> {
    * Use this to transform an `Option<T>` into a Result<T, E> by providing
    * a possible Error value in case of `None`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -488,7 +488,7 @@ export interface IOption<T> {
    *
    * This is mostly useful if the Error value is expensive to produce
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -514,7 +514,7 @@ export interface IOption<T> {
    *
    * This is mostly useful for shoving an `Option<T>` into an async context.
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -542,7 +542,7 @@ export interface IOption<T> {
    * |  LHS: Some<T> | Some<[T, U]> |     None    |
    * |  LHS:  None   |     None     |     None    |
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -592,7 +592,7 @@ export interface IOption<T> {
    * Can be used to perform synchronous side-effects which can derail the
    * current `Option<T>`
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```
@@ -646,7 +646,7 @@ export interface IOption<T> {
    * |  LHS: Some<T>  |    Some<U>   |     None    |
    * |  LHS:  None    |      None    |     None    |
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -721,7 +721,7 @@ export interface IOption<T> {
    * |  LHS: Some<T>  |    Some<T>   |   Some<T>   |
    * |  LHS:  None    |    Some<U>   |    None     |
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -748,7 +748,7 @@ export interface IOption<T> {
    * |  LHS: Some<T>  |     None     |    Some<T>  |
    * |  LHS:  None    |    Some<U>   |     None    |
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -806,7 +806,7 @@ export interface IOption<T> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -850,7 +850,7 @@ export interface IOption<T> {
    *
    * Short-curcuits in case of `None'
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -876,7 +876,7 @@ export interface IOption<T> {
    * Use this to get the full string tag
    * Short-hand for `Object.prototype.toString.call(option)`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -886,8 +886,8 @@ export interface IOption<T> {
    * const someTag = Some("thing").toTag();
    * const noneTag = None.toTag();
    *
-   * assert(someTag === "[object eitherway::Option::Some<thing>]");
-   * assert(noneTag === "[object eitherway::Option::None]");
+   * assert(someTag === "[object aetherway.Option.Some<thing>]");
+   * assert(noneTag === "[object aetherway.Option.None]");
    * ```
    */
   toTag(): string;
@@ -900,7 +900,7 @@ export interface IOption<T> {
    *
    * See the [`reference`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description)
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -928,7 +928,7 @@ export interface IOption<T> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -959,7 +959,7 @@ export interface IOption<T> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf)
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -986,7 +986,7 @@ export interface IOption<T> {
    *
    * In case of `None`, an empty iterator is returned
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -1027,7 +1027,7 @@ export interface IOption<T> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator)
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -1079,7 +1079,7 @@ export interface IOption<T> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#primitive_coercion)
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    */
   [Symbol.toPrimitive](hint?: string): string | number | boolean | symbol;
 
@@ -1093,7 +1093,7 @@ export interface IOption<T> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag)
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -1106,12 +1106,12 @@ export interface IOption<T> {
    *
    * const toString = Object.prototype.toString;
    *
-   * assert(toString.call(rec) === "[object eitherway::Option::Some<[object Object]>]");
-   * assert(toString.call(str) === "[object eitherway::Option::Some<abc>]");
-   * assert(toString.call(none) === "[object eitherway::Option::None]");
-   * assert(toString.call(Option) === "[object eitherway::Option]");
-   * assert(toString.call(Some) === "[object eitherway::Option::Some]");
-   * assert(toString.call(None) === "[object eitherway::Option::None]");
+   * assert(toString.call(rec) === "[object aetherway.Option.Some<[object Object]>]");
+   * assert(toString.call(str) === "[object aetherway.Option.Some<abc>]");
+   * assert(toString.call(none) === "[object aetherway.Option.None]");
+   * assert(toString.call(Option) === "[object aetherway.Option]");
+   * assert(toString.call(Some) === "[object aetherway.Option.Some]");
+   * assert(toString.call(None) === "[object aetherway.Option.None]");
    * ```
    */
   [Symbol.toStringTag]: string;
@@ -1235,7 +1235,7 @@ class _None<T = never> implements IOption<never> {
     return false;
   }
   get [Symbol.toStringTag]() {
-    return "eitherway::Option::None";
+    return "aetherway.Option.None";
   }
 }
 
@@ -1256,7 +1256,7 @@ class _Some<T> implements IOption<T> {
     return this;
   }
   clone(): Some<T> {
-    return Some(structuredClone(this.#value));
+    return Some(structuredClone(this.#value as Exclude<T, Nullish>));
   }
   map<U>(mapFn: (arg: T) => NonNullish<U>): Some<NonNullish<U>> {
     return Some(mapFn(this.#value));
@@ -1382,7 +1382,7 @@ class _Some<T> implements IOption<T> {
     const innerTag = typeof this.#value === "object"
       ? Object.prototype.toString.call(this.#value)
       : String(this.#value);
-    return `eitherway::Option::Some<${innerTag}>`;
+    return `aetherway.Option.Some<${innerTag}>`;
   }
 }
 
@@ -1436,7 +1436,7 @@ class _Some<T> implements IOption<T> {
  * assert(some.unwrap() === str);
  * assert(String(some) === str);
  * assert(arr.join("") === str);
- * assert(JSON.stringify(some) === JSON.stringify({ some: "thing" }));
+ * assert(JSON.stringify(rec) === JSON.stringify({ some: "thing" }));
  * ```
  */
 export type Some<T> = _Some<T>;
@@ -1454,7 +1454,7 @@ export namespace Some {
    * to signal a successful operation would evaluate to `None`, if
    * converted into an `Option<T>`
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -1483,7 +1483,7 @@ Object.defineProperty(Some, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Some, Symbol.toStringTag, {
-  value: "eitherway::Option::Some",
+  value: "aetherway.Option.Some",
 });
 
 /**
@@ -1491,7 +1491,7 @@ Object.defineProperty(Some, Symbol.toStringTag, {
  * `None` represents the absence of a value and is the opinionated, composable
  * equivalent of `undefined`.
  *
- * It support [coercion to the falsy representation of primitive types](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#primitive_coercion)
+ * It supports [coercion to the falsy representation of primitive types](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#primitive_coercion)
  * Furthermore, it implements the iterator protocol and returns `undefined`
  * when it gets JSON encoded via JSON.stringify()
  *
@@ -1510,8 +1510,7 @@ Object.defineProperty(Some, Symbol.toStringTag, {
  *
  * const encode = JSON.stringify;
  *
- * //TS Bug: https://github.com/microsoft/TypeScript/issues/39064
- * assert(none instanceof (None as any) === true);
+ * assert(none instanceof Option === true);
  * assert(none.isNone() === true);
  * assert(none.isSome() === false);
  * assert(none.unwrap() === undefined);
@@ -1531,7 +1530,7 @@ Object.defineProperty(None, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(None, Symbol.toStringTag, {
-  value: "eitherway::Option::None",
+  value: "aetherway.Option.None",
 });
 Object.freeze(None);
 
@@ -1545,14 +1544,7 @@ Object.freeze(None);
  *
  * Not only is it useful for representing a value OR the absence of it,
  * but also representing a value and communicating a certain fact
- * about it. As in the following example:
- *
- * ```typescript
- * import { Option } from "./option.ts";
- *
- * type Prime = number;
- * declare function toPrime(n: number): Option<Prime>;
- * ```
+ * about it.
  *
  * Furthermore, it's important to note that the encapsulated vaule must not
  * be nullish
@@ -1587,17 +1579,13 @@ export type Option<T> = Some<T> | None;
 export function Option<T>(value: T): Option<NonNullish<T>> {
   return isNotNullish(value) ? Some(value) : None;
 }
-/**
- * Unfortunately TypeScript still doesn't support ECMA standard symbol for type narrowing
- * https://github.com/microsoft/TypeScript/issues/39064
- */
 Object.defineProperty(Option, Symbol.hasInstance, {
   value: (lhs: unknown): lhs is Option<unknown> => {
     return lhs instanceof _Some || lhs instanceof _None;
   },
 });
 Object.defineProperty(Option, Symbol.toStringTag, {
-  value: "eitherway::Option",
+  value: "aetherway.Option",
 });
 
 //deno-lint-ignore no-namespace
@@ -1605,7 +1593,7 @@ export namespace Option {
   /**
    * Alias for Option()
    *
-   * @category Option::Basic
+   * @category Option#Basic
    *
    * @example
    * ```typescript
@@ -1633,7 +1621,7 @@ export namespace Option {
    *
    * Behaves like Option.from() but also returns None for instances of Error
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -1667,7 +1655,7 @@ export namespace Option {
    * Behaves like Option.from() but returns None for falsy values
    * This is also reflected in the return type in case of unions
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -1676,7 +1664,7 @@ export namespace Option {
    *
    * type Bit = 1 | 0;
    * type Maybe = "thing" | "";
-   * const str = "" as Maybe;
+   * const str = "thing" as Maybe;
    * const bit = 0 as Bit;
    *
    * const some: Option<"thing"> = Option.fromCoercible(str);
@@ -1710,7 +1698,7 @@ export namespace Option {
    *
    * See [`Applicative`](https://en.wikipedia.org/wiki/Applicative_functor)
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -1758,7 +1746,7 @@ export namespace Option {
    * Use this to return the provided instance of `Option<T>`
    * Mostly usefull for flattening or en lieu of a no-op
    *
-   * @category Option::Basic
+   * @category Option#Basic
    */
   export function id<T>(
     opt: Readonly<Option<T>> | Option<T>,
@@ -1780,7 +1768,7 @@ export namespace Option {
    * Furthermore, it allows for composing functions with custom `Option`
    * constructors to preserve certain invariants
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -1852,7 +1840,7 @@ export namespace Option {
    * Use this if the function to be lifted might throw. In case of an
    * exception, `None` is returned.
    *
-   * @category Option::Advanced
+   * @category Option#Advanced
    *
    * @example
    * ```typescript
@@ -1902,7 +1890,7 @@ export namespace Options {
   /**
    * Type predicate - use this to check if all values in an array are `Some<T>`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    */
   export function areSome<T>(
     opts: ReadonlyArray<Option<T>>,
@@ -1913,7 +1901,7 @@ export namespace Options {
   /**
    * Type predicate - use this to check if all values in an array are `None`
    *
-   * @category Option::Basic
+   * @category Option#Basic
    */
   export function areNone<T>(
     opts: ReadonlyArray<Option<T>>,
@@ -1931,7 +1919,7 @@ export namespace Options {
    * This function retains type constraints like `readonly` on the input array
    * or tuple and is able to infer variadic tuples
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -1990,7 +1978,7 @@ export namespace Options {
    *
    * If no item is `Some<T>` or the input array is empty, `None` is returned
    *
-   * @category Option::Intermediate
+   * @category Option#Intermediate
    *
    * @example
    * ```typescript
@@ -2044,7 +2032,7 @@ export namespace Options {
 /**
  * Use this to infer the encapsulated `<T>` type from a `Some<T>`
  *
- * @category Option::Basic
+ * @category Option#Basic
  */
 export type InferredSomeType<O extends Readonly<Option<unknown>>> = O extends
   Readonly<Some<infer T>> ? T : never;
@@ -2052,7 +2040,7 @@ export type InferredSomeType<O extends Readonly<Option<unknown>>> = O extends
 /**
  * Use this to infer an `Option<T>` type
  *
- * @categroy OPtion::Basic
+ * @categroy Option#Basic
  */
 //deno-lint-ignore no-explicit-any
 export type InferredOptionType<O extends Readonly<Option<any>>> = O extends
@@ -2064,7 +2052,7 @@ export type InferredOptionType<O extends Readonly<Option<any>>> = O extends
 /**
  * Use this to infer the encapsulated `Some<T>` types from a tuple of `Option<T>`
  *
- * @category Option::Intermediate
+ * @category Option#Intermediate
  */
 export type InferredSomeTuple<
   Opts extends Readonly<ArrayLike<Option<unknown>>>,
@@ -2075,7 +2063,7 @@ export type InferredSomeTuple<
 /**
  * Use this to infer a union of all `Some<T>` types from a tuple of `Option<T>`
  *
- * @category Option::Intermediate
+ * @category Option#Intermediate
  */
 export type InferredSomeUnion<
   Opts extends Readonly<ArrayLike<Option<unknown>>>,

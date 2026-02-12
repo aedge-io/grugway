@@ -1,7 +1,7 @@
 import { Panic } from "./errors.ts";
 // Slightly modified from the Deno standard library https://github.com/denoland/deno_std/blob/main/assert/assert.ts
 export class AssertionError extends TypeError {
-  name = "AssertionError";
+  override name = "AssertionError";
   constructor(message: string, options?: { cause?: unknown }) {
     super(message, options);
   }

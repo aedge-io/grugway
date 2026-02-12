@@ -17,7 +17,7 @@ Deno.test("eitherway::core::errors", async (t) => {
       assertInstanceOf(pnc, Error);
       assertInstanceOf(pnc, Panic);
       assertStrictEquals(pnc.constructor, Panic);
-      assertStrictEquals(pnc.name, "eitherway::Panic");
+      assertStrictEquals(pnc.name, "aetherway.Panic");
       assertStrictEquals(pnc.message, "Runtime exception");
       assertStrictEquals(pnc.cause, cause);
     });
@@ -29,7 +29,7 @@ Deno.test("eitherway::core::errors", async (t) => {
       assertInstanceOf(pnc, Error);
       assertInstanceOf(pnc, Panic);
       assertStrictEquals(pnc.constructor, Panic);
-      assertStrictEquals(pnc.name, "eitherway::Panic");
+      assertStrictEquals(pnc.name, "aetherway.Panic");
       assertStrictEquals(pnc.message, "Runtime exception");
       assertStrictEquals(pnc.cause, cause);
     });

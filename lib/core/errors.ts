@@ -5,8 +5,8 @@
  * @category Core::Errors
  */
 export class Panic<E> extends Error {
-  name = "eitherway::Panic";
-  readonly cause?: E;
+  override name = "aetherway.Panic";
+  override readonly cause?: E;
   constructor(cause?: E, msg?: string) {
     super(msg, { cause });
     this.cause = cause;
@@ -34,8 +34,9 @@ export class Panic<E> extends Error {
  *
  * @example
  * ```typescript
- * import { Result, Option } from "https://deno.land/x/eitherway/mod.ts";
- * import { panic } from "./mod.ts"
+ * import { Result } from "./result.ts";
+ * import { Option } from "./option.ts";
+ * import { panic } from "./errors.ts";
  *
  * function parseHex(hex: string): Result<number, TypeError> {
  *   const candidate = Number.parseInt(hex, 16);
@@ -76,8 +77,8 @@ export function isEitherwayPanic(err: unknown): err is Panic<unknown> {
  *
  * @example Lifting a fallible function
  * ```typescript
- * import { Result } from "https://deno.land/x/eitherway/mod.ts";
- * import { unsafeCastTo } from "./mod.ts";
+ * import { Result } from "./result.ts";
+ * import { unsafeCastTo } from "./errors.ts";
  *
  * function parseHex(hex: string): number {
  *   const candidate = Number.parseInt(hex, 16);

@@ -1,7 +1,7 @@
 //deno-lint-ignore-file
-import { Option, Result } from "../lib/core/mod.ts";
+import { Option } from "../lib/core/option.ts";
+import { Result } from "../lib/core/result.ts";
 import { Task } from "../lib/async/task.ts";
-import * as TaskOps from "../lib/async/operators.ts";
 
 const INPUTS = [
   "casio",
@@ -24,16 +24,6 @@ Deno.bench({
         await AsyncExceptions.processString(i);
       } catch (e) {
       }
-    }
-  },
-});
-
-Deno.bench({
-  name: "Task Operator Composition",
-  group: "Async::Composition",
-  fn: async () => {
-    for (const i of INPUTS) {
-      await TaskFlows.operatorComposition(i);
     }
   },
 });
@@ -146,14 +136,6 @@ namespace TaskFlows {
     return toUpperCase(input)
       .andThen(stringToLength)
       .andThen(powerOfSelf);
-  }
-
-  export async function operatorComposition(
-    input: string | undefined,
-  ): Promise<Result<number, TypeError>> {
-    return toUpperCase(input)
-      .then(TaskOps.andThen(stringToLength))
-      .then(TaskOps.andThen(powerOfSelf));
   }
 
   export async function earlyReturn(

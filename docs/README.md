@@ -82,7 +82,7 @@ productivity by focusing on the following goals:
 ## `eitherway` in Action
 
 ```typescript
-import { Option, Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+import { Option, Result, Task } from "../lib/mod.ts";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -137,7 +137,7 @@ async function main(): Promise<Result<number, TypeError>> {
   return Task.of(result); // You can return Task<T, E> as Promise<Result<T, E>>
 }
 
-main()
+await main()
   .then((result) => {
     result // Result<number, TypeError>
       .inspect(console.log)
@@ -192,12 +192,6 @@ import {
 import { Err, None, Ok, Option, Result, Some, Task } from "npm:eitherway";
 ```
 
-`cjs`:
-
-```javascript
-const { Err, Ok, Option, None, Result, Some, Task } = require("eitherway");
-```
-
 ## API
 
 ### Overview
@@ -225,7 +219,7 @@ with most parts already. A couple of things are handled differently though:
   or `unchecked` variants for methods like `.unwrap()`.
 
 ```typescript
-import { Ok, Option, Result } from "https://deno.land/x/eitherway/mod.ts";
+import { Ok, Option, Result } from "../lib/mod.ts";
 
 const opt: Option<string> = Option("foo");
 const res: Result<number, TypeError> = Ok(1);
@@ -331,8 +325,8 @@ Some notable additions, which you may have been missing in other libraries:
    They really reduce noise and speed up integrating external code a lot.
 
 ```typescript
-import { Option, Result } from "https://deno.land/x/eitherway/mod.ts";
-import * as semver from "https://deno.land/std@0.206.0/semver/mod.ts";
+import { Option, Result } from "../lib/mod.ts";
+import * as semver from "jsr:@std/semver";
 
 const noInputProvidedError = Error("No input provided");
 const toParseError = (e: unknown) =>
@@ -362,7 +356,7 @@ code which is often even more pleasant to read.
 
 Synchronous:
 
-```typescript
+```typescript ignore
 /* Classic exception style */
 
 declare function toUpperCase(input: string | undefined): string;
@@ -384,10 +378,10 @@ function processString(input: string | undefined): number {
 }
 ```
 
-```typescript
+```typescript ignore
 /* Equivalent Result flow */
 
-import { Result } from "https://deno.land/x/eitherway/mod.ts";
+import { Result } from "../lib/mod.ts";
 
 declare function toUpperCase(
   input: string | undefined,
@@ -405,7 +399,7 @@ function processString(input: string | undefined): Result<number, TypeError> {
 
 Asynchronous:
 
-```typescript
+```typescript ignore
 /* Classic exception style */
 
 declare function toUpperCase(input: string | undefined): Promise<string>;
@@ -427,10 +421,10 @@ async function processString(input: string | undefined): Promise<number> {
 }
 ```
 
-```typescript
+```typescript ignore
 /* Equivalent Task flow */
 
-import { Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+import { Result, Task } from "../lib/mod.ts";
 
 declare function toUpperCase(
   input: string | undefined,
@@ -579,7 +573,7 @@ Since `Task<T, E>` is a subclass of `Promise<Result<T, E>>`, it's possible to
 return it as such from an async function though or just await it.
 
 ```typescript
-import { Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+import { Result, Task } from "../lib/mod.ts";
 
 async function toTask(str: string): Promise<Result<string, never>> {
   return Task.succeed(str);

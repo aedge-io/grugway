@@ -43,7 +43,7 @@ export interface DeferredTask<T, E> {
  * Furthermore, {@linkcode Tasks} exposes a few functions to ease working
  * with collections (indexed and plain `Iterable`s)
  *
- * @category Task::Basic
+ * @category Task#Basic
  */
 export class Task<T, E> extends Promise<Result<T, E>> {
   private constructor(executor: ExecutorFn<T, E>) {
@@ -59,11 +59,11 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   /**
    * Use this to create a task from a `Result<T, E>` value
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
-   * import { Ok, Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { Ok, Result, Task } from "../mod.ts";
    *
    * async function produceRes(): Promise<Result<number, TypeError>> {
    *  return Ok(42);
@@ -81,11 +81,11 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   /**
    * Use this to create a `Task` which always succeeds with a value `<T>`
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
-   * import { Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { Task } from "./task.ts";
    *
    * const task: Task<number, never> = Task.succeed(42);
    * ```
@@ -97,11 +97,11 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   /**
    * Use this to create a `Task` which always fails with a value `<E>`
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
-   * import { Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { Task } from "./task.ts";
    *
    * const task: Task<never, number> = Task.fail(1);
    * ```
@@ -119,7 +119,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * This is mostly useful when working with push-based APIs
    *
-   * @category Task::Advanced
+   * @category Task#Advanced
    *
    * @example
    * ```typescript
@@ -129,12 +129,15 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * const { task, succeed, fail } = Task.deferred<number, TimeoutError>();
    *
-   * setTimeout(() => succeed(42), Math.random() * 1000);
-   * setTimeout(() => fail(new TimeoutError()), 500);
+   * const t1 = setTimeout(() => succeed(42), Math.random() * 1000);
+   * const t2 = setTimeout(() => fail(new TimeoutError()), 500);
    *
    * await task
    *   .inspect(console.log)
    *   .inspectErr(console.error);
+   *
+   * clearTimeout(t1);
+   * clearTimeout(t2);
    * ```
    */
   static deferred<T, E>(): DeferredTask<T, E> {
@@ -156,11 +159,11 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * Use {@linkcode Task.fromFallible} if this is not the case.
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
-   * import { Ok, Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { Ok, Result, Task } from "../mod.ts";
    *
    * async function produceRes(): Promise<Result<number, TypeError>> {
    *  return Ok(42);
@@ -187,20 +190,20 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * If you are certain(!) that the provided promise will never reject, you can
    * provide the {@linkcode asInfallible} helper from the core module.
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
-   * import { asInfallible, Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { asInfallible, Task } from "../mod.ts";
    *
-   * const willBeString = new Promise<string>((resolve) => {
-   *   setTimeout(() => resolve("42"), 500);
-   * });
+   * const willBeString = Promise.resolve("42");
    *
    * const task: Task<string, never> = Task.fromPromise(
    *   willBeString,
    *   asInfallible,
    * );
+   *
+   * await task;
    * ```
    */
   static fromPromise<T, E>(
@@ -214,11 +217,11 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * Use this to construct a `Task<T, E>` from the return value of a fallible
    * function.
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
-   * import { Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { Task } from "./task.ts";
    *
    * async function rand(): Promise<number> {
    *   throw new TypeError("Oops");
@@ -254,11 +257,11 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * This higher order function is especially useful to intergrate 3rd party
    * code into your `Task` pipelines.
    *
-   * @category Task::Advanced
+   * @category Task#Advanced
    *
    * @example
    * ```
-   * import { Err, Ok, Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { Err, Ok, Result, Task } from "../mod.ts";
    *
    * async function toSpecialString(s: string): Promise<string> {
    *   if (s.length % 3 === 0) return s;
@@ -303,7 +306,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * This is mostly provided for compatibility with with `Result<T, E>`.
    *
-   * @category Task::Basic
+   * @category Task#Basic
    */
   id(): Task<T, E> {
     return this;
@@ -368,15 +371,15 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * |  **LHS: Ok<T>**     |     Ok<T>     |     Err<E2>    |
    * |  **LHS: Err<E>**    |     Err<E>    |     Err<E>     |
    *
-   * @category Task::Advanced
+   * @category Task#Advanced
    *
    * @example
    * ```typescript
    * import { Task } from "./task.ts";
    *
-   * declare function getPath(): Task<string, Error>;
-   * declare function isReadableDir(path: string): Task<void, TypeError>;
-   * declare function getFileExtensions(path: string): Task<string[], Error>;
+   * function getPath(): Task<string, Error> { return Task.succeed("/home")};
+   * function isReadableDir(path: string): Task<void, TypeError> { return Task.succeed(undefined) };
+   * function getFileExtensions(path: string): Task<string[], Error> { return Task.succeed([".ts"])};
    *
    * getPath()
    *   .andEnsure(isReadableDir)
@@ -412,15 +415,15 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * |  **LHS: Ok<T>**    |     Ok<T>     |     Ok<T>      |
    * |  **LHS: Err<E>**   |     Ok<T2>    |     Err<E>     |
    *
-   * @category Task::Advanced
+   * @category Task#Advanced
    *
    * @example
    * ```typescript
    * import { Task } from "./task.ts";
    *
-   * declare function getConfig(): Task<string, RangeError>;
-   * declare function getFallback(err: RangeError): Task<string, Error>;
-   * declare function configureService(path: string): Task<void, TypeError>;
+   * function getConfig(): Task<string, RangeError> { return Task.succeed("secret")};
+   * function getFallback(err: RangeError): Task<string, Error> { return Task.succeed("default")};
+   * function configureService(path: string): Task<void, TypeError> {return Task.succeed(undefined)};
    *
    * getConfig()
    *   .orEnsure(getFallback)
@@ -480,7 +483,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * In contrast to other implementations, this method NEVER throws an
    * exception
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
@@ -504,7 +507,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * Same as {@linkcode Task#unwrap} but returns a default value in case the
    * underlying `Result<T, E>` is an `Err<E>`
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
@@ -528,7 +531,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * Same as {@linkcode Task#unwrap} but returns a fallback value, which can based
    * constructed from the underlying value of type `<E>` in case of `Err<E>`
    *
-   * @category Task::Basic
+   * @category Task#Basic
    *
    * @example
    * ```typescript
@@ -555,12 +558,12 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * In case of failure, this method returns the empty `AsyncIteratorResult`
    *
-   * @category Task::Advanced
+   * @category Task#Advanced
    *
    * @example
    * ```typescript
    * import { assert } from "../core/assert.ts"
-   * import { Err, Ok, Result, Task } from "https://deno.land/x/eitherway/mod.ts";
+   * import { Err, Ok, Result, Task } from "../mod.ts";
    *
    * const success = Task.succeed(42);
    * const failure = Task.fail(Error());
@@ -610,7 +613,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
    *
-   * @category Result::Advanced
+   * @category Task#Advanced
    *
    * @example
    * ```typescript
@@ -619,10 +622,10 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * const tag = Task.succeed(42).toString();
    *
-   * assert(tag === "[object eitherway::Task]");
+   * assert(tag === "[object aetherway.Task]");
    * ```
    */
-  toString(): string {
+  override toString(): string {
     return Object.prototype.toString.call(this);
   }
 
@@ -636,7 +639,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag)
    *
-   * @category Task::Advanced
+   * @category Task#Advanced
    *
    * @example
    * ```typescript
@@ -647,15 +650,15 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * const toString = Object.prototype.toString;
    *
-   * assert(toString.call(task) === "[object eitherway::Task]");
-   * assert(toString.call(Task) === "[object eitherway::Task]");
+   * assert(toString.call(task) === "[object aetherway.Task]");
+   * assert(toString.call(Task) === "[object aetherway.Task]");
    * ```
    */
-  get [Symbol.toStringTag](): string {
-    return "eitherway::Task";
+  override get [Symbol.toStringTag](): string {
+    return "aetherway.Task";
   }
   static get [Symbol.toStringTag](): string {
-    return "eitherway::Task";
+    return "aetherway.Task";
   }
 
   /**
@@ -664,7 +667,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * In all other cases, it yields the empty `AsyncIteratorResult`
    *
-   * @category Task::Advanced
+   * @category Task#Advanced
    */
   async *[Symbol.asyncIterator](): AsyncIterableIterator<
     T extends AsyncIterable<infer U> ? U : never

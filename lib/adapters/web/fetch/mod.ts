@@ -13,13 +13,13 @@ export interface FailedRequestJson {
 }
 
 export class FailedRequest<R extends ResponseLike> extends Error {
-  name = "FailedRequest";
+  override name = "FailedRequest";
   status: number;
   statusText: string;
-  #response: R;
+  response: R;
   constructor(res: R) {
     super(res.statusText);
-    this.#response = res;
+    this.response = res;
     this.status = res.status;
     this.statusText = res.statusText;
   }
@@ -34,10 +34,6 @@ export class FailedRequest<R extends ResponseLike> extends Error {
     );
   }
 
-  getResponse(): R {
-    return this.#response;
-  }
-
   toJSON(): FailedRequestJson {
     return {
       status: this.status,
@@ -47,10 +43,10 @@ export class FailedRequest<R extends ResponseLike> extends Error {
 }
 
 export class FetchException extends Error {
-  name = "FetchException";
-  cause: Error | TypeError;
+  override name = "FetchException";
+  override cause: Error | TypeError;
   constructor(cause: unknown) {
-    super("Fetch paniced - operation aborted.");
+    super("Fetch panicked - operation aborted.");
     this.cause = cause instanceof Error
       ? cause
       : Error("Unknown exception", { cause });
