@@ -4,9 +4,9 @@ import {
   assertNotStrictEquals,
   assertStrictEquals,
   assertThrows,
-  assertType,
-} from "../../dev_deps.ts";
-import type { IsExact } from "../../dev_deps.ts";
+} from "@std/assert";
+import type { IsExact } from "@std/testing/types";
+import { assertType } from "@std/testing/types";
 import { None, Option } from "./option.ts";
 import { Err, Ok, Result, Results } from "./result.ts";
 import type {
@@ -970,7 +970,7 @@ Deno.test("eitherway::Result::Err", async (t) => {
       const res = Err(TypeError()) as Result<number, TypeError>;
 
       if (res.isOk()) {
-        assertType<IsExact<typeof res, Ok<number>>>(true);
+        assertType<IsExact<typeof res, Ok<never> | Ok<number>>>(true);
       }
 
       assertStrictEquals(res.isOk(), false);
@@ -980,7 +980,7 @@ Deno.test("eitherway::Result::Err", async (t) => {
       const res = Err(TypeError()) as Result<number, TypeError>;
 
       if (res.isErr()) {
-        assertType<IsExact<typeof res, Err<TypeError>>>(true);
+        assertType<IsExact<typeof res, Err<never> | Err<TypeError>>>(true);
       }
 
       assertStrictEquals(res.isErr(), true);
@@ -1055,7 +1055,9 @@ Deno.test("eitherway::Result::Err", async (t) => {
 
       const chained = err.andThen(processString);
 
-      assertType<IsExact<typeof chained, Result<number, Error | TypeError>>>(
+      assertType<
+        IsExact<typeof chained, Result<number, TypeError> | Err<Error>>
+      >(
         true,
       );
       assertStrictEquals(chained, err);
@@ -1101,7 +1103,7 @@ Deno.test("eitherway::Result::Err", async (t) => {
 
       const tripped = err.trip(noop);
 
-      assertType<IsExact<typeof tripped, Result<string, Error | TypeError>>>(
+      assertType<IsExact<typeof tripped, Result<string, TypeError | Error>>>(
         true,
       );
       assertStrictEquals(count, 0);
