@@ -368,7 +368,7 @@ Deno.test("eitherway::Result::Ok", async (t) => {
       const res = Ok(42) as Result<number, TypeError>;
 
       if (res.isOk()) {
-        assertType<IsExact<typeof res, Ok<number>>>(true);
+        assertType<IsExact<typeof res, Ok<never> | Ok<number>>>(true);
       }
 
       assertStrictEquals(res.isOk(), true);
@@ -378,7 +378,7 @@ Deno.test("eitherway::Result::Ok", async (t) => {
       const res = Ok(42) as Result<number, TypeError>;
 
       if (res.isErr()) {
-        assertType<IsExact<typeof res, Err<TypeError>>>(true);
+        assertType<IsExact<typeof res, Err<never> | Err<TypeError>>>(true);
       }
 
       assertStrictEquals(res.isErr(), false);
@@ -456,7 +456,9 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
         const chained = ok.andThen(processString);
 
-        assertType<IsExact<typeof chained, Result<number, TypeError | Error>>>(
+        assertType<
+          IsExact<typeof chained, Err<Error> | Result<number, TypeError>>
+        >(
           true,
         );
         assertStrictEquals(chained.isOk(), true);
@@ -469,7 +471,9 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
       const flattened = nested.andThen((res) => res);
 
-      assertType<IsExact<typeof flattened, Result<number, TypeError | Error>>>(
+      assertType<
+        IsExact<typeof flattened, Err<Error> | Result<number, TypeError>>
+      >(
         true,
       );
       assertStrictEquals(flattened.isOk(), true);
@@ -504,7 +508,9 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
         const tripped = ok.trip(checkIfEven);
 
-        assertType<IsExact<typeof tripped, Result<number, Error | TypeError>>>(
+        assertType<
+          IsExact<typeof tripped, Result<number, Error> | Err<TypeError>>
+        >(
           true,
         );
         assertStrictEquals(tripped.isErr(), true);
@@ -524,7 +530,9 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
         const tripped = ok.trip(checkIfEven);
 
-        assertType<IsExact<typeof tripped, Result<number, Error | TypeError>>>(
+        assertType<
+          IsExact<typeof tripped, Result<number, Error> | Err<TypeError>>
+        >(
           true,
         );
         assertStrictEquals(tripped, ok);
@@ -545,7 +553,9 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
         const ensured = ok.andEnsure(checkIfEven);
 
-        assertType<IsExact<typeof ensured, Result<number, Error | TypeError>>>(
+        assertType<
+          IsExact<typeof ensured, Result<number, Error> | Err<TypeError>>
+        >(
           true,
         );
         assertStrictEquals(ensured.isErr(), true);
@@ -565,7 +575,9 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
         const ensured = ok.andEnsure(checkIfEven);
 
-        assertType<IsExact<typeof ensured, Result<number, Error | TypeError>>>(
+        assertType<
+          IsExact<typeof ensured, Result<number, Error> | Err<TypeError>>
+        >(
           true,
         );
         assertStrictEquals(ensured, ok);
@@ -584,7 +596,7 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
       const risen = ok.rise(recover);
 
-      assertType<IsExact<typeof risen, Result<string, Error | TypeError>>>(
+      assertType<IsExact<typeof risen, Result<string, Error>>>(
         true,
       );
       assertStrictEquals(risen, ok);
@@ -604,7 +616,7 @@ Deno.test("eitherway::Result::Ok", async (t) => {
 
         const ensured = ok.orEnsure(recover);
 
-        assertType<IsExact<typeof ensured, Result<string, Error | TypeError>>>(
+        assertType<IsExact<typeof ensured, Result<string, Error>>>(
           true,
         );
         assertStrictEquals(ensured, ok);
@@ -1103,7 +1115,9 @@ Deno.test("eitherway::Result::Err", async (t) => {
 
       const tripped = err.trip(noop);
 
-      assertType<IsExact<typeof tripped, Result<string, TypeError | Error>>>(
+      assertType<
+        IsExact<typeof tripped, Ok<string> | Err<Error> | Err<TypeError>>
+      >(
         true,
       );
       assertStrictEquals(count, 0);
@@ -1123,7 +1137,9 @@ Deno.test("eitherway::Result::Err", async (t) => {
 
         const ensured = err.andEnsure(noop);
 
-        assertType<IsExact<typeof ensured, Result<string, Error | TypeError>>>(
+        assertType<
+          IsExact<typeof ensured, Ok<string> | Err<Error> | Err<TypeError>>
+        >(
           true,
         );
         assertStrictEquals(count, 0);
