@@ -18,6 +18,31 @@ import {
   toFetchResult,
 } from "./mod.ts";
 
+/**
+ * A stub replacement for `fetch` that returns a successful JSON response
+ * without making any network requests. Matches the `fetch` signature.
+ */
+function fetchStub(
+  input: string | URL | Request,
+  init?: RequestInit,
+): Promise<Response> {
+  void init;
+  const url = typeof input === "string"
+    ? input
+    : input instanceof URL
+    ? input.href
+    : input.url;
+
+  // Simulate a user response for the jsonplaceholder URL pattern
+  const userIdMatch = url.match(/\/users\/(\d+)/);
+  if (userIdMatch) {
+    const id = Number(userIdMatch[1]);
+    return Promise.resolve(Response.json({ id }));
+  }
+
+  return Promise.resolve(Response.json({}));
+}
+
 Deno.test("eitherway::adapters::web::fetch", async (t) => {
   await t.step("FailedRequest<R>", async (t) => {
     await t.step(".from() -> produces a new generic instance", () => {
@@ -74,7 +99,10 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
       const exception = FetchException.from(cause);
 
       assertInstanceOf(exception.cause, Error);
-      assertStrictEquals((exception.cause as Error).message, "Unknown exception");
+      assertStrictEquals(
+        (exception.cause as Error).message,
+        "Unknown exception",
+      );
       assertStrictEquals((exception.cause as Error).cause, cause);
       assertStrictEquals(exception.name, "FetchException");
     });
@@ -110,7 +138,10 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
         assertStrictEquals(err.isErr(), true);
         assertInstanceOf(unwrapped, FailedRequest);
         assertStrictEquals((unwrapped as FailedRequest<Response>).status, 0);
-        assertStrictEquals((unwrapped as FailedRequest<Response>).response, errorResponse);
+        assertStrictEquals(
+          (unwrapped as FailedRequest<Response>).response,
+          errorResponse,
+        );
       },
     );
 
@@ -147,14 +178,14 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
       async () => {
         const testUrl = "https://jsonplaceholder.typicode.com/users/1";
 
-        const lifted = liftFetch(fetch);
+        const lifted = liftFetch(fetchStub);
         const result = await lifted(testUrl)
           .trip(() => Task.succeed("Just to test"))
           .inspectErr(console.error)
           .map((response) => response.json());
 
         assertType<
-          IsExact<Parameters<typeof lifted>, Parameters<typeof fetch>>
+          IsExact<Parameters<typeof lifted>, Parameters<typeof fetchStub>>
         >(true);
         assertType<
           IsExact<
@@ -262,9 +293,15 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
         >(true);
         assertStrictEquals(result.isErr(), true);
         assertInstanceOf(result.unwrap(), FetchException);
-        assertStrictEquals((result.unwrap() as FetchException).name, "FetchException");
+        assertStrictEquals(
+          (result.unwrap() as FetchException).name,
+          "FetchException",
+        );
         assertInstanceOf((result.unwrap() as FetchException).cause, Error);
-        assertStrictEquals(((result.unwrap() as FetchException).cause as Error).message, "Network error");
+        assertStrictEquals(
+          ((result.unwrap() as FetchException).cause as Error).message,
+          "Network error",
+        );
       },
     );
 
@@ -278,11 +315,11 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
         }
         const errMapFn = (cause: unknown) => ReferenceError("Dunno", { cause });
 
-        const lifted = liftFetch(fetch, ctor, errMapFn);
+        const lifted = liftFetch(fetchStub, ctor, errMapFn);
         const result = await lifted(testUrl);
 
         assertType<
-          IsExact<Parameters<typeof lifted>, Parameters<typeof fetch>>
+          IsExact<Parameters<typeof lifted>, Parameters<typeof fetchStub>>
         >(true);
         assertType<
           IsExact<
