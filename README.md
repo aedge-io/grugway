@@ -39,29 +39,13 @@ in-context learning. The basic assumptions are:
 
 ### Installation
 
--- WORK IN PROGRESS --
-
-**Deno:**
-
-```typescript ignore
-import {
-  Err,
-  None,
-  Ok,
-  Option,
-  Result,
-  Some,
-  Task,
-} from "https://deno.land/x/aetherway/mod.ts";
-```
-
 **Node.js:**
 
 ```bash
-npm add aetherway
+(bun | deno | (p)npm)  add aetherway
 ```
 
-```typescript ignore
+```typescript
 import { Err, None, Ok, Option, Result, Some, Task } from "aetherway";
 ```
 
@@ -78,16 +62,18 @@ import { Err, None, Ok, Option, Result, Some, Task } from "aetherway";
 
 ### Option — Handling Optional Values
 
-```typescript ignore
+```typescript
 import { None, Option, Some } from "aetherway";
+import { getUserById, id } from "aetherway/examples";
+import type { User } from "aetherway/examples";
 
 // Nullish values become None
 const maybeUser = Option(getUserById(id)); // Option<User>
 
 // Chain operations safely
 const email = maybeUser
-  .filter((user) => user.isActive)
-  .map((user) => user.email)
+  .filter((user: User) => user.isActive)
+  .map((user: User) => user.email)
   .unwrapOr("no-email@example.com");
 
 // Convert to Result for error handling
@@ -97,7 +83,7 @@ const userResult = maybeUser.okOrElse(() => new Error("User not found"));
 ### Result — Explicit Error Handling
 
 ```typescript
-import { Err, Ok, Result } from "./lib/mod.ts";
+import { Err, Ok, Result } from "aetherway";
 
 function divide(a: number, b: number): Result<number, Error> {
   if (b === 0) return Err(new Error("Division by zero"));
@@ -118,18 +104,19 @@ if (result.isOk()) {
 
 ### Task — Async Operations
 
-```typescript ignore
+```typescript
 import { Err, Ok, Task } from "aetherway";
+import { validateName } from "aetherway/examples";
 
 // Create tasks from promises
 const fetchUser = Task.fromPromise(
   fetch("/api/user").then((r) => r.json()),
-  (e) => new Error("Failed to fetch user", { cause: e }),
+  (e: unknown) => new Error("Failed to fetch user", { cause: e }),
 );
 
 // Compose async operations with the same API as Result
 const userName = fetchUser
-  .map((user) => user.name)
+  .map((user: { name: string }) => user.name)
   .andThen(validateName)
   .mapErr((e) => ({ code: "USER_ERROR", message: e.message }));
 
@@ -142,20 +129,20 @@ result.inspect(console.log).inspectErr(console.error);
 
 Integrate third-party libraries without manual wrapping:
 
-```typescript ignore
-import { Result, Task } from "aetherway";
-import * as semver from "semver";
+```typescript
+import { Option, Result, Task } from "aetherway";
+import * as semver from "@std/semver";
 
 // Lift sync functions
 const tryParse = Result.liftFallible(
   semver.parse,
-  (e) => new TypeError("Invalid version", { cause: e }),
+  (e: unknown) => new TypeError("Invalid version", { cause: e }),
 );
 
 // Lift async functions
 const tryFetch = Task.liftFallible(
   (url: string) => fetch(url).then((r) => r.json()),
-  (e) => new Error("Fetch failed", { cause: e }),
+  (e: unknown) => new Error("Fetch failed", { cause: e }),
 );
 
 // Use in pipelines
@@ -186,7 +173,7 @@ different scenarios.
 | `Some.empty()`                | `Some<Empty>` | Signal success without a meaningful value  |
 
 ```typescript
-import { Option } from "./lib/mod.ts";
+import { Option } from "aetherway";
 
 // Choose based on what should be "absent"
 Option(0); // Some(0) — zero is a valid number
@@ -206,7 +193,7 @@ Option.fromFallible(new Error()); // None    — errors mean absence
 | `Option.id(opt)`                 | Identity — useful for flattening `Option<Option<T>>`             |
 
 ```typescript
-import { Option } from "./lib/mod.ts";
+import { Option } from "aetherway";
 
 // Lift a parser that might return undefined
 const parseIntSafe = Option.lift(parseInt, Option.fromCoercible);
@@ -239,20 +226,23 @@ parseJSON("invalid"); // None
 | `Ok(value)`                         | `Ok<T>`            | Explicit success                              |
 | `Err(error)`                        | `Err<E>`           | Explicit failure                              |
 | `Result(value)`                     | `Result<T, E>`     | Auto-detect — `Error` instances → `Err`       |
-| `Result.from(fn)`                   | `Result<T, never>` | Lift infallible function (throws → propagate) |
-| `Result.fromFallible(fn, errMapFn)` | `Result<T, E>`     | Lift fallible function (throws → `Err`)       |
+| `Result.from(fn)`                   | `Result<T, never>` | Get value of infallible function (throws → propagate) |
+| `Result.fromFallible(fn, errMapFn)` | `Result<T, E>`     | Get value of fallible function (throws → `Err`)       |
 | `Ok.empty()`                        | `Ok<Empty>`        | Signal success without a value                |
 | `Err.empty()`                       | `Err<Empty>`       | Signal failure without details                |
 
-```typescript ignore
+```typescript
+import { Result } from "aetherway";
+import { getString, riskyDivision, MathError } from "aetherway/examples";
+
 // Auto-detection for union types
 const value: string | TypeError = getString();
 Result(value); // Ok<string> or Err<TypeError> based on runtime type
 
-// Lift sync functions
+// Get the result of a fallible function
 const safeDivide = Result.fromFallible(
   riskyDivision,
-  (e) => new MathError("Division failed", { cause: e }),
+  (e: unknown) => new MathError("Division failed", { cause: e }),
 );
 ```
 
@@ -264,21 +254,22 @@ const safeDivide = Result.fromFallible(
 | `Result.liftFallible(fn, errMapFn, ctor?)` | Wrap function, map exceptions to `Err<E>`                           |
 | `asInfallible`                             | Error mapper that re-throws — marks function as "should never fail" |
 
-```typescript ignore
+```typescript
+import { Ok, Result, asInfallible } from "aetherway";
 // Integrate a library function that throws
-import * as semver from "semver";
+import * as semver from "@std/semver";
 
 const tryParse = Result.liftFallible(
   semver.parse,
-  (e) => new TypeError("Invalid semver", { cause: e }),
+  (e: unknown) => new TypeError("Invalid semver", { cause: e }),
 );
 
 Ok("1.2.3").andThen(tryParse); // Ok<SemVer>
 Ok("bad").andThen(tryParse); // Err<TypeError>
 
-// Mark a function as infallible (will throw if it actually fails)
-const mustParse = Result.fromFallible(
-  () => JSON.parse(trustedInput),
+// Mark a function as infallible (will throw Panic if it actually fails)
+const alwaysParses = Result.liftFallible(
+  (input: string) => JSON.parse(input),
   asInfallible, // "I promise this won't throw"
 );
 ```
@@ -290,7 +281,18 @@ const mustParse = Result.fromFallible(
 | `Results.all(results)` | `Result<T[], E>` | All `Ok` → `Ok<T[]>`, first `Err` short-circuits |
 | `Results.any(results)` | `Result<T, E[]>` | First `Ok` found, or all `Err`s collected        |
 
-```typescript ignore
+```typescript
+import { Results } from "aetherway";
+import {
+  input,
+  loadDefaults,
+  loadFromEnv,
+  loadFromFile,
+  validateAge,
+  validateEmail,
+  validateName,
+} from "aetherway/examples";
+
 // Validate multiple fields, fail on first error. Supports tuples!
 const validated = Results.all(
   [
@@ -326,19 +328,23 @@ const config = Results.any([
 | `Task.fromFallible(fn, errMapFn)`     | `Task<T, E>`         | From async function that might throw                  |
 | `Task.deferred()`                     | `DeferredTask<T, E>` | For push-based APIs (callbacks, events)               |
 
-```typescript ignore
+```typescript
+import { Task } from "aetherway";
+import { Data, FetchError, TimeoutError, legacyApi } from "aetherway/examples";
+
 // Wrap fetch with proper error handling
 const fetchJson = <T>(url: string): Task<T, FetchError> =>
   Task.fromPromise(
     fetch(url).then((r) => r.json()),
-    (e) => new FetchError(url, { cause: e }),
+    (e: unknown) => new FetchError(url, { cause: e }),
   );
 
 // Deferred task for callback or push based APIs
 const { task, succeed, fail } = Task.deferred<Data, TimeoutError>();
-setTimeout(() => fail(new TimeoutError()), 5000);
-legacyApi.fetch((err, data) => err ? fail(err) : succeed(data));
+const timer = setTimeout(() => fail(new TimeoutError()), 5000);
+legacyApi.fetch((err, data) => err ? fail(err) : succeed(data!));
 await task; // Resolves when either callback fires
+clearTimeout(timer);
 ```
 
 #### Composability Helpers
@@ -347,7 +353,10 @@ await task; // Resolves when either callback fires
 | ---------------------------------------- | ----------------------------------------------- |
 | `Task.liftFallible(fn, errMapFn, ctor?)` | Wrap async function, map exceptions to `Err<E>` |
 
-```typescript ignore
+```typescript
+import { Task } from "aetherway";
+import { ApiError } from "aetherway/examples";
+
 // Lift an async library function
 const tryFetch = Task.liftFallible(
   async (url: string) => {
@@ -355,13 +364,13 @@ const tryFetch = Task.liftFallible(
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
-  (e) => new ApiError("Request failed", { cause: e }),
+  (e: unknown) => new ApiError("Request failed", { cause: e }),
 );
 
 // Use in pipelines
 Task.succeed("/api/users")
   .andThen(tryFetch)
-  .map((users) => users.filter((u) => u.active))
+  .map((users: { active: boolean }[]) => users.filter((u) => u.active))
   .inspectErr(console.error);
 ```
 
@@ -372,7 +381,17 @@ Task.succeed("/api/users")
 | `Tasks.all(tasks)` | `Task<T[], E>` | All succeed → `Ok<T[]>`, first failure short-circuits |
 | `Tasks.any(tasks)` | `Task<T, E[]>` | First success, or all failures collected              |
 
-```typescript ignore
+```typescript
+import { Tasks } from "aetherway";
+import {
+  fetchFromCache,
+  fetchFromPrimary,
+  fetchFromReplica,
+  fetchOrders,
+  fetchProducts,
+  fetchUsers,
+} from "aetherway/examples";
+
 // These work for all iterables
 // Parallel fetch with combined results
 const allData = await Tasks.all(
@@ -403,13 +422,23 @@ const fastestResponse = await Tasks.any(
 
 Build pipelines where success flows forward and errors short-circuit:
 
-```typescript ignore
+```typescript
+import { Task } from "aetherway";
+import {
+  generateReceipt,
+  getOrder,
+  logError,
+  processPayment,
+  validateOrder,
+} from "aetherway/examples";
+import type { OrderError, Receipt } from "aetherway/examples";
+
 function processOrder(orderId: string): Task<Receipt, OrderError> {
   return getOrder(orderId) // Task<Order, NotFoundError>
     .andThen(validateOrder) // Task<Order, ValidationError>
     .andThen(processPayment) // Task<Payment, PaymentError>
     .andThen(generateReceipt) // Task<Receipt, ReceiptError>
-    .inspectErr(logError); // Log any error transparently
+    .inspectErr(logError);
 }
 ```
 
@@ -417,12 +446,15 @@ function processOrder(orderId: string): Task<Receipt, OrderError> {
 
 Validate without consuming the value:
 
-```typescript ignore
+```typescript
+import { Result } from "aetherway";
+import { isValid, isWritable, parse, writeFile } from "aetherway/examples";
+
 function saveFile(path: string): Result<void, Error> {
-  return Ok(path)
-    .andEnsure(validatePath) // Validate, but keep original path
-    .andEnsure(checkPermissions) // Check permissions, keep path
-    .andThen(writeFile); // Finally use the path
+  return parse(path)
+    .andEnsure(isValid) // Validate, but keep original path
+    .andEnsure(isWritable) // Check permissions, keep path
+    .andThen(writeFile);
 }
 ```
 
@@ -430,20 +462,17 @@ function saveFile(path: string): Result<void, Error> {
 
 ## Best Practices
 
-1. **Computations, not data** — Use these abstractions for operation results,
-   not data models
+1. **Computations, not data** — Use these abstractions for operation results,not data models
 2. **Embrace immutability** — Don't mutate wrapped values
-3. **Unwrap at the edges** — Keep Result/Task types in your domain logic; unwrap
-   at API boundaries
-4. **Some errors are fatal** — It's okay to throw for truly unrecoverable states
+3. **Unwrap at the edges** — Keep Result/Task types in your domain logic; unwrap at API boundaries
+4. **Some errors are fatal** — It's okay to throw for truly unrecoverable states. Just make sure to catch at the top level and terminate gracefully.
 5. **Lift external code** — Use `liftFallible` to integrate libraries cleanly
 
 ---
 
 ## Performance
 
-These abstractions have **virtually no overhead** compared to traditional
-exception handling. In benchmarks, the linear return path often performs
+These abstractions are not totally performance prohibitive. In benchmarks, the linear return path often performs
 slightly better than nested try/catch blocks:
 
 ```
