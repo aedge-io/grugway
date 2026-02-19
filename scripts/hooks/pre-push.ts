@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run -A
 import $ from "@david/dax";
-import { Cmd, runPipeline, Step } from "aetherway/pipeline";
+import { Cmd, runPipeline, Step } from "grugway/pipeline";
 
 await runPipeline({
   name: "PRE-PUSH:",

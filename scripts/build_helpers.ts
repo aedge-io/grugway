@@ -1,4 +1,4 @@
-import { Option, Result, Task } from "../lib/mod.ts";
+import { Option, Result, Task } from "grugway";
 import { emptyDir } from "@deno/dnt";
 import * as semver from "@std/semver";
 

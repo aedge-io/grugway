@@ -15,8 +15,8 @@
     "@std/assert": "jsr:@std/assert@1.0.18", //dev
     "@std/semver": "jsr:@std/semver@1.0.8", //dev
     "@std/testing": "jsr:@std/testing@1.0.17", //dev
-    "aetherway": "./lib/mod.ts", //dev
-    "aetherway/examples": "./examples/doc_helpers.ts", //dev
-    "aetherway/pipeline": "./scripts/pipeline.ts" //dev
+    "grugway": "./lib/mod.ts", //dev
+    "grugway/examples": "./examples/doc_helpers.ts", //dev
+    "grugway/pipeline": "./scripts/pipeline.ts" //dev
   }
 }

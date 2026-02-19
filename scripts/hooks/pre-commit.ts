@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run -A
 import { $ } from "@david/dax";
-import { Cmd, runPipeline, Step } from "aetherway/pipeline";
+import { Cmd, runPipeline, Step } from "grugway/pipeline";
 
 const root = await $`git rev-parse --show-toplevel`.text();
 const staged = (await $`git diff \

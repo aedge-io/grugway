@@ -1,5 +1,5 @@
 import $, { CommandBuilder, CommandResult } from "@david/dax";
-import { Err, None, Ok, Option, Some, Task } from "aetherway";
+import { Err, None, Ok, Option, Some, Task } from "grugway";
 
 type ErrorChannel = "stderr" | "stdout" | "both";
 type TerminatorFn = (cmdRes: CommandResult) => void;
