@@ -221,19 +221,19 @@ parseJSON("invalid"); // None
 
 #### Constructors
 
-| Constructor                         | Returns            | Use When                                      |
-| ----------------------------------- | ------------------ | --------------------------------------------- |
-| `Ok(value)`                         | `Ok<T>`            | Explicit success                              |
-| `Err(error)`                        | `Err<E>`           | Explicit failure                              |
-| `Result(value)`                     | `Result<T, E>`     | Auto-detect — `Error` instances → `Err`       |
+| Constructor                         | Returns            | Use When                                              |
+| ----------------------------------- | ------------------ | ----------------------------------------------------- |
+| `Ok(value)`                         | `Ok<T>`            | Explicit success                                      |
+| `Err(error)`                        | `Err<E>`           | Explicit failure                                      |
+| `Result(value)`                     | `Result<T, E>`     | Auto-detect — `Error` instances → `Err`               |
 | `Result.from(fn)`                   | `Result<T, never>` | Get value of infallible function (throws → propagate) |
 | `Result.fromFallible(fn, errMapFn)` | `Result<T, E>`     | Get value of fallible function (throws → `Err`)       |
-| `Ok.empty()`                        | `Ok<Empty>`        | Signal success without a value                |
-| `Err.empty()`                       | `Err<Empty>`       | Signal failure without details                |
+| `Ok.empty()`                        | `Ok<Empty>`        | Signal success without a value                        |
+| `Err.empty()`                       | `Err<Empty>`       | Signal failure without details                        |
 
 ```typescript
 import { Result } from "aetherway";
-import { getString, riskyDivision, MathError } from "aetherway/examples";
+import { getString, MathError, riskyDivision } from "aetherway/examples";
 
 // Auto-detection for union types
 const value: string | TypeError = getString();
@@ -255,7 +255,7 @@ const safeDivide = Result.fromFallible(
 | `asInfallible`                             | Error mapper that re-throws — marks function as "should never fail" |
 
 ```typescript
-import { Ok, Result, asInfallible } from "aetherway";
+import { asInfallible, Ok, Result } from "aetherway";
 // Integrate a library function that throws
 import * as semver from "@std/semver";
 
@@ -330,7 +330,7 @@ const config = Results.any([
 
 ```typescript
 import { Task } from "aetherway";
-import { Data, FetchError, TimeoutError, legacyApi } from "aetherway/examples";
+import { Data, FetchError, legacyApi, TimeoutError } from "aetherway/examples";
 
 // Wrap fetch with proper error handling
 const fetchJson = <T>(url: string): Task<T, FetchError> =>
@@ -358,6 +358,7 @@ import { Task } from "aetherway";
 import { ApiError } from "aetherway/examples";
 
 // Lift an async library function
+// Check out the ready-made fetch adapter for a more thorough take on this
 const tryFetch = Task.liftFallible(
   async (url: string) => {
     const res = await fetch(url);
@@ -462,18 +463,21 @@ function saveFile(path: string): Result<void, Error> {
 
 ## Best Practices
 
-1. **Computations, not data** — Use these abstractions for operation results,not data models
+1. **Computations, not data** — Use these abstractions for operation results,not
+   data models
 2. **Embrace immutability** — Don't mutate wrapped values
-3. **Unwrap at the edges** — Keep Result/Task types in your domain logic; unwrap at API boundaries
-4. **Some errors are fatal** — It's okay to throw for truly unrecoverable states. Just make sure to catch at the top level and terminate gracefully.
+3. **Unwrap at the edges** — Keep Result/Task types in your domain logic; unwrap
+   at API boundaries
+4. **Some errors are fatal** — It's okay to throw for truly unrecoverable
+   states. Just make sure to catch at the top level and terminate gracefully.
 5. **Lift external code** — Use `liftFallible` to integrate libraries cleanly
 
 ---
 
 ## Performance
 
-These abstractions are not totally performance prohibitive. In benchmarks, the linear return path often performs
-slightly better than nested try/catch blocks:
+These abstractions are not totally performance prohibitive. In benchmarks, the
+linear return path often performs slightly better than nested try/catch blocks:
 
 ```
 Synchronous:  Result flow ~1.3x faster than exceptions
