@@ -1,6 +1,7 @@
 # aetherway
 
 [![codecov](https://codecov.io/github/aedge-io/grugway/graph/badge.svg?token=9WTDQ8WOKW)](https://codecov.io/github/aedge-io/grugway)
+
 > Safe abstractions for fallible flows — for humans and clankers alike.
 
 This is a ~~fork~~ rework of an old, personal project
