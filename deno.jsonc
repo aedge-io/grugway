@@ -7,7 +7,7 @@
     "build:cov": "deno coverage --lcov --output=./cov.lcov ./cov/",
     "check:ci": "deno check --doc",
     "hooks:install": "./scripts/install_hooks.ts",
-    "test:ci": "deno test --coverage=./cov"
+    "test:ci": "deno test --parallel --fail-fast --coverage=./cov"
   },
   "imports": {
     "@david/dax": "jsr:@david/dax@0.45.0", //dev

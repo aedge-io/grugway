@@ -33,12 +33,11 @@ jobs:
       - name: Run tests & generate coverage
         run: deno task test:ci
 
-      # - name: Generate coverage report
-      #   run: deno task build:cov
-      #
-      # - name: Upload coverage report
-      #   uses: paambaati/codeclimate-action@v5.0.0
-      #   env:
-      #     CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPORTER_ID }}
-      #   with:
-      #     coverageLocations: ${{github.workspace}}/*.lcov:lcov
+      - name: Generate coverage report
+        run: deno task build:cov
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./cov.lcov
