@@ -1,12 +1,10 @@
 # aetherway
 
+[![codecov](https://codecov.io/github/aedge-io/grugway/graph/badge.svg?token=9WTDQ8WOKW)](https://codecov.io/github/aedge-io/grugway)
 > Safe abstractions for fallible flows — for humans and clankers alike.
 
-This is a fork of the now stale project
+This is a ~~fork~~ rework of an old, personal project
 [eitherway](https://github.com/realpha/eitherway).
-
-**MANDATORY AI DISCLAIMER:** LLMs are/were used for parts of the refactoring and
-documentation.
 
 ---
 
@@ -484,15 +482,7 @@ Synchronous:  Result flow ~1.3x faster than exceptions
 Asynchronous: Task flow   ~1.0x (equivalent performance)
 ```
 
-Your mileage will vary though. Run benchmarks yourself: `deno bench`
-
----
-
-## Attribution
-
-**aetherway** is a fork of [eitherway](https://github.com/realpha/eitherway),
-originally created by [realpha](https://github.com/realpha)
-(0xrealpha@proton.me).
+**Your mileage will vary though.** Run benchmarks yourself: `deno bench`
 
 ### License
 
