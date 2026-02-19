@@ -1,4 +1,4 @@
-import { Err, Ok, Result, Task } from "../lib/mod.ts";
+import { Err, Ok, Result, Task } from "grugway";
 import {
   dirIsEmpty,
   parseVersion,
@@ -8,13 +8,13 @@ import {
 import { build } from "@deno/dnt";
 import * as semver from "@std/semver";
 
-const PKG_NAME = "eitherway";
-const ENTRY_POINT = "./mod.ts";
+const PKG_NAME = "grugway";
+const ENTRY_POINT = "./lib/mod.ts";
 const OUT_DIR = "./npm";
 const LICENSE = "./LICENSE.md";
 const README = "./README.md";
-const GIT_URL = "git+https://github.com/realpha/eitherway.git";
-const ISSUE_URL = "https://github.com/realpha/eitherway/issues";
+const GIT_URL = "git+https://github.com/aedge-io/grugway.git";
+const ISSUE_URL = "https://github.com/aedge-io/grugway/issues";
 
 async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
   try {
@@ -31,9 +31,9 @@ async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
         name: PKG_NAME,
         version: semver.format(v),
         description:
-          "Safe abstractions for fallible flows inspired by F# and Rust",
+          "Safe abstractions for fallible flows for humans and clankers alike",
         license: "MIT",
-        author: "realpha <0xrealpha@proton.me>",
+        author: "aedge-io <os@aedge.io>",
         engines: {
           "node": ">=17.0.0", //needed for structuredClone
         },
@@ -46,17 +46,19 @@ async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
         },
         keywords: [
           "async",
+          "clanker",
+          "clankers",
+          "clanker-friendly",
           "either",
           "error",
+          "errors",
           "error-handling",
-          "fsharp",
           "fallible",
           "functional",
           "maybe",
           "monad",
           "option",
           "result",
-          "rust",
           "task",
           "typescript",
         ],

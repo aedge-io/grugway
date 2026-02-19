@@ -1,4 +1,4 @@
-# aetherway
+# grugway
 
 [![codecov](https://codecov.io/github/aedge-io/grugway/graph/badge.svg?token=9WTDQ8WOKW)](https://codecov.io/github/aedge-io/grugway)
 
@@ -9,7 +9,7 @@ This is a ~~fork~~ rework of an old, personal project
 
 ---
 
-## Why aetherway?
+## Why grugway?
 
 This is for now mostly an experiment in human - agent collaboration and
 in-context learning. The basic assumptions are:
@@ -41,11 +41,11 @@ in-context learning. The basic assumptions are:
 **Node.js:**
 
 ```bash
-(bun | deno | (p)npm)  add aetherway
+(bun | deno | (p)npm)  add grugway
 ```
 
 ```typescript
-import { Err, None, Ok, Option, Result, Some, Task } from "aetherway";
+import { Err, None, Ok, Option, Result, Some, Task } from "grugway";
 ```
 
 ### Runtime Requirements
@@ -62,9 +62,9 @@ import { Err, None, Ok, Option, Result, Some, Task } from "aetherway";
 ### Option — Handling Optional Values
 
 ```typescript
-import { None, Option, Some } from "aetherway";
-import { getUserById, id } from "aetherway/examples";
-import type { User } from "aetherway/examples";
+import { None, Option, Some } from "grugway";
+import { getUserById, id } from "grugway/examples";
+import type { User } from "grugway/examples";
 
 // Nullish values become None
 const maybeUser = Option(getUserById(id)); // Option<User>
@@ -82,7 +82,7 @@ const userResult = maybeUser.okOrElse(() => new Error("User not found"));
 ### Result — Explicit Error Handling
 
 ```typescript
-import { Err, Ok, Result } from "aetherway";
+import { Err, Ok, Result } from "grugway";
 
 function divide(a: number, b: number): Result<number, Error> {
   if (b === 0) return Err(new Error("Division by zero"));
@@ -104,8 +104,8 @@ if (result.isOk()) {
 ### Task — Async Operations
 
 ```typescript
-import { Err, Ok, Task } from "aetherway";
-import { validateName } from "aetherway/examples";
+import { Err, Ok, Task } from "grugway";
+import { validateName } from "grugway/examples";
 
 // Create tasks from promises
 const fetchUser = Task.fromPromise(
@@ -129,7 +129,7 @@ result.inspect(console.log).inspectErr(console.error);
 Integrate third-party libraries without manual wrapping:
 
 ```typescript
-import { Option, Result, Task } from "aetherway";
+import { Option, Result, Task } from "grugway";
 import * as semver from "@std/semver";
 
 // Lift sync functions
@@ -172,7 +172,7 @@ different scenarios.
 | `Some.empty()`                | `Some<Empty>` | Signal success without a meaningful value  |
 
 ```typescript
-import { Option } from "aetherway";
+import { Option } from "grugway";
 
 // Choose based on what should be "absent"
 Option(0); // Some(0) — zero is a valid number
@@ -192,7 +192,7 @@ Option.fromFallible(new Error()); // None    — errors mean absence
 | `Option.id(opt)`                 | Identity — useful for flattening `Option<Option<T>>`             |
 
 ```typescript
-import { Option } from "aetherway";
+import { Option } from "grugway";
 
 // Lift a parser that might return undefined
 const parseIntSafe = Option.lift(parseInt, Option.fromCoercible);
@@ -231,8 +231,8 @@ parseJSON("invalid"); // None
 | `Err.empty()`                       | `Err<Empty>`       | Signal failure without details                        |
 
 ```typescript
-import { Result } from "aetherway";
-import { getString, MathError, riskyDivision } from "aetherway/examples";
+import { Result } from "grugway";
+import { getString, MathError, riskyDivision } from "grugway/examples";
 
 // Auto-detection for union types
 const value: string | TypeError = getString();
@@ -254,7 +254,7 @@ const safeDivide = Result.fromFallible(
 | `asInfallible`                             | Error mapper that re-throws — marks function as "should never fail" |
 
 ```typescript
-import { asInfallible, Ok, Result } from "aetherway";
+import { asInfallible, Ok, Result } from "grugway";
 // Integrate a library function that throws
 import * as semver from "@std/semver";
 
@@ -281,7 +281,7 @@ const alwaysParses = Result.liftFallible(
 | `Results.any(results)` | `Result<T, E[]>` | First `Ok` found, or all `Err`s collected        |
 
 ```typescript
-import { Results } from "aetherway";
+import { Results } from "grugway";
 import {
   input,
   loadDefaults,
@@ -290,7 +290,7 @@ import {
   validateAge,
   validateEmail,
   validateName,
-} from "aetherway/examples";
+} from "grugway/examples";
 
 // Validate multiple fields, fail on first error. Supports tuples!
 const validated = Results.all(
@@ -328,8 +328,8 @@ const config = Results.any([
 | `Task.deferred()`                     | `DeferredTask<T, E>` | For push-based APIs (callbacks, events)               |
 
 ```typescript
-import { Task } from "aetherway";
-import { Data, FetchError, legacyApi, TimeoutError } from "aetherway/examples";
+import { Task } from "grugway";
+import { Data, FetchError, legacyApi, TimeoutError } from "grugway/examples";
 
 // Wrap fetch with proper error handling
 const fetchJson = <T>(url: string): Task<T, FetchError> =>
@@ -353,8 +353,8 @@ clearTimeout(timer);
 | `Task.liftFallible(fn, errMapFn, ctor?)` | Wrap async function, map exceptions to `Err<E>` |
 
 ```typescript
-import { Task } from "aetherway";
-import { ApiError } from "aetherway/examples";
+import { Task } from "grugway";
+import { ApiError } from "grugway/examples";
 
 // Lift an async library function
 // Check out the ready-made fetch adapter for a more thorough take on this
@@ -382,7 +382,7 @@ Task.succeed("/api/users")
 | `Tasks.any(tasks)` | `Task<T, E[]>` | First success, or all failures collected              |
 
 ```typescript
-import { Tasks } from "aetherway";
+import { Tasks } from "grugway";
 import {
   fetchFromCache,
   fetchFromPrimary,
@@ -390,7 +390,7 @@ import {
   fetchOrders,
   fetchProducts,
   fetchUsers,
-} from "aetherway/examples";
+} from "grugway/examples";
 
 // These work for all iterables
 // Parallel fetch with combined results
@@ -423,15 +423,15 @@ const fastestResponse = await Tasks.any(
 Build pipelines where success flows forward and errors short-circuit:
 
 ```typescript
-import { Task } from "aetherway";
+import { Task } from "grugway";
 import {
   generateReceipt,
   getOrder,
   logError,
   processPayment,
   validateOrder,
-} from "aetherway/examples";
-import type { OrderError, Receipt } from "aetherway/examples";
+} from "grugway/examples";
+import type { OrderError, Receipt } from "grugway/examples";
 
 function processOrder(orderId: string): Task<Receipt, OrderError> {
   return getOrder(orderId) // Task<Order, NotFoundError>
@@ -447,8 +447,8 @@ function processOrder(orderId: string): Task<Receipt, OrderError> {
 Validate without consuming the value:
 
 ```typescript
-import { Result } from "aetherway";
-import { isValid, isWritable, parse, writeFile } from "aetherway/examples";
+import { Result } from "grugway";
+import { isValid, isWritable, parse, writeFile } from "grugway/examples";
 
 function saveFile(path: string): Result<void, Error> {
   return parse(path)
@@ -475,7 +475,7 @@ function saveFile(path: string): Result<void, Error> {
 
 ## Performance
 
-These abstractions are not totally performance prohibitive. In benchmarks, the
+These abstractions are _not totally performance prohibitive_. In benchmarks, the
 linear return path often performs slightly better than nested try/catch blocks:
 
 ```
@@ -483,14 +483,15 @@ Synchronous:  Result flow ~1.3x faster than exceptions
 Asynchronous: Task flow   ~1.0x (equivalent performance)
 ```
 
-**Your mileage will vary though.** Run benchmarks yourself: `deno bench`
+**Your mileage will vary though.** Memory isn't free. Run benchmarks yourself:
+`deno bench`
 
 ### License
 
 MIT License — see [LICENSE.md](./LICENSE.md)
 
 - Original eitherway: Copyright © 2023-2025 realpha
-- aetherway modifications: Copyright © 2026 aedge-io
+- grugway modifications: Copyright © 2026 aedge-io
 
 ---
 
