@@ -23,6 +23,7 @@ async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
       outDir: OUT_DIR,
       typeCheck: "both",
       declaration: "separate",
+      scriptModule: "cjs",
       test: false,
       shims: {
         deno: false,
