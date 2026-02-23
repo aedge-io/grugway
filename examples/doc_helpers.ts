@@ -3,7 +3,7 @@
  * These exist solely to make the documentation examples type-check.
  */
 
-import { Ok, type Result, Task } from "grugway";
+import { Ok, type Result, Task } from "@aedge-io/grugway";
 
 // ── Types ──
 

@@ -41,11 +41,11 @@ in-context learning. The basic assumptions are:
 **Node.js:**
 
 ```bash
-(bun | deno | (p)npm)  add grugway
+(bun | deno | (p)npm)  add @aedge-io/grugway
 ```
 
 ```typescript
-import { Err, None, Ok, Option, Result, Some, Task } from "grugway";
+import { Err, None, Ok, Option, Result, Some, Task } from "@aedge-io/grugway";
 ```
 
 ### Runtime Requirements
@@ -62,7 +62,7 @@ import { Err, None, Ok, Option, Result, Some, Task } from "grugway";
 ### Option — Handling Optional Values
 
 ```typescript
-import { None, Option, Some } from "grugway";
+import { None, Option, Some } from "@aedge-io/grugway";
 import { getUserById, id } from "grugway/examples";
 import type { User } from "grugway/examples";
 
@@ -82,7 +82,7 @@ const userResult = maybeUser.okOrElse(() => new Error("User not found"));
 ### Result — Explicit Error Handling
 
 ```typescript
-import { Err, Ok, Result } from "grugway";
+import { Err, Ok, Result } from "@aedge-io/grugway";
 
 function divide(a: number, b: number): Result<number, Error> {
   if (b === 0) return Err(new Error("Division by zero"));
@@ -104,7 +104,7 @@ if (result.isOk()) {
 ### Task — Async Operations
 
 ```typescript
-import { Err, Ok, Task } from "grugway";
+import { Err, Ok, Task } from "@aedge-io/grugway";
 import { validateName } from "grugway/examples";
 
 // Create tasks from promises
@@ -129,7 +129,7 @@ result.inspect(console.log).inspectErr(console.error);
 Integrate third-party libraries without manual wrapping:
 
 ```typescript
-import { Option, Result, Task } from "grugway";
+import { Option, Result, Task } from "@aedge-io/grugway";
 import * as semver from "@std/semver";
 
 // Lift sync functions
@@ -172,7 +172,7 @@ different scenarios.
 | `Some.empty()`                | `Some<Empty>` | Signal success without a meaningful value  |
 
 ```typescript
-import { Option } from "grugway";
+import { Option } from "@aedge-io/grugway";
 
 // Choose based on what should be "absent"
 Option(0); // Some(0) — zero is a valid number
@@ -192,7 +192,7 @@ Option.fromFallible(new Error()); // None    — errors mean absence
 | `Option.id(opt)`                 | Identity — useful for flattening `Option<Option<T>>`             |
 
 ```typescript
-import { Option } from "grugway";
+import { Option } from "@aedge-io/grugway";
 
 // Lift a parser that might return undefined
 const parseIntSafe = Option.lift(parseInt, Option.fromCoercible);
@@ -231,7 +231,7 @@ parseJSON("invalid"); // None
 | `Err.empty()`                       | `Err<Empty>`       | Signal failure without details                        |
 
 ```typescript
-import { Result } from "grugway";
+import { Result } from "@aedge-io/grugway";
 import { getString, MathError, riskyDivision } from "grugway/examples";
 
 // Auto-detection for union types
@@ -254,7 +254,7 @@ const safeDivide = Result.fromFallible(
 | `asInfallible`                             | Error mapper that re-throws — marks function as "should never fail" |
 
 ```typescript
-import { asInfallible, Ok, Result } from "grugway";
+import { asInfallible, Ok, Result } from "@aedge-io/grugway";
 // Integrate a library function that throws
 import * as semver from "@std/semver";
 
@@ -281,7 +281,7 @@ const alwaysParses = Result.liftFallible(
 | `Results.any(results)` | `Result<T, E[]>` | First `Ok` found, or all `Err`s collected        |
 
 ```typescript
-import { Results } from "grugway";
+import { Results } from "@aedge-io/grugway";
 import {
   input,
   loadDefaults,
@@ -328,7 +328,7 @@ const config = Results.any([
 | `Task.deferred()`                     | `DeferredTask<T, E>` | For push-based APIs (callbacks, events)               |
 
 ```typescript
-import { Task } from "grugway";
+import { Task } from "@aedge-io/grugway";
 import { Data, FetchError, legacyApi, TimeoutError } from "grugway/examples";
 
 // Wrap fetch with proper error handling
@@ -353,7 +353,7 @@ clearTimeout(timer);
 | `Task.liftFallible(fn, errMapFn, ctor?)` | Wrap async function, map exceptions to `Err<E>` |
 
 ```typescript
-import { Task } from "grugway";
+import { Task } from "@aedge-io/grugway";
 import { ApiError } from "grugway/examples";
 
 // Lift an async library function
@@ -382,7 +382,7 @@ Task.succeed("/api/users")
 | `Tasks.any(tasks)` | `Task<T, E[]>` | First success, or all failures collected              |
 
 ```typescript
-import { Tasks } from "grugway";
+import { Tasks } from "@aedge-io/grugway";
 import {
   fetchFromCache,
   fetchFromPrimary,
@@ -423,7 +423,7 @@ const fastestResponse = await Tasks.any(
 Build pipelines where success flows forward and errors short-circuit:
 
 ```typescript
-import { Task } from "grugway";
+import { Task } from "@aedge-io/grugway";
 import {
   generateReceipt,
   getOrder,
@@ -447,7 +447,7 @@ function processOrder(orderId: string): Task<Receipt, OrderError> {
 Validate without consuming the value:
 
 ```typescript
-import { Result } from "grugway";
+import { Result } from "@aedge-io/grugway";
 import { isValid, isWritable, parse, writeFile } from "grugway/examples";
 
 function saveFile(path: string): Result<void, Error> {

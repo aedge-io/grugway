@@ -1,4 +1,4 @@
-import { Option, Result, Task } from "grugway";
+import { Option, Result, Task } from "@aedge-io/grugway";
 import { emptyDir } from "@deno/dnt";
 import * as semver from "@std/semver";
 
@@ -12,6 +12,9 @@ export const ScriptErrors = {
   BuildFailed: (e: unknown) => Error(`Build failed`, { cause: e }),
 } as const;
 
+/**
+ * {@linkcode semver.parse}
+ */
 export const tryParse = Result.liftFallible(
   semver.parse,
   (e: unknown) => e as TypeError,

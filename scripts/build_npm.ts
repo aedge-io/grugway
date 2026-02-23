@@ -1,4 +1,4 @@
-import { Err, Ok, Result, Task } from "grugway";
+import { Err, Ok, Result, Task } from "@aedge-io/grugway";
 import {
   dirIsEmpty,
   parseVersion,
@@ -8,7 +8,7 @@ import {
 import { build } from "@deno/dnt";
 import * as semver from "@std/semver";
 
-const PKG_NAME = "grugway";
+const PKG_NAME = "@aedge-io/grugway";
 const ENTRY_POINT = "./lib/mod.ts";
 const OUT_DIR = "./npm";
 const LICENSE = "./LICENSE.md";
