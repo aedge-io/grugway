@@ -1164,13 +1164,13 @@ class _None<T = never> implements IOption<never> {
   orElse<U>(elseFn: () => Option<U>): Option<U> {
     return elseFn();
   }
-  unwrap() {
+  unwrap(): undefined {
     return undefined;
   }
-  unwrapOr<U>(orValue: NonNullish<U>) {
+  unwrapOr<U>(orValue: NonNullish<U>): NonNullish<U> {
     return orValue;
   }
-  unwrapOrElse<U>(elseFn: () => NonNullish<U>) {
+  unwrapOrElse<U>(elseFn: () => NonNullish<U>): NonNullish<U> {
     return elseFn();
   }
   okOr<E>(err: E): Err<E> {
@@ -1192,7 +1192,7 @@ class _None<T = never> implements IOption<never> {
     if (rhs.isSome()) return rhs;
     return this;
   }
-  tap(tapFn: (arg: None) => void) {
+  tap(tapFn: (arg: None) => void): None {
     tapFn(None);
     return this;
   }
@@ -1234,7 +1234,7 @@ class _None<T = never> implements IOption<never> {
     if (hint === "number") return 0;
     return false;
   }
-  get [Symbol.toStringTag]() {
+  get [Symbol.toStringTag](): string {
     return "aetherway.Option.None";
   }
 }
@@ -1378,7 +1378,7 @@ class _Some<T> implements IOption<T> {
     }
     return target.toString();
   }
-  get [Symbol.toStringTag]() {
+  get [Symbol.toStringTag](): string {
     const innerTag = typeof this.#value === "object"
       ? Object.prototype.toString.call(this.#value)
       : String(this.#value);
@@ -1828,7 +1828,7 @@ export namespace Option {
   >(
     fn: (...args: Args) => R1,
     ctor: (arg: R1) => Option<R2> = Option.from as (arg: R1) => Option<R2>,
-  ) {
+  ): (...args: Args) => Option<R2> {
     return function (...args: Readonly<Args>): Option<R2> {
       return ctor(fn(...args));
     };
@@ -1867,7 +1867,7 @@ export namespace Option {
   >(
     fn: (...args: Args) => R1,
     ctor: (arg: R1) => Option<R2> = Option.from as (arg: R1) => Option<R2>,
-  ) {
+  ): (...args: Args) => Option<R2> {
     return function (...args: Readonly<Args>): Option<R2> {
       try {
         return ctor(fn(...args));
