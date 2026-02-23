@@ -1,13 +1,15 @@
-import { Err, Ok, Result, Task } from "@aedge-io/grugway";
+import { Err, Ok, type Result, Task } from "@aedge-io/grugway";
 import {
   dirIsEmpty,
   parseVersion,
+  releaseVersionsMatch,
   ScriptErrors,
-  SemVer,
+  type SemVer,
 } from "./build_helpers.ts";
 import { build } from "@deno/dnt";
 import * as semver from "@std/semver";
 
+const MAIN_CONFIG_FILE = import.meta.resolve("../deno.jsonc");
 const PKG_NAME = "@aedge-io/grugway";
 const ENTRY_POINT = "./lib/mod.ts";
 const OUT_DIR = "./npm";
@@ -19,6 +21,7 @@ const ISSUE_URL = "https://github.com/aedge-io/grugway/issues";
 async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
   try {
     await build({
+      configFile: MAIN_CONFIG_FILE,
       entryPoints: [ENTRY_POINT],
       outDir: OUT_DIR,
       typeCheck: "both",
@@ -82,6 +85,7 @@ async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
 
 function main() {
   return parseVersion()
+    .andEnsure(releaseVersionsMatch)
     .into(Task.of<SemVer, TypeError>)
     .andEnsure(() => dirIsEmpty(OUT_DIR))
     .andThen(buildPackage);
