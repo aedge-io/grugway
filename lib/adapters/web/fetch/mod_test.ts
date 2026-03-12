@@ -313,7 +313,7 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
           if (res.ok) return Ok(await res.json());
           return Err(TypeError("Oh no", { cause: res }));
         }
-        const errMapFn = (cause: unknown) => ReferenceError("Dunno", { cause });
+        const errMapFn = (cause: unknown) => TypeError("Dunno", { cause });
 
         const lifted = liftFetch(fetchStub, ctor, errMapFn);
         const result = await lifted(testUrl);
@@ -326,7 +326,7 @@ Deno.test("eitherway::adapters::web::fetch", async (t) => {
             ReturnType<typeof lifted>,
             Task<
               User,
-              TypeError | ReferenceError
+              TypeError | TypeError
             >
           >
         >(true);

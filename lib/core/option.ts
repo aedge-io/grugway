@@ -21,7 +21,7 @@ import {
   isPrimitive,
   isTruthy,
 } from "./type_utils.ts";
-import { Err, Ok, Result } from "./result.ts";
+import { Err, Ok, type Result } from "./result.ts";
 import { assertNotNullish } from "./assert.ts";
 
 /**
