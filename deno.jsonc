@@ -1,6 +1,7 @@
 {
   "name": "@aedge-io/grugway",
-  "version": "0.1.0",
+  "description": "Safe abstractions for fallible flows - for humans, their clankers and foes",
+  "version": "0.0.0",
   "license": "MIT",
   "exports": "./lib/mod.ts",
   "publish": {
@@ -19,22 +20,31 @@
     "exclude": ["cov/", "npm/"]
   },
   "tasks": {
-    "build:npm": "deno run -A ./scripts/build_npm.ts",
+    "build:npm": "./scripts/build_npm.ts",
     "build:cov": "deno coverage --lcov --output=./cov.lcov ./cov/",
+    "bump": "./scripts/bump_version.ts",
     "check:ci": "deno check --doc",
     "hooks:install": "./scripts/install_hooks.ts",
-    "test:ci": "deno test --parallel --fail-fast --coverage=./cov"
+    "test:ci": "deno test --parallel --fail-fast --coverage=./cov",
+    "release": "./scripts/release.ts"
   },
   "imports": {
     "@david/dax": "jsr:@david/dax@0.45.0", //dev
+    "@david/jsonc-morph": "jsr:@david/jsonc-morph@0.3.1", //dev
     "@deno/dnt": "jsr:@deno/dnt@0.42.3", //dev
     "@std/assert": "jsr:@std/assert@1.0.18", //dev
-    "@std/jsonc": "jsr:@std/jsonc@^1.0.2", //dev
+    "@std/cli": "jsr:@std/cli@1.0.28", //dev
     "@std/semver": "jsr:@std/semver@1.0.8", //dev
     "@std/testing": "jsr:@std/testing@1.0.17", //dev
     "@aedge-io/grugway": "./lib/mod.ts", //dev
+    "grugway/integrity": "./scripts/helpers/integrity.ts", //dev
+    "grugway/metadata": "./scripts/metadata.ts", //dev
     "grugway/examples": "./examples/doc_helpers.ts", //dev
     "grugway/pipeline": "./scripts/helpers/pipeline.ts", //dev
-    "grugway/version": "./scripts/helpers/version.ts" //dev
+    "grugway/manifest": "./scripts/helpers/manifest.ts", //dev
+    "grugway/version": "./scripts/helpers/version.ts", //dev
+    "grugway/shell": "./scripts/helpers/shell.ts", //dev
+    "grugway/git": "./scripts/helpers/git.ts", //dev
+    "grugway/fs": "./scripts/helpers/fs.ts" //dev
   }
 }
