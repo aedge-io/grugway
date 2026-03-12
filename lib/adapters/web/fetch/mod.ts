@@ -1,5 +1,5 @@
 import { Task } from "../../../async/task.ts";
-import { Err, Ok, Result } from "../../../core/result.ts";
+import { Err, Ok, type Result } from "../../../core/result.ts";
 
 export interface ResponseLike {
   ok: boolean;

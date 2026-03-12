@@ -1,4 +1,4 @@
-import { Result, Results } from "../core/result.ts";
+import { type Result, Results } from "../core/result.ts";
 import { Task } from "./task.ts";
 
 /**

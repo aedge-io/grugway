@@ -1,4 +1,4 @@
-import { asInfallible, Err, Ok, Result } from "../core/result.ts";
+import { asInfallible, Err, Ok, type Result } from "../core/result.ts";
 import type { ExecutorFn } from "./_internal.ts";
 import {
   andEnsureTask,

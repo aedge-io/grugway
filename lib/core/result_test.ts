@@ -7,7 +7,7 @@ import {
 } from "@std/assert";
 import type { IsExact } from "@std/testing/types";
 import { assertType } from "@std/testing/types";
-import { None, Option } from "./option.ts";
+import type { None, Option } from "./option.ts";
 import { Err, Ok, Result, Results } from "./result.ts";
 import type {
   InferredErrTuple,
@@ -17,7 +17,7 @@ import type {
   InferredOkType,
   InferredOkUnion,
 } from "./result.ts";
-import { Empty } from "./type_utils.ts";
+import type { Empty } from "./type_utils.ts";
 
 Deno.test("eitherway::Result", async (t) => {
   await t.step("() -> produces an instance of Result for union types", () => {
