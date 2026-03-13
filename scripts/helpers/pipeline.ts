@@ -1,14 +1,17 @@
-import $, { CommandBuilder, CommandResult } from "@david/dax";
-import { Err, None, Ok, Option, Some, Task } from "@aedge-io/grugway";
+import { None, Option, Some } from "@aedge-io/grugway";
+import type { $Base, CommandBuilder, CommandResult } from "grugway/shell";
+import { $, shellTask } from "grugway/shell";
 
-type ErrorChannel = "stderr" | "stdout" | "both";
-type TerminatorFn = (cmdRes: CommandResult) => void;
+export type ErrorChannel = "stderr" | "stdout" | "both" | "none";
+
+export type TerminatorFn = (cmdRes: CommandResult) => void;
 
 export type Cmd = {
   cmd: CommandBuilder;
   errChannel: ErrorChannel;
   terminatorFn: Option<TerminatorFn>;
 };
+
 export function Cmd(
   cmd: CommandBuilder,
   errChannel: ErrorChannel = "stderr",
@@ -22,6 +25,7 @@ export type Step = {
   description: string;
   cmd: Cmd;
 };
+
 export function Step(
   name: string,
   description: string,
@@ -30,60 +34,71 @@ export function Step(
   return { name, description, cmd };
 }
 
-export type PipelineDefinition = {
+export type PipelineOptions = {
   name: string;
   steps: Step[];
+  executor?: $Base;
 };
 
-export async function runPipeline({ name, steps }: PipelineDefinition) {
+export async function runPipeline(opts: PipelineOptions) {
+  const { name, steps, executor = $ } = opts;
+
   let err: Option<CommandResult> = None;
   let terminatorFn: Option<TerminatorFn> = None;
+
   pipeline: for (const step of steps) {
     terminatorFn = step.cmd.terminatorFn;
-    const pb = $.progress(name);
+
+    const pb = executor.progress(name);
+
     const stepRes = await pb.message(step.description).with(() => {
-      return runStep(
-        step.name,
-        step.cmd,
-      );
+      return runStep(step.name, step.cmd, executor);
     });
+
     if (stepRes.isErr() && terminatorFn.isSome()) {
       err = stepRes.err();
       break pipeline;
     }
   }
+
   Option.apply(terminatorFn, err);
 }
 
 function runStep(
   name: string,
   cmdDef: Cmd,
+  executor: $Base = $,
 ) {
   const { cmd, errChannel } = cmdDef;
-  const reporter = errorReporter(name, errChannel);
-  return Task.of(
-    cmd.noThrow().stdout("piped").stderr("piped").then((cmdResult) => {
-      if (cmdResult.code !== 0) return Err(cmdResult);
-      return Ok(cmdResult);
-    }),
-  ).inspectErr(reporter);
+
+  const reporter = errorReporter(name, errChannel, executor);
+
+  return shellTask(cmd).inspectErr(reporter);
 }
 
-function errorReporter(name: string, errChannel: ErrorChannel) {
+function errorReporter(
+  name: string,
+  errChannel: ErrorChannel,
+  executor: $Base,
+) {
   switch (errChannel) {
+    case "none":
+      return (_res: CommandResult) => {};
     case "both":
       return (res: CommandResult) => {
-        $.logError(name, res.stderr);
-        $.logError(name, res.stdout);
+        executor.logError(name, res.stderr);
+        executor.logError(name, res.stdout);
       };
     case "stderr":
       return (res: CommandResult) => {
-        $.logError(name, res.stderr);
+        executor.logError(name, res.stderr);
       };
     case "stdout":
       return (res: CommandResult) => {
-        $.logError(name, res.stdout);
+        executor.logError(name, res.stdout);
       };
+    default:
+      throw new SyntaxError(`value ${errChannel} is not a valid error channel`);
   }
 }
 
