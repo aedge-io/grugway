@@ -1,7 +1,7 @@
 {
   "name": "@aedge-io/grugway",
   "description": "Safe abstractions for fallible flows - for humans, their clankers and foes",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "exports": "./lib/mod.ts",
   "exclude": ["cov/", "npm/"],
