@@ -5,9 +5,11 @@ import {
   assertNotStrictEquals,
   assertObjectMatch,
   assertStrictEquals,
+  assertThrows,
 } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
 import { None, Option, Options, Some } from "./option.ts";
+import { Panic } from "./errors.ts";
 
 /**
  * Setup test value collections
@@ -69,7 +71,7 @@ const allFallible = nullish.concat([err]);
 // @ts-ignore-lines These heterogenous arrays break type inference
 const allValues = allNonNullish.concat(nullish);
 
-Deno.test("eitherway::Option", async (t) => {
+Deno.test("grugway::Option", async (t) => {
   await t.step("() -> returns Some for NonNullish values", () => {
     allNonNullish.forEach((val) => {
       const some = Option(val);
@@ -297,7 +299,7 @@ Deno.test("eitherway::Option", async (t) => {
   );
 });
 
-Deno.test("eitherway::Options", async (t) => {
+Deno.test("grugway::Options", async (t) => {
   await t.step(".all() -> returns None for empty arrays", () => {
     const empty: Option<string>[] = [];
 
@@ -392,7 +394,14 @@ Deno.test("eitherway::Options", async (t) => {
   );
 });
 
-Deno.test("eitherway::Option::Some", async (t) => {
+Deno.test("grugway::Option::Some", async (t) => {
+  await t.step("Some<T> -> Ctor", async (t) => {
+    await t.step("() -> throws if instantiated with nullish value", () => {
+      const secretelyNullish = null as unknown as {};
+
+      assertThrows(() => Some(secretelyNullish), Panic);
+    });
+  });
   await t.step("Some<T> -> Type Predicates", async (t) => {
     await t.step(".isSome() -> returns true", () => {
       const some = Some("thing");
@@ -1043,7 +1052,7 @@ Deno.test("eitherway::Option::Some", async (t) => {
   });
 });
 
-Deno.test("eitherway::Option::None", async (t) => {
+Deno.test("grugway::Option::None", async (t) => {
   await t.step("None -> Is a frozen contant", () => {
     const isFrozen = Object.isFrozen(None);
 

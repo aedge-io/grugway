@@ -12,7 +12,7 @@ import { Err, Ok } from "../core/result.ts";
 import { assertEquals, assertStrictEquals } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
 
-Deno.test("eitherway::Task::InferredTypes", async (t) => {
+Deno.test("grugway::Task::InferredTypes", async (t) => {
   await t.step(
     "InferredSuccessType<P> -> infers encapsulated type <T> correctly",
     () => {
@@ -94,7 +94,7 @@ Deno.test("eitherway::Task::InferredTypes", async (t) => {
   );
 });
 
-Deno.test("eitherway::Tasks", async (t) => {
+Deno.test("grugway::Tasks", async (t) => {
   await t.step(".all() -> collects Ok values into an array", async () => {
     const collection: Task<number, Error>[] = Array(5).fill(0).map((v, i) =>
       Task.succeed(v + i)
