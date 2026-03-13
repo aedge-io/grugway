@@ -37,7 +37,7 @@ export function generateChange(opts: ChangeFileOptions): string {
   const compareSegment = lastTag.map((t) => `compare/${format(t)}..`).unwrapOr(
     "commits/",
   );
-  const lTag = lastTag.toString();
+  const lTag = lastTag.map(format).toString();
   const nTag = format(nextTag);
 
   const { breaking, feats, fixes, others } = groupIntoSummaries(commits);
