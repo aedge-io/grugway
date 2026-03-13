@@ -657,9 +657,6 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   override get [Symbol.toStringTag](): string {
     return "grugway.Task";
   }
-  static get [Symbol.toStringTag](): string {
-    return "grugway.Task";
-  }
 
   /**
    * In case of success AND that the encapsulated value `<T>` implements the
