@@ -1,32 +1,15 @@
-import {
-  assertInstanceOf,
-  assertStrictEquals,
-  assertThrows,
-} from "@std/assert";
-import { assert, AssertionError } from "./assert.ts";
+import { assertThrows } from "@std/assert";
+import { assertNotNullish } from "./assert.ts";
+import { Panic } from "./errors.ts";
 
-Deno.test("eitherway::core::assert", async (t) => {
-  await t.step("AssertionError -> Is a subclass of TypeError", () => {
-    const err = new AssertionError("test");
-
-    assertInstanceOf(err, Error);
-    assertInstanceOf(err, TypeError);
-    assertInstanceOf(err, AssertionError);
-    assertStrictEquals(err.constructor, AssertionError);
-    assertStrictEquals(err.name, "AssertionError");
-    assertStrictEquals(err.message, "test");
-  });
-
-  await t.step("AssertionError -> can be constructed with a cause", () => {
-    const err = new AssertionError("test", { cause: new Error("boom") });
-
-    assertInstanceOf(err.cause, Error);
-    assertStrictEquals(err.cause.message, "boom");
-  });
-
-  await t.step("assert() -> panics if expression evaluates to false", () => {
-    assertThrows(() => {
-      assert(false);
-    });
+Deno.test("grugway::core::assert", async (t) => {
+  await t.step("assertNotNullish() -> panics if expression is nullish", () => {
+    assertThrows(
+      () => {
+        assertNotNullish(undefined);
+      },
+      Panic,
+      "expected non-nullish value",
+    );
   });
 });
