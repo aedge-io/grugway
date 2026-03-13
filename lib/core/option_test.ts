@@ -818,15 +818,15 @@ Deno.test("grugway::Option::Some", async (t) => {
         const resArr = Object.prototype.toString.call(someArr);
         const resRec = Object.prototype.toString.call(someRec);
 
-        assertStrictEquals(resStatic, "[object aetherway.Option.Some]");
-        assertStrictEquals(resStr, "[object aetherway.Option.Some<abc>]");
+        assertStrictEquals(resStatic, "[object grugway.Option.Some]");
+        assertStrictEquals(resStr, "[object grugway.Option.Some<abc>]");
         assertStrictEquals(
           resArr,
-          "[object aetherway.Option.Some<[object Array]>]",
+          "[object grugway.Option.Some<[object Array]>]",
         );
         assertStrictEquals(
           resRec,
-          "[object aetherway.Option.Some<[object TestRecord]>]",
+          "[object grugway.Option.Some<[object TestRecord]>]",
         );
       },
     );
@@ -1393,7 +1393,7 @@ Deno.test("grugway::Option::None", async (t) => {
         const res = Object.prototype.toString.call(None);
 
         assertExists(res);
-        assertStrictEquals(res, "[object aetherway.Option.None]");
+        assertStrictEquals(res, "[object grugway.Option.None]");
       },
     );
 

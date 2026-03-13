@@ -909,8 +909,8 @@ export interface IResult<T, E> {
    * const okTag = Ok("thing").toString();
    * const errTag = Err(Error()).toString();
    *
-   * assert(okTag === "[object aetherway.Result.Ok<thing>]");
-   * assert(errTag === "[object aetherway.Result.Err<[object Error]>]");
+   * assert(okTag === "[object grugway.Result.Ok<thing>]");
+   * assert(errTag === "[object grugway.Result.Err<[object Error]>]");
    * ```
    */
   toString(): string;
@@ -995,12 +995,12 @@ export interface IResult<T, E> {
    *
    * const toString = Object.prototype.toString;
    *
-   * assert(toString.call(rec) === "[object aetherway.Result.Ok<[object Object]>]");
-   * assert(toString.call(str) === "[object aetherway.Result.Ok<abc>]");
-   * assert(toString.call(err) === "[object aetherway.Result.Err<[object Error]>]");
-   * assert(toString.call(Result) === "[object aetherway.Result]");
-   * assert(toString.call(Ok) === "[object aetherway.Result.Ok]");
-   * assert(toString.call(Err) === "[object aetherway.Result.Err]");
+   * assert(toString.call(rec) === "[object grugway.Result.Ok<[object Object]>]");
+   * assert(toString.call(str) === "[object grugway.Result.Ok<abc>]");
+   * assert(toString.call(err) === "[object grugway.Result.Err<[object Error]>]");
+   * assert(toString.call(Result) === "[object grugway.Result]");
+   * assert(toString.call(Ok) === "[object grugway.Result.Ok]");
+   * assert(toString.call(Err) === "[object grugway.Result.Err]");
    * ```
    */
   [Symbol.toStringTag]: string;
@@ -1128,7 +1128,7 @@ class _Ok<T> implements IResult<T, never> {
     const innerTag = typeof this.#value === "object"
       ? Object.prototype.toString.call(this.#value)
       : String(this.#value);
-    return `aetherway.Result.Ok<${innerTag}>`;
+    return `grugway.Result.Ok<${innerTag}>`;
   }
 }
 
@@ -1239,7 +1239,7 @@ class _Err<E> implements IResult<never, E> {
     const innerTag = typeof this.#err === "object"
       ? Object.prototype.toString.call(this.#err)
       : String(this.#err);
-    return `aetherway.Result.Err<${innerTag}>`;
+    return `grugway.Result.Err<${innerTag}>`;
   }
   toString(): string {
     return Object.prototype.toString.call(this);
@@ -1274,7 +1274,7 @@ class _Err<E> implements IResult<never, E> {
  *
  * assert(ok instanceof Ok);
  * assert(ok instanceof Result);
- * assert(tag === "[object aetherway.Result.Ok]");
+ * assert(tag === "[object grugway.Result.Ok]");
  * ```
  */
 export type Ok<T> = _Ok<T>;
@@ -1310,7 +1310,7 @@ Object.defineProperty(Ok, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Ok, Symbol.toStringTag, {
-  value: "aetherway.Result.Ok",
+  value: "grugway.Result.Ok",
 });
 
 /**
@@ -1332,7 +1332,7 @@ Object.defineProperty(Ok, Symbol.toStringTag, {
  *
  * assert(err instanceof Err);
  * assert(err instanceof Result);
- * assert(tag === "[object aetherway.Result.Err]");
+ * assert(tag === "[object grugway.Result.Err]");
  * ```
  */
 export type Err<E> = _Err<E>;
@@ -1368,7 +1368,7 @@ Object.defineProperty(Err, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Err, Symbol.toStringTag, {
-  value: "aetherway.Result.Err",
+  value: "grugway.Result.Err",
 });
 
 /**
@@ -1408,7 +1408,7 @@ Object.defineProperty(Err, Symbol.toStringTag, {
  * assert(ok.isOk());
  * assert(err instanceof Result);
  * assert(err.isErr());
- * assert(tag === "[object aetherway.Result]");
+ * assert(tag === "[object grugway.Result]");
  * ```
  */
 export type Result<T, E> = Ok<T> | Err<E>;
@@ -1424,7 +1424,7 @@ Object.defineProperty(Result, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Result, Symbol.toStringTag, {
-  value: "aetherway.Result",
+  value: "grugway.Result",
 });
 
 //deno-lint-ignore no-namespace

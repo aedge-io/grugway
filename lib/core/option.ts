@@ -886,8 +886,8 @@ export interface IOption<T> {
    * const someTag = Some("thing").toTag();
    * const noneTag = None.toTag();
    *
-   * assert(someTag === "[object aetherway.Option.Some<thing>]");
-   * assert(noneTag === "[object aetherway.Option.None]");
+   * assert(someTag === "[object grugway.Option.Some<thing>]");
+   * assert(noneTag === "[object grugway.Option.None]");
    * ```
    */
   toTag(): string;
@@ -1106,12 +1106,12 @@ export interface IOption<T> {
    *
    * const toString = Object.prototype.toString;
    *
-   * assert(toString.call(rec) === "[object aetherway.Option.Some<[object Object]>]");
-   * assert(toString.call(str) === "[object aetherway.Option.Some<abc>]");
-   * assert(toString.call(none) === "[object aetherway.Option.None]");
-   * assert(toString.call(Option) === "[object aetherway.Option]");
-   * assert(toString.call(Some) === "[object aetherway.Option.Some]");
-   * assert(toString.call(None) === "[object aetherway.Option.None]");
+   * assert(toString.call(rec) === "[object grugway.Option.Some<[object Object]>]");
+   * assert(toString.call(str) === "[object grugway.Option.Some<abc>]");
+   * assert(toString.call(none) === "[object grugway.Option.None]");
+   * assert(toString.call(Option) === "[object grugway.Option]");
+   * assert(toString.call(Some) === "[object grugway.Option.Some]");
+   * assert(toString.call(None) === "[object grugway.Option.None]");
    * ```
    */
   [Symbol.toStringTag]: string;
@@ -1235,7 +1235,7 @@ class _None<T = never> implements IOption<never> {
     return false;
   }
   get [Symbol.toStringTag](): string {
-    return "aetherway.Option.None";
+    return "grugway.Option.None";
   }
 }
 
@@ -1382,7 +1382,7 @@ class _Some<T> implements IOption<T> {
     const innerTag = typeof this.#value === "object"
       ? Object.prototype.toString.call(this.#value)
       : String(this.#value);
-    return `aetherway.Option.Some<${innerTag}>`;
+    return `grugway.Option.Some<${innerTag}>`;
   }
 }
 
@@ -1483,7 +1483,7 @@ Object.defineProperty(Some, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Some, Symbol.toStringTag, {
-  value: "aetherway.Option.Some",
+  value: "grugway.Option.Some",
 });
 
 /**
@@ -1530,7 +1530,7 @@ Object.defineProperty(None, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(None, Symbol.toStringTag, {
-  value: "aetherway.Option.None",
+  value: "grugway.Option.None",
 });
 Object.freeze(None);
 
@@ -1585,7 +1585,7 @@ Object.defineProperty(Option, Symbol.hasInstance, {
   },
 });
 Object.defineProperty(Option, Symbol.toStringTag, {
-  value: "aetherway.Option",
+  value: "grugway.Option",
 });
 
 //deno-lint-ignore no-namespace
