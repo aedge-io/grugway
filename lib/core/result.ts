@@ -25,7 +25,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const res = Ok(42) as Result<number, Error>;
@@ -47,7 +47,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const res = Err(Error()) as Result<number, Error>;
@@ -72,7 +72,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const res = Ok(Err(Error())) as Result<Result<number, Error>, TypeError>;
@@ -105,7 +105,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const record = { a: "thing" };
@@ -133,7 +133,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const double = (n: number) => n * 2;
@@ -159,7 +159,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const fallback = 10;
@@ -188,7 +188,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const fallback = (e: TypeError) => e.message.length;
@@ -216,7 +216,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const toTypeError = (e: Error) => TypeError("Something went wrong", { cause: e });
@@ -250,7 +250,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const processString = function(str: string): Result<number, TypeError> {
@@ -291,7 +291,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Option } from "./option.ts";
    * import { Err, Ok, Result } from "./result.ts"
    *
@@ -344,7 +344,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    * import { emptyDirSync } from "https://deno.land/std@0.207.0/fs/empty_dir.ts";
    *
@@ -415,7 +415,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const { BadResource, NotFound, PermissionDenied } = Deno.errors;
@@ -468,7 +468,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42);
@@ -496,7 +496,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42);
@@ -530,7 +530,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const sum = function(...nums: number[]): Result<number, TypeError> {
@@ -567,7 +567,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42) as Result<number, string>;
@@ -599,7 +599,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42) as Result<number, string>;
@@ -624,7 +624,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42) as Result<number, string>;
@@ -652,7 +652,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const res = Ok(42);
@@ -673,7 +673,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const res = Ok(42) as Result<number, string>;
@@ -695,7 +695,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42).ok();
@@ -716,7 +716,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42).err();
@@ -738,7 +738,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    * import { Task } from "../async/task.ts";
    *
@@ -765,7 +765,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const ok = Ok(42);
@@ -818,7 +818,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const record = { a: "thing" };
@@ -849,7 +849,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const record = { a: "thing" };
@@ -877,7 +877,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const record = { a: "thing" };
@@ -903,7 +903,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const okTag = Ok("thing").toString();
@@ -929,7 +929,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const simpleOk = Ok(42);            //`number` is not iterable
@@ -986,7 +986,7 @@ export interface IResult<T, E> {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const rec = Ok({ a: 1, b: 2 });
@@ -1266,7 +1266,7 @@ class _Err<E> implements IResult<never, E> {
  *
  * @example
  * ```typescript
- * import { assert } from "./assert.ts";
+ * import { assert } from "@std/assert";
  * import { Err, Ok, Result } from "./result.ts";
  *
  * const ok = Ok(42);
@@ -1291,7 +1291,7 @@ export function Ok<T>(value: T): Ok<T> {
  *
  * @example
  * ```typescript
- * import { assert } from "./assert.ts";
+ * import { assert } from "@std/assert";
  * import { Err, Ok, Result } from "./result.ts";
  *
  * const empty = Ok.empty().ok();
@@ -1324,7 +1324,7 @@ Object.defineProperty(Ok, Symbol.toStringTag, {
  *
  * @example
  * ```typescript
- * import { assert } from "./assert.ts";
+ * import { assert } from "@std/assert";
  * import { Err, Ok, Result } from "./result.ts";
  *
  * const err = Err("Problem");
@@ -1349,7 +1349,7 @@ export function Err<E>(err: E): Err<E> {
  *
  * @example
  * ```typescript
- * import { assert } from "./assert.ts";
+ * import { assert } from "@std/assert";
  * import { Err, Ok, Result } from "./result.ts";
  *
  * const empty = Err.empty().err();
@@ -1389,7 +1389,7 @@ Object.defineProperty(Err, Symbol.toStringTag, {
  *
  * @example
  * ```typescript
- * import { assert } from "./assert.ts";
+ * import { assert } from "@std/assert";
  * import { Err, Ok, Result } from "./result.ts";
  *
  * type StrOrTypeError = string | TypeError;
@@ -1442,7 +1442,7 @@ export namespace Result {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const produceArr = () => [1,2,3];
@@ -1463,7 +1463,7 @@ export namespace Result {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * const castToErr = <E>(e: unknown): E => e as E;
@@ -1498,7 +1498,7 @@ export namespace Result {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * function powerOfTwo(n: number): number {
@@ -1539,7 +1539,7 @@ export namespace Result {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
    * function toSpecialString(s: string): string {
@@ -1594,7 +1594,7 @@ export namespace Results {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Result, Results } from "./result.ts";
    *
    * const str = "thing" as string | TypeError;
@@ -1642,7 +1642,7 @@ export namespace Results {
    *
    * @example
    * ```typescript
-   * import { assert } from "./assert.ts";
+   * import { assert } from "@std/assert";
    * import { Result, Results } from "./result.ts";
    *
    * const str = "thing" as string | TypeError;
@@ -1748,7 +1748,7 @@ export type InferredErrUnion<
  *
  * @example
  * ```typescript
- * import { assert } from "./assert.ts"
+ * import { assert } from "@std/assert"
  * import { Err, Ok, Result, asInfallible } from "./result.ts"
  *
  * //Let's re-implement `Result.from`

@@ -397,6 +397,7 @@ Deno.test("grugway::Options", async (t) => {
 Deno.test("grugway::Option::Some", async (t) => {
   await t.step("Some<T> -> Ctor", async (t) => {
     await t.step("() -> throws if instantiated with nullish value", () => {
+      //deno-lint-ignore ban-types
       const secretelyNullish = null as unknown as {};
 
       assertThrows(() => Some(secretelyNullish), Panic);

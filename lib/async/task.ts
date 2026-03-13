@@ -487,7 +487,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { assert } from "../core/assert.ts";
+   * import { assert } from "@std/assert";
    * import { Result } from "../core/result.ts";
    * import { Task } from "./task.ts";
    *
@@ -511,7 +511,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { assert } from "../core/assert.ts";
+   * import { assert } from "@std/assert";
    * import { Result } from "../core/result.ts";
    * import { Task } from "./task.ts";
    *
@@ -535,7 +535,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { assert } from "../core/assert.ts";
+   * import { assert } from "@std/assert";
    * import { Result } from "../core/result.ts";
    * import { Task } from "./task.ts";
    *
@@ -562,7 +562,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { assert } from "../core/assert.ts"
+   * import { assert } from "@std/assert"
    * import { Err, Ok, Result, Task } from "../mod.ts";
    *
    * const success = Task.succeed(42);
@@ -617,7 +617,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { assert } from "../core/assert.ts";
+   * import { assert } from "@std/assert";
    * import { Task } from "./task.ts"
    *
    * const tag = Task.succeed(42).toString();
@@ -643,7 +643,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { assert } from "../core/assert.ts";
+   * import { assert } from "@std/assert";
    * import { Task } from "./task.ts"
    *
    * const task = Task.succeed({ a: 1, b: 2 });
