@@ -785,20 +785,24 @@ function toStep(action: Action, termFn: TerminatorFn, isDryRun = true): Step {
  */
 
 function abort(e: Error | CommandResult): never {
-  $.killAll();
   const [code, err] = errorEssentials(e);
+
   $.logError("aborting due to error:\n", err);
+
+  $.killAll();
   Deno.exit(code);
 }
 
 function exit(res: Result<unknown, Error | CommandResult>): never {
-  $.killAll();
   const [code, err] = res.mapErr((e) => errorEssentials(e))
     .err()
     .unwrapOr([0, undefined]);
+
   if (err) {
     verboseMode.get() ? $.logError(err) : $.logError(err.message);
   }
+
+  $.killAll();
   Deno.exit(code);
 }
 
