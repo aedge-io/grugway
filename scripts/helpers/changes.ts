@@ -32,13 +32,12 @@ const changeFileHeaders = {
 type ChangeSection = keyof typeof changeFileHeaders;
 
 export function generateChange(opts: ChangeFileOptions): string {
-  const { repo, title, lastTag, nextTag, commits, defaultBranch, sha } = opts;
+  const { repo, title, lastTag, nextTag, commits, sha } = opts;
 
-  /**
-   * Keep those short to not break the layout with fmt
-   * And yes, the `.` is important! (compare links)
-   */
-  const lTag = lastTag.map((t) => `${format(t)}.`).unwrapOr(defaultBranch);
+  const compareSegment = lastTag.map((t) => `compare/${format(t)}..`).unwrapOr(
+    "commits/",
+  );
+  const lTag = lastTag.toString();
   const nTag = format(nextTag);
 
   const { breaking, feats, fixes, others } = groupIntoSummaries(commits);
@@ -65,7 +64,7 @@ ${toMdList(others)}
 
 ---
 
-**Full Changelog**: [${lTag}..${nTag}](${repo}/compare/${lTag}..${nTag})
+**Full Changelog**: [${lTag}..${nTag}](${repo}/${compareSegment}${nTag})
 ${createIntegrityTag({ version: format(nextTag), sha })}`;
 }
 
@@ -299,7 +298,7 @@ function groupIntoSummaries(commits: Commit[]): SummaryGroup {
 
 function toSummaryLine(c: Commit): string {
   // deno-fmt-ignore
-  return `${c.summary} *-> by* [@${c.author}](${c.authorUrl}) *in* [${c.sha.slice(0, 5)}](${c.url})`;
+  return `${c.summary} ([${c.sha.slice(0, 7)}](${c.url} by [@${c.author}](${c.authorUrl}))`;
 }
 
 function toMdList(list: string[]) {
