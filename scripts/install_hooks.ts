@@ -1,32 +1,36 @@
-#!/usr/bin/env -S deno run -A
-import $ from "@david/dax";
+#!/usr/bin/env -S deno run --cached-only -A
 
-const projectRoot = $.path(import.meta.url).join("../..");
-const gitHooksDir = projectRoot.join(".git", "hooks");
+import { $ as shellBuilder } from "grugway/shell";
+import { paths } from "grugway/metadata";
+
+const $ = shellBuilder.withLogPrefix("[Install Hooks]>");
+
+const gitHooksDir = paths.root.join(".git", "hooks");
 
 if (!gitHooksDir.existsSync()) {
-  $.logError("Not a git repository (no .git/hooks directory found).");
+  $.logError("not a git repository (no .git/hooks directory found).");
   Deno.exit(1);
 }
 
-async function installHook(hookName: string, sourcePath: string) {
-  const source = projectRoot.join(sourcePath);
+function installHook(hookName: string, sourcePath: string) {
+  const source = paths.root.join(sourcePath);
   const target = gitHooksDir.join(hookName);
 
-  $.logStep(`Linking ${hookName} -> ${sourcePath}...`);
+  $.logLight(`linking ${hookName} -> ${sourcePath}...`);
 
-  if (target.existsSync()) {
-    await target.remove();
+  if (target.existsSync() || target.isSymlinkSync()) {
+    $.logLight(`hook ${hookName} already exists. Removing it...`);
+    target.removeSync();
   }
 
-  await $`ln -sf ${source} ${target}`;
+  /* You've read that right */
+  target.symlinkToSync(source, { kind: "absolute" });
+  source.chmodSync(0o755);
 
-  await $`chmod +x ${source}`;
-
-  $.logStep(`Hook ${hookName} installed.`);
+  $.logLight(`hook ${hookName} installed.`);
 }
 
-await installHook("pre-commit", "scripts/hooks/pre-commit.ts");
-await installHook("pre-push", "scripts/hooks/pre-push.ts");
+installHook("pre-commit", "scripts/hooks/pre-commit.ts");
+installHook("pre-push", "scripts/hooks/pre-push.ts");
 
-$.logLight("Hooks installed successfully via symlinks.");
+$.logStep("all hooks installed.");

@@ -1,5 +1,6 @@
 #!/usr/bin/env -S deno run -A
-import { $ } from "@david/dax";
+
+import { $ } from "grugway/shell";
 import { Cmd, runPipeline, Step } from "grugway/pipeline";
 
 const root = await $`git rev-parse --show-toplevel`.text();
@@ -10,9 +11,9 @@ const staged = (await $`git diff \
   .lines()).map((file) => $.path(root).join(file));
 
 await runPipeline({
-  name: "PRE-COMMIT:",
+  name: "[Pre-commit]>",
   steps: [
-    Step("FMT", "fmt staged files...", Cmd($`deno fmt -q ${staged}`)),
-    Step("GIT", "re-add to the index...", Cmd($`git add ${staged}`)),
+    Step("fmt", "fmt staged files...", Cmd($`deno fmt -q ${staged}`)),
+    Step("git", "re-add to the index...", Cmd($`git add ${staged}`)),
   ],
 });
