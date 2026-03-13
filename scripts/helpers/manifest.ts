@@ -43,7 +43,6 @@ export class Manifest {
 
   /**
    * Creates a new instance by roundtripping ser/de
-   * BEWARE of race conditions: still points at the same resource
    */
   public withBumpedVersion(v: SemVer): Manifest {
     const newRoot = parse(this.#root.toString());
