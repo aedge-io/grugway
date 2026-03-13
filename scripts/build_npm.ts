@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run -A --cached-only
+#!/usr/bin/env -S deno run -A
 
 import { Err, Ok, type Result, Task } from "@aedge-io/grugway";
 import { build } from "@deno/dnt";
