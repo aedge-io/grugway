@@ -42,6 +42,7 @@
     "grugway/examples": "./examples/doc_helpers.ts", //dev
     "grugway/pipeline": "./scripts/helpers/pipeline.ts", //dev
     "grugway/manifest": "./scripts/helpers/manifest.ts", //dev
+    "grugway/changes": "./scripts/helpers/changes.ts", //dev
     "grugway/version": "./scripts/helpers/version.ts", //dev
     "grugway/shell": "./scripts/helpers/shell.ts", //dev
     "grugway/git": "./scripts/helpers/git.ts", //dev
