@@ -23,8 +23,8 @@ export type ChangeFileOptions = {
 };
 
 const changeFileHeaders = {
-  breaking: "## Breaking Changes",
-  feats: "## Features",
+  breaking: "### Breaking Changes",
+  feats: "### Features",
   fixes: "### Fixes",
   others: "### Other Changes",
 } as const;
@@ -43,7 +43,7 @@ export function generateChange(opts: ChangeFileOptions): string {
 
   const { breaking, feats, fixes, others } = groupIntoSummaries(commits);
 
-  return `# ${nTag}${title.map((t) => ` - ${t}`)}
+  return `## grugway ${nTag}${title.map((t) => ` - ${t}`)}
 
 ${changeFileHeaders.breaking}
 
