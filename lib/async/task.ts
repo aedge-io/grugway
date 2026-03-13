@@ -622,7 +622,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * const tag = Task.succeed(42).toString();
    *
-   * assert(tag === "[object aetherway.Task]");
+   * assert(tag === "[object grugway.Task]");
    * ```
    */
   override toString(): string {
@@ -650,15 +650,15 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    *
    * const toString = Object.prototype.toString;
    *
-   * assert(toString.call(task) === "[object aetherway.Task]");
-   * assert(toString.call(Task) === "[object aetherway.Task]");
+   * assert(toString.call(task) === "[object grugway.Task]");
+   * assert(toString.call(Task) === "[object grugway.Task]");
    * ```
    */
   override get [Symbol.toStringTag](): string {
-    return "aetherway.Task";
+    return "grugway.Task";
   }
   static get [Symbol.toStringTag](): string {
-    return "aetherway.Task";
+    return "grugway.Task";
   }
 
   /**

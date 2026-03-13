@@ -5,7 +5,7 @@
  * @category Core::Errors
  */
 export class Panic<E> extends Error {
-  override name = "aetherway.Panic";
+  override name = "grugway.Panic";
   override readonly cause?: E;
   constructor(cause?: E, msg?: string) {
     super(msg, { cause });

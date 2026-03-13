@@ -16,7 +16,7 @@ Deno.test("grugway::core::errors", async (t) => {
       assertInstanceOf(pnc, Error);
       assertInstanceOf(pnc, Panic);
       assertStrictEquals(pnc.constructor, Panic);
-      assertStrictEquals(pnc.name, "aetherway.Panic");
+      assertStrictEquals(pnc.name, "grugway.Panic");
       assertStrictEquals(pnc.message, "Runtime exception");
       assertStrictEquals(pnc.cause, cause);
     });
@@ -28,7 +28,7 @@ Deno.test("grugway::core::errors", async (t) => {
       assertInstanceOf(pnc, Error);
       assertInstanceOf(pnc, Panic);
       assertStrictEquals(pnc.constructor, Panic);
-      assertStrictEquals(pnc.name, "aetherway.Panic");
+      assertStrictEquals(pnc.name, "grugway.Panic");
       assertStrictEquals(pnc.message, "Runtime exception");
       assertStrictEquals(pnc.cause, cause);
     });

@@ -44,7 +44,7 @@ Deno.test("grugway::Result", async (t) => {
     assertStrictEquals(okUnion instanceof Result, true);
     assertStrictEquals(okVoid.isOk(), true);
     assertStrictEquals(okVoid instanceof Result, true);
-    assertStrictEquals(tag, "[object aetherway.Result]");
+    assertStrictEquals(tag, "[object grugway.Result]");
   });
 
   await t.step(".from() -> returns Result<T, never> inferred from fn", () => {
@@ -352,7 +352,7 @@ Deno.test("grugway::Result::Ok", async (t) => {
       assertStrictEquals(ok instanceof Result, true);
       assertStrictEquals(ok instanceof Ok, true);
       assertStrictEquals(ok.isOk(), true);
-      assertStrictEquals(tag, "[object aetherway.Result.Ok]");
+      assertStrictEquals(tag, "[object grugway.Result.Ok]");
     });
 
     await t.step(".empty() -> returns Ok<Empty>", () => {
@@ -896,13 +896,13 @@ Deno.test("grugway::Result::Ok", async (t) => {
     await t.step(".toString() -> returns the string tag", () => {
       const okTag = Ok("thing").toString();
 
-      assertStrictEquals(okTag, "[object aetherway.Result.Ok<thing>]");
+      assertStrictEquals(okTag, "[object grugway.Result.Ok<thing>]");
     });
 
     await t.step("[Symbol.toStringTag] -> returns the FQN", () => {
       const fqn = Ok("thing")[Symbol.toStringTag];
 
-      assertStrictEquals(fqn, "aetherway.Result.Ok<thing>");
+      assertStrictEquals(fqn, "grugway.Result.Ok<thing>");
     });
 
     await t.step(
@@ -910,7 +910,7 @@ Deno.test("grugway::Result::Ok", async (t) => {
       () => {
         const fqn = Ok(["thing"])[Symbol.toStringTag];
 
-        assertStrictEquals(fqn, "aetherway.Result.Ok<[object Array]>");
+        assertStrictEquals(fqn, "grugway.Result.Ok<[object Array]>");
       },
     );
 
@@ -966,7 +966,7 @@ Deno.test("grugway::Result::Err", async (t) => {
       assertStrictEquals(err instanceof Err, true);
       assertStrictEquals(err instanceof Result, true);
       assertStrictEquals(err.isErr(), true);
-      assertStrictEquals(tag, "[object aetherway.Result.Err]");
+      assertStrictEquals(tag, "[object grugway.Result.Err]");
     });
 
     await t.step(".empty() -> returns Err<Empty>", () => {
@@ -1465,14 +1465,14 @@ Deno.test("grugway::Result::Err", async (t) => {
 
       assertStrictEquals(
         errTag,
-        "[object aetherway.Result.Err<[object Error]>]",
+        "[object grugway.Result.Err<[object Error]>]",
       );
     });
 
     await t.step("[Symbol.toStringTag] -> returns the FQN", () => {
       const fqn = Err(123)[Symbol.toStringTag];
 
-      assertStrictEquals(fqn, "aetherway.Result.Err<123>");
+      assertStrictEquals(fqn, "grugway.Result.Err<123>");
     });
 
     await t.step(
@@ -1480,7 +1480,7 @@ Deno.test("grugway::Result::Err", async (t) => {
       () => {
         const fqn = Err(["thing"])[Symbol.toStringTag];
 
-        assertStrictEquals(fqn, "aetherway.Result.Err<[object Array]>");
+        assertStrictEquals(fqn, "grugway.Result.Err<[object Array]>");
       },
     );
 
