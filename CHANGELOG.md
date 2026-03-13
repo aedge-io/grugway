@@ -14,6 +14,6 @@
 - Change header sizes
 - Setup dev deps and import maps
 
-[-> Release overview](../docs/changes/0.1.0.md)
+[-> Release overview](docs/changes/0.1.0.md)
 
 <!-- release-metadata: {"version":"0.1.0","sha":"15d7601edaac480ffe0bcf4f955820fe38901b06"} -->

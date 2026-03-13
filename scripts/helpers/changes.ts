@@ -190,7 +190,7 @@ function releaseHeader(ver: SemVer, title: Option<string>) {
 }
 
 function releaseOverview(changelog: Path, change: Path) {
-  return `[-> Release overview](${changelog.relative(change)})`;
+  return `[-> Release overview](${changelog.parent()?.relative(change)})`;
 }
 
 function releaseHighlights(cm: Commit[], pre = "") {
