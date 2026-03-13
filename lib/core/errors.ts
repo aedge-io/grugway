@@ -15,6 +15,15 @@ export class Panic<E> extends Error {
   static causedBy<E>(cause?: E, msg = "Panic"): Panic<E> {
     return new Panic(cause, msg);
   }
+
+  /**
+   * Use this to narrow an `unknown` error to a `Panic<unknown>`
+   *
+   * @category Core::Errors
+   */
+  static isPanic(err: unknown): err is Panic<unknown> {
+    return err != null && typeof err === "object" && err.constructor === Panic;
+  }
 }
 
 /**
@@ -53,15 +62,6 @@ export function panic<E>(err?: E): never {
     throw err;
   }
   throw Panic.causedBy(err, "Panic caused by unknown error!");
-}
-
-/**
- * Use this to narrow an `unknown` error to a `Panic<unknown>`
- *
- * @category Core::Errors
- */
-export function isEitherwayPanic(err: unknown): err is Panic<unknown> {
-  return err != null && typeof err === "object" && err.constructor === Panic;
 }
 
 /**
