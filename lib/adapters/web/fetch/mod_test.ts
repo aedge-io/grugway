@@ -43,7 +43,7 @@ function fetchStub(
   return Promise.resolve(Response.json({}));
 }
 
-Deno.test("eitherway::adapters::web::fetch", async (t) => {
+Deno.test("grugway::adapters::web::fetch", async (t) => {
   await t.step("FailedRequest<R>", async (t) => {
     await t.step(".from() -> produces a new generic instance", () => {
       const responseLike = {

@@ -19,7 +19,7 @@ import type {
 } from "./result.ts";
 import type { Empty } from "./type_utils.ts";
 
-Deno.test("eitherway::Result", async (t) => {
+Deno.test("grugway::Result", async (t) => {
   await t.step("() -> produces an instance of Result for union types", () => {
     const str = "str";
     const te = TypeError();
@@ -162,7 +162,7 @@ Deno.test("eitherway::Result", async (t) => {
   );
 });
 
-Deno.test("eitherway::Result::InferredTypes", async (t) => {
+Deno.test("grugway::Result::InferredTypes", async (t) => {
   await t.step(
     "InferredOkType<R> -> inferres encapsulated type <T> correctly",
     () => {
@@ -239,7 +239,7 @@ Deno.test("eitherway::Result::InferredTypes", async (t) => {
   );
 });
 
-Deno.test("eitherway::Results", async (t) => {
+Deno.test("grugway::Results", async (t) => {
   await t.step(".all() -> collects Ok values into an array", () => {
     const collection: Result<number, Error>[] = Array(5).fill(0).map((v, i) =>
       Ok(v + i)
@@ -343,7 +343,7 @@ Deno.test("eitherway::Results", async (t) => {
   });
 });
 
-Deno.test("eitherway::Result::Ok", async (t) => {
+Deno.test("grugway::Result::Ok", async (t) => {
   await t.step("Ok<T> -> Constructors", async (t) => {
     await t.step("() -> returns Ok", () => {
       const ok = Ok(undefined);
@@ -957,7 +957,7 @@ Deno.test("eitherway::Result::Ok", async (t) => {
   });
 });
 
-Deno.test("eitherway::Result::Err", async (t) => {
+Deno.test("grugway::Result::Err", async (t) => {
   await t.step("Err<E> -> Constructors", async (t) => {
     await t.step("() -> returns Err<E>", () => {
       const err = Err(undefined);

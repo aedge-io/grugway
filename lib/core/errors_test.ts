@@ -6,7 +6,7 @@ import {
 import { assertType, type IsExact } from "@std/testing/types";
 import { Panic, panic } from "./errors.ts";
 
-Deno.test("eitherway::core::errors", async (t) => {
+Deno.test("grugway::core::errors", async (t) => {
   await t.step("Panic<E> -> Contructors", async (t) => {
     await t.step("new() -> creates a generic instance", () => {
       const cause = new Error("boom");
@@ -33,7 +33,7 @@ Deno.test("eitherway::core::errors", async (t) => {
       assertStrictEquals(pnc.cause, cause);
     });
     await t.step(
-      "isPanic() -> narrows an unknown value to a Panic",
+      ".isPanic() -> narrows an unknown value to a Panic",
       () => {
         const err = Error("boom");
         const pnc = Panic.causedBy(null, "Expected non-nullish value");

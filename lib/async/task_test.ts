@@ -5,7 +5,7 @@ import { assertInstanceOf, assertStrictEquals } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
 import type { Empty } from "../core/type_utils.ts";
 
-Deno.test("eitherway::Task", async (t) => {
+Deno.test("grugway::Task", async (t) => {
   await t.step("Task<T, E> -> Constructors", async (t) => {
     await t.step(
       ".of() -> propagates exception asynchronously if Promise<Result<T,E>> throws",

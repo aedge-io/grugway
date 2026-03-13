@@ -19,7 +19,7 @@ type IsOption<O> = O extends Option<unknown> ? true : false;
 type OptionType<O> = O extends Readonly<Option<infer T>> ? T : never;
 type SomeType<S> = S extends Readonly<Some<infer T>> ? T : never;
 
-Deno.test("eitherway::Option::TypeHelpers::TypeTests", async (t) => {
+Deno.test("grugway::Option::TypeHelpers::TypeTests", async (t) => {
   await t.step(
     "InferredOptionTypes<O> -> Inferres T[] from Option<T>[]",
     () => {
@@ -65,7 +65,7 @@ Deno.test("eitherway::Option::TypeHelpers::TypeTests", async (t) => {
   });
 });
 
-Deno.test("eitherway::Option::TypeTests", async (t) => {
+Deno.test("grugway::Option::TypeTests", async (t) => {
   await t.step(
     "Option.from() -> Nullish types stripped from inner return type",
     () => {
@@ -204,7 +204,7 @@ Deno.test("eitherway::Option::TypeTests", async (t) => {
   );
 });
 
-Deno.test("eitherway::Options::TypeTests", async (t) => {
+Deno.test("grugway::Options::TypeTests", async (t) => {
   await t.step(
     ".all() -> Heterogenous tuple types are correctly inferred",
     () => {
@@ -265,7 +265,7 @@ Deno.test("eitherway::Options::TypeTests", async (t) => {
   );
 });
 
-Deno.test("eitherway::Option::Some::TypeTests", async (t) => {
+Deno.test("grugway::Option::Some::TypeTests", async (t) => {
   await t.step("Some<T> -> Ctor doesn't accept Nullish types", () => {
     type NullishUnion = string | undefined | null;
 
@@ -590,7 +590,7 @@ Deno.test("eitherway::Option::Some::TypeTests", async (t) => {
   });
 });
 
-Deno.test("eitherway::Option::None::TypeTests", async (t) => {
+Deno.test("grugway::Option::None::TypeTests", async (t) => {
   await t.step("None -> Map Methods", async (t) => {
     await t.step(".map() -> Return type is None", () => {
       const none = None.map(() => "never");
