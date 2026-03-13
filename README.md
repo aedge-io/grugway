@@ -2,7 +2,7 @@
 
 [![codecov](https://codecov.io/github/aedge-io/grugway/graph/badge.svg?token=9WTDQ8WOKW)](https://codecov.io/github/aedge-io/grugway)
 
-> Safe abstractions for fallible flows — for humans and clankers alike.
+> Safe abstractions for fallible flows — for humans, their clankers and foes.
 
 This is a ~~fork~~ rework of an old, personal project
 [eitherway](https://github.com/realpha/eitherway).

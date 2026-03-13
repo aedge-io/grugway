@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "exports": "./lib/mod.ts",
+  "exclude": ["cov/", "npm/"],
   "publish": {
     "include": ["LICENSE.md", "README.md", "lib/**/*.ts"],
     "exclude": [
@@ -15,9 +16,6 @@
       "scripts/",
       "lib/**/*_test.ts"
     ]
-  },
-  "fmt": {
-    "exclude": ["cov/", "npm/"]
   },
   "tasks": {
     "build:npm": "./scripts/build_npm.ts",
