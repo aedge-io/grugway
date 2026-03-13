@@ -1,52 +1,83 @@
+#!/usr/bin/env -S deno run -A --cached-only
+
 import { Err, Ok, type Result, Task } from "@aedge-io/grugway";
-import {
-  dirIsEmpty,
-  parseVersion,
-  releaseVersionsMatch,
-  ScriptErrors,
-  type SemVer,
-} from "./build_helpers.ts";
 import { build } from "@deno/dnt";
-import * as semver from "@std/semver";
+import { dirIsEmpty } from "grugway/fs";
+import { git, manifest, paths } from "grugway/metadata";
+import { $ as $builder } from "grugway/shell";
+import { format, parse, type SemVer, versionsMatch } from "grugway/version";
 
-const MAIN_CONFIG_FILE = import.meta.resolve("../deno.jsonc");
-const PKG_NAME = "@aedge-io/grugway";
-const ENTRY_POINT = "./lib/mod.ts";
-const OUT_DIR = "./npm";
-const LICENSE = "./LICENSE.md";
-const README = "./README.md";
-const GIT_URL = "git+https://github.com/aedge-io/grugway.git";
-const ISSUE_URL = "https://github.com/aedge-io/grugway/issues";
+const $ = $builder.withLogPrefix("[Build Npm]>");
 
-async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
+$.enableShutdownHooks();
+
+const { root, npmDir, libEntryPoint, readme, license } = paths;
+
+function main() {
+  return parse(Deno.args[0])
+    .inspect(versionToBuild)
+    .andEnsure(releaseVersionsMatch)
+    .into(Task.of<SemVer, Error>)
+    .andEnsure(npmDirIsEmpty)
+    .andThen(buildPackage);
+}
+
+await main().then((res) => {
+  const code = res
+    .inspect(() => $.logStep("succeeded"))
+    .inspectErr($.logError)
+    .mapOr(() => 0, 1)
+    .unwrap();
+
+  Deno.exit(code);
+});
+
+/*
+ ********************************************************************
+ * build definitions and log helpers
+ ********************************************************************
+ */
+
+function npmDirIsEmpty() {
+  return dirIsEmpty(npmDir.toString());
+}
+function versionToBuild(v: SemVer) {
+  $.logStep(`new version ${format(v)}`);
+}
+function releaseVersionsMatch(v: SemVer) {
+  return versionsMatch(manifest.version, v);
+}
+
+async function buildPackage(next: SemVer): Promise<Result<void, Error>> {
   try {
     await build({
-      configFile: MAIN_CONFIG_FILE,
-      entryPoints: [ENTRY_POINT],
-      outDir: OUT_DIR,
-      typeCheck: "both",
+      entryPoints: [root.relative(libEntryPoint).toString()],
+      outDir: npmDir.toString(),
       declaration: "separate",
-      scriptModule: "cjs",
+      scriptModule: false,
       test: false,
       shims: {
         deno: false,
       },
       package: {
-        name: PKG_NAME,
-        version: semver.format(v),
-        description:
-          "Safe abstractions for fallible flows for humans and clankers alike",
+        name: manifest.name,
+        version: format(next),
+        description: manifest.description,
         license: "MIT",
         author: "aedge-io <os@aedge.io>",
         engines: {
-          "node": ">=17.0.0", //needed for structuredClone
+          "node": ">=17.0.0", /* needed for structuredClone */
         },
         repository: {
           type: "git",
-          url: GIT_URL,
+          url: git.remote.toString(),
         },
         bugs: {
-          url: ISSUE_URL,
+          url: git.issues.toString(),
+        },
+        publishConfig: {
+          access: "public",
+          provenance: true,
         },
         keywords: [
           "async",
@@ -68,35 +99,17 @@ async function buildPackage(v: SemVer): Promise<Result<void, Error>> {
         ],
       },
       compilerOptions: {
-        lib: ["DOM", "ES2022"], //needed for structuredClone
+        lib: ["DOM", "ES2022"], /* needed for structuredClone */
         target: "ES2022",
       },
       postBuild() {
-        Deno.copyFileSync(LICENSE, `${OUT_DIR}/LICENSE.md`);
-        Deno.copyFileSync(README, `${OUT_DIR}/README.md`);
-        Deno.removeSync(`${OUT_DIR}/src`, { recursive: true });
+        license.copyFileSync(npmDir.join("LICENSE.md"));
+        readme.copyFileSync(npmDir.join("README.md"));
+        npmDir.join("src").removeSync({ recursive: true });
       },
     });
     return Ok(undefined);
   } catch (e: unknown) {
-    return Err(ScriptErrors.BuildFailed(e));
+    return Err(Error(`Build failed`, { cause: e }));
   }
 }
-
-function main() {
-  return parseVersion()
-    .andEnsure(releaseVersionsMatch)
-    .into(Task.of<SemVer, TypeError>)
-    .andEnsure(() => dirIsEmpty(OUT_DIR))
-    .andThen(buildPackage);
-}
-
-main().then((res) => {
-  const code = res
-    .inspect(() => console.log("Build succeeded!"))
-    .inspectErr(console.error)
-    .mapOr(() => 0, 1)
-    .unwrap();
-
-  Deno.exit(code);
-});
