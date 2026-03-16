@@ -1219,20 +1219,6 @@ Deno.test("grugway::Option::None", async (t) => {
       assertStrictEquals(maybeFallback.unwrap(), 42);
     });
 
-    await t.step(".trip() -> is a no-op", () => {
-      let gotCalled = false;
-      const tripFn = () => {
-        gotCalled = true;
-        return Option(42);
-      };
-      const opt = Option.fromCoercible(0);
-
-      const same = opt.trip(tripFn);
-
-      assertStrictEquals(gotCalled, false);
-      assertStrictEquals(same, opt);
-    });
-
     await t.step(".andEnsure() -> is a no-op", () => {
       let gotCalled = false;
       const ensureFn = () => {

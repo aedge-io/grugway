@@ -386,11 +386,6 @@ export interface IResult<T, E> {
   ): Result<T, E> | Err<E2>;
 
   /**
-   * @deprecated (will be removed in 1.0.0) Use {@linkcode IResult#andEnsure} instead
-   */
-  trip<T2, E2>(tripFn: (value: T) => Result<T2, E2>): Result<T, E> | Err<E2>;
-
-  /**
    * Use this to conditionally pass-through the encapsulated value `<E>`
    * based upon the outcome of the supplied `ensureFn`.
    *
@@ -449,11 +444,6 @@ export interface IResult<T, E> {
    * assert(res.isErr() === true);
    */
   orEnsure<T2, E2>(ensureFn: (err: E) => Result<T2, E2>): Result<T, E> | Ok<T2>;
-
-  /**
-   * @deprecated (will be removed in 1.0.0) Use {@linkcode IResult#orEnsure} instead
-   */
-  rise<T2, E2>(riseFn: (err: E) => Result<T2, E2>): Result<T, E> | Ok<T2>;
 
   /**
    * Logical AND (`&&`)
@@ -1092,15 +1082,7 @@ class _Ok<T> implements IResult<T, never> {
 
     return lhs.and(this);
   }
-  trip<T2, E2>(tripFn: (value: T) => Result<T2, E2>): Ok<T> | Err<E2> {
-    const lhs = tripFn(this.#value);
-
-    return lhs.and(this);
-  }
   orEnsure<T2, E2>(ensureFn: (err: never) => Result<T2, E2>): Ok<T> {
-    return this;
-  }
-  rise<T2, E2>(riseFn: (err: never) => Result<T2, E2>): Ok<T> {
     return this;
   }
   tap(tapFn: (value: Ok<T>) => void): Ok<T> {
@@ -1176,16 +1158,8 @@ class _Err<E> implements IResult<never, E> {
   andEnsure<T2, E2>(ensureFn: (value: never) => Result<T2, E2>): Err<E> {
     return this;
   }
-  trip<T2, E2>(tripFn: (value: never) => Result<T2, E2>): Err<E> {
-    return this;
-  }
   orEnsure<T2, E2>(ensureFn: (err: E) => Result<T2, E2>): Ok<T2> | Err<E> {
     const lhs = ensureFn(this.#err);
-
-    return lhs.or(this);
-  }
-  rise<T2, E2>(riseFn: (err: E) => Result<T2, E2>): Ok<T2> | Err<E> {
-    const lhs = riseFn(this.#err);
 
     return lhs.or(this);
   }

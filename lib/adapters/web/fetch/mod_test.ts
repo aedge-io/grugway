@@ -1,4 +1,4 @@
-import { Task } from "../../../async/task.ts";
+import type { Task } from "../../../async/task.ts";
 import { Err, Ok } from "../../../core/result.ts";
 
 import {
@@ -180,7 +180,6 @@ Deno.test("grugway::adapters::web::fetch", async (t) => {
 
         const lifted = liftFetch(fetchStub);
         const result = await lifted(testUrl)
-          .trip(() => Task.succeed("Just to test"))
           .inspectErr(console.error)
           .map((response) => response.json());
 
