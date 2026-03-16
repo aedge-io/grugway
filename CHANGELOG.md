@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Provide promise parity for `Task<T, E>` without expensive subclassing
+
 ## 0.1.0
 
 - BREAKING: actually throw in non-nullish assertion
