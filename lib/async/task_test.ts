@@ -300,6 +300,67 @@ Deno.test("grugway::Task", async (t) => {
           assertType<IsExact<taskFinally, promiseFinally>>(true);
         },
       );
+
+      await t.step(
+        ".finally() -> invokes callback and passes through the result",
+        async () => {
+          let called = false;
+          const task = Task.succeed(42);
+
+          const res = await task.finally(() => {
+            called = true;
+          });
+
+          assertStrictEquals(called, true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
+        },
+      );
+    });
+
+    await t.step("Task<T, E> -> Identity & Clone", async (t) => {
+      await t.step(
+        ".id() -> returns the same Task instance",
+        async () => {
+          const task = Task.succeed(42);
+
+          const same = task.id();
+
+          assertType<IsExact<typeof same, Task<number, never>>>(true);
+          assertStrictEquals(same, task);
+        },
+      );
+
+      await t.step(
+        ".clone() -> returns a new Task instance with the same value",
+        async () => {
+          const task: Task<number, TypeError> = Task.succeed(42);
+
+          const cloned = task.clone();
+          const res = await cloned;
+
+          assertType<IsExact<typeof cloned, Task<number, TypeError>>>(true);
+          assertStrictEquals(cloned === task, false);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
+        },
+      );
+
+      await t.step(
+        ".clone() -> returns a new Task instance with the same error",
+        async () => {
+          const te = TypeError("fail");
+          const task: Task<number, TypeError> = Task.fail(te);
+
+          const cloned = task.clone();
+          const res = await cloned;
+
+          assertType<IsExact<typeof cloned, Task<number, TypeError>>>(true);
+          assertStrictEquals(cloned === task, false);
+          assertStrictEquals(res.isErr(), true);
+          assertStrictEquals((res.unwrap() as TypeError).message, te.message);
+        },
+      );
     });
 
     await t.step("Task<T, E> -> Map Methods", async (t) => {
@@ -316,6 +377,68 @@ Deno.test("grugway::Task", async (t) => {
           assertStrictEquals(mapped === task, false);
           assertStrictEquals(res.isOk(), true);
           assertStrictEquals(res.unwrap(), 42);
+        },
+      );
+
+      await t.step(
+        ".mapOr() -> applies mapFn to value in case of Ok",
+        async () => {
+          const task: Task<number, TypeError> = Task.succeed(21);
+
+          const mapped = task.mapOr((x) => x * 2, 0);
+          const res = await mapped;
+
+          assertType<IsExact<typeof mapped, Task<number, never>>>(true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
+        },
+      );
+
+      await t.step(
+        ".mapOr() -> returns orValue in case of Err",
+        async () => {
+          const task: Task<number, TypeError> = Task.fail(TypeError());
+
+          const mapped = task.mapOr((x) => x * 2, 0);
+          const res = await mapped;
+
+          assertType<IsExact<typeof mapped, Task<number, never>>>(true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 0);
+        },
+      );
+
+      await t.step(
+        ".mapOrElse() -> applies mapFn to value in case of Ok",
+        async () => {
+          const task: Task<number, TypeError> = Task.succeed(21);
+
+          const mapped = task.mapOrElse(
+            (x) => x * 2,
+            (e) => e.message.length,
+          );
+          const res = await mapped;
+
+          assertType<IsExact<typeof mapped, Task<number, never>>>(true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
+        },
+      );
+
+      await t.step(
+        ".mapOrElse() -> applies orFn to error in case of Err",
+        async () => {
+          const task: Task<number, TypeError> = Task.fail(TypeError("abc"));
+
+          const mapped = task.mapOrElse(
+            (x) => x * 2,
+            (e) => e.message.length,
+          );
+          const res = await mapped;
+
+          assertType<IsExact<typeof mapped, Task<number, never>>>(true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 3);
         },
       );
 
@@ -563,6 +686,163 @@ Deno.test("grugway::Task", async (t) => {
         assertStrictEquals(ok.isOk(), true);
         assertStrictEquals(ok.unwrap(), 42);
       });
+
+      await t.step(
+        ".rise() -> recovers the failed Task if riseFn succeeds",
+        async () => {
+          const te = TypeError("Cannot do that");
+          const failure: Task<number, TypeError> = Task.fail(te);
+          const riseFn = (err: TypeError): Result<bigint, RangeError> =>
+            err.message.length % 2 === 0 ? Ok(42n) : Err(RangeError());
+
+          const okTask = failure.rise(riseFn);
+
+          assertType<
+            IsExact<typeof okTask, Task<number | bigint, TypeError>>
+          >(true);
+
+          const ok = await okTask;
+
+          assertStrictEquals(ok.isOk(), true);
+          assertStrictEquals(ok.unwrap(), 42n);
+        },
+      );
+
+      await t.step(
+        ".rise() -> returns the original Err if riseFn fails",
+        async () => {
+          const te = TypeError("Cannot do that");
+          const failure: Task<number, TypeError> = Task.fail(te);
+          const riseFn = (err: TypeError): Result<Empty, RangeError> =>
+            err.message.length % 2 !== 0 ? Ok.empty() : Err(RangeError());
+
+          const errTask = failure.rise(riseFn);
+
+          assertType<
+            IsExact<typeof errTask, Task<number | Empty, TypeError>>
+          >(true);
+
+          const err = await errTask;
+
+          assertStrictEquals(err.isErr(), true);
+          assertStrictEquals(err.unwrap(), te);
+        },
+      );
+
+      await t.step(".rise() -> is a no-op in case of Ok", async () => {
+        const success: Task<number, TypeError> = Task.succeed(42);
+        const riseFn = (err: TypeError): Result<Empty, RangeError> =>
+          err instanceof TypeError ? Ok.empty() : Err(RangeError());
+
+        const okTask = success.rise(riseFn);
+
+        assertType<
+          IsExact<typeof okTask, Task<number | Empty, TypeError>>
+        >(true);
+
+        const ok = await okTask;
+
+        assertStrictEquals(ok.isOk(), true);
+        assertStrictEquals(ok.unwrap(), 42);
+      });
+
+      await t.step(
+        ".zip() -> combines two Ok values into a tuple",
+        async () => {
+          const task = Task.succeed(1);
+          const rhs = Ok("two").asResult();
+
+          const zipped = task.zip(rhs);
+          const res = await zipped;
+
+          const [a, b] = res.unwrap();
+
+          assertType<
+            IsExact<typeof zipped, Task<[number, string], never>>
+          >(true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(a, 1);
+          assertStrictEquals(b, "two");
+        },
+      );
+
+      await t.step(
+        ".zip() -> returns Err if the lhs is Err",
+        async () => {
+          const te = TypeError("fail");
+          const task: Task<number, TypeError> = Task.fail(te);
+          const rhs = Ok("two").asResult();
+
+          const zipped = task.zip(rhs);
+          const res = await zipped;
+
+          assertType<
+            IsExact<typeof zipped, Task<[number, string], TypeError>>
+          >(true);
+          assertStrictEquals(res.isErr(), true);
+          assertStrictEquals(res.unwrap(), te);
+        },
+      );
+
+      await t.step(
+        ".zip() -> returns Err if the rhs is Err",
+        async () => {
+          const re = RangeError("fail");
+          const task = Task.succeed(1);
+          const rhs = Err(re).asResult();
+
+          const zipped = task.zip(rhs);
+          const res = await zipped;
+
+          assertType<
+            IsExact<
+              typeof zipped,
+              Task<[number, never], RangeError>
+            >
+          >(true);
+          assertStrictEquals(res.isErr(), true);
+          assertStrictEquals(res.unwrap(), re);
+        },
+      );
+
+      await t.step(
+        ".tap() -> invokes tapFn with the Result and returns the original",
+        async () => {
+          let tapped: Result<number, never> | undefined;
+          const task = Task.succeed(42);
+
+          const tappedTask = task.tap((res) => {
+            tapped = res;
+          });
+          const res = await tappedTask;
+
+          assertType<IsExact<typeof tappedTask, Task<number, never>>>(true);
+          assertStrictEquals(res !== tapped, true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
+          assertStrictEquals(tapped?.unwrap(), 42);
+        },
+      );
+
+      await t.step(
+        ".tap() -> invokes tapFn with the Err Result in case of failure",
+        async () => {
+          const te = TypeError("fail");
+          let tapped: Result<number, TypeError> | undefined;
+          const task: Task<number, TypeError> = Task.fail(te);
+
+          const tappedTask = task.tap((res) => {
+            tapped = res;
+          });
+          const res = await tappedTask;
+
+          assertType<IsExact<typeof tappedTask, Task<number, TypeError>>>(true);
+          assertStrictEquals(res !== tapped, true);
+          assertStrictEquals(res.isErr(), true);
+          assertInstanceOf(res.unwrap(), TypeError);
+          assertStrictEquals(tapped?.isErr(), true);
+        },
+      );
     });
 
     await t.step("Task<T, E> -> Unwrap Methods", async (t) => {
