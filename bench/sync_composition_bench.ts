@@ -10,15 +10,17 @@ const INPUTS = [
   "5",
 ];
 
+const sink: unknown[] = [null];
+
 Deno.bench({
   name: "Sync Exceptions",
   group: "Sync::Composition",
   fn: () => {
     INPUTS.forEach((i) => {
       try {
-        SyncExceptions.processString(i);
+        sink[0] = SyncExceptions.processString(i);
       } catch (e) {
-        //nothing to do here
+        sink[0] = e;
       }
     });
   },
@@ -29,7 +31,7 @@ Deno.bench({
   group: "Sync::Composition",
   baseline: true,
   fn: () => {
-    INPUTS.forEach((i) => SyncResults.instanceComposition(i));
+    INPUTS.forEach((i) => sink[0] = SyncResults.instanceComposition(i));
   },
 });
 
@@ -37,7 +39,7 @@ Deno.bench({
   name: "Result Early Return",
   group: "Sync::Composition",
   fn: () => {
-    INPUTS.forEach((i) => SyncResults.earlyReturn(i));
+    INPUTS.forEach((i) => sink[0] = SyncResults.earlyReturn(i));
   },
 });
 
