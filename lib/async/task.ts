@@ -12,12 +12,12 @@ export interface DeferredTask<T, E> {
 /**
  * # Task<T, E>
  *
- * `Task<T, E>` is a composeable extension of `Promise<Result<T, E>>`
+ * `Task<T, E>` is a composeable equivalent of `Promise<Result<T, E>>`
  *
- * It wraps a `Promise<Result<T, E>>` via composition, implementing the
- * `Promise` interface so it can be `await`ed directly.
+ * It never rejects, but always resolves. Either with an `Ok<T>` or an `Err<E>`
  *
- * It never rejects, but always resolves — either with an `Ok<T>` or an `Err<E>`
+ * It implements the full interface of `Promise<Result<T, E>>` and can be used
+ * as a drop-in replacement if desired.
  *
  * It supports almost the same API as {@linkcode Result} and allows for
  * the same composition patterns as {@linkcode Result}
@@ -35,8 +35,6 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   }
 
   /**
-   * Make `task instanceof Promise` return `true` without subclassing.
-   *
    * This is done to provide drop-in parity with native Promises, as some libraries
    * are (IMO needlessly) invariant over `PromiseLike` types and test for `thenability`
    * via `value instanceof Promise`
@@ -88,19 +86,24 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    */
 
   /**
-   * Use this to create a task from a `Result<T, E>` value
+   * Use this to create a task from a `Result<T, E>` or
+   * `PromiseLike<Result<T, E>` value
    *
    * @category Task#Basic
    *
    * @example
    * ```typescript
-   * import { Ok, Result, Task } from "../mod.ts";
+   * import { assert } from "@std/assert";
+   * import { Ok, Result, Task } from "@aedge-io/grugway";
    *
    * async function produceRes(): Promise<Result<number, TypeError>> {
    *  return Ok(42);
    * }
    *
    * const task = Task.of(produceRes());
+   *
+   * assert(task instanceof Promise);
+   * assert(task instanceof Task);
    * ```
    */
   static of<T>(value: Ok<T> | PromiseLike<Ok<T>>): Task<T, never>;
@@ -119,7 +122,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { Task } from "./task.ts";
+   * import { Task } from "@aedge-io/grugway";
    *
    * const task: Task<number, never> = Task.succeed(42);
    * ```
@@ -135,7 +138,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { Task } from "./task.ts";
+   * import { Task } from "@aedge-io/grugway";
    *
    * const task: Task<never, number> = Task.fail(1);
    * ```
@@ -157,7 +160,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { Task } from "./task.ts";
+   * import { Task } from "@aedge-io/grugway";
    *
    * class TimeoutError extends Error {}
    *
@@ -198,7 +201,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { Ok, Result, Task } from "../mod.ts";
+   * import { Ok, Result, Task } from "@aedge-io/grugway";
    *
    * async function produceRes(): Promise<Result<number, TypeError>> {
    *  return Ok(42);
@@ -229,7 +232,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { asInfallible, Task } from "../mod.ts";
+   * import { asInfallible, Task } from "@aedge-io/grugway";
    *
    * const willBeString = Promise.resolve("42");
    *
@@ -258,7 +261,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { Task } from "./task.ts";
+   * import { Task } from "@aedge-io/grugway";
    *
    * async function rand(): Promise<number> {
    *   throw new TypeError("Oops");
@@ -298,7 +301,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```
-   * import { Err, Ok, Result, Task } from "../mod.ts";
+   * import { Err, Ok, Result, Task } from "@aedge-io/grugway";
    *
    * async function toSpecialString(s: string): Promise<string> {
    *   if (s.length % 3 === 0) return s;
@@ -349,10 +352,47 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     return this;
   }
 
+  /**
+   * Use this to obtain a deep clone of `Task<T, E>`
+   *
+   * Under the hood, this uses the `structuredClone` algorithm
+   *
+   * @category Task#Basic
+   *
+   * @example
+   * ```typescript
+   * import { assert } from "@std/assert";
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.succeed({ a: 1 });
+   * const cloned = task.clone();
+   *
+   * const res = await task;
+   * const clonedRes = await cloned;
+   *
+   * assert(res.unwrap() !== clonedRes.unwrap())
+   * ```
+   */
   clone(): Task<T, E> {
     return new Task(this.#promise.then((res) => res.clone()));
   }
 
+  /**
+   * Use this to asynchronously map the encapsulated value `<T>` to `<T2>`
+   *
+   * In case of `Err<E>`, this method short-circuits.
+   * See {@linkcode Task#mapErr} for the opposite case.
+   *
+   * @category Task#Basic
+   *
+   * @example
+   * ```typescript
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.succeed(21).map((n) => n * 2);
+   * const res = await task; // Ok(42)
+   * ```
+   */
   map<T2>(mapFn: (v: T) => T2 | PromiseLike<T2>): Task<T2, E> {
     return new Task(this.#promise.then(async (res) => {
       if (res.isErr()) return res;
@@ -360,6 +400,20 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Same as {@linkcode Task#map} but returns the provided `orValue` asynchronously
+   * as a fallback in case of `Err<E>`
+   *
+   * @category Task#Intermediate
+   *
+   * @example
+   * ```typescript
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const t1 = Task.succeed(5).mapOr((n) => n * 2, 0); // Task<number, never>
+   * const t2 = Task.fail("x").mapOr((n) => n * 2, 0);  // Task<number, never>
+   * ```
+   */
   mapOr<T2>(
     mapFn: (v: T) => T2 | PromiseLike<T2>,
     orValue: T2 | PromiseLike<T2>,
@@ -370,6 +424,22 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Same as {@linkcode Task#map} but applies `orFn` asynchronously to the
+   * error value in case of `Err<E>`
+   *
+   * Use this if the fallback value is expensive to produce.
+   *
+   * @category Task#Intermediate
+   *
+   * @example
+   * ```typescript
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const t1 = Task.succeed(5).mapOrElse((n) => n * 2, (e) => -1);  // Ok(10)
+   * const t2 = Task.fail("x").mapOrElse((n) => n * 2, (e) => -1);   // Ok(-1)
+   * ```
+   */
   mapOrElse<T2>(
     mapFn: (v: T) => T2 | PromiseLike<T2>,
     orFn: (e: E) => T2 | PromiseLike<T2>,
@@ -382,6 +452,24 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Use this to asynchronously map the encapsulated error `<E>` to `<E2>`
+   *
+   * In case of `Ok<T>`, this method short-circuits.
+   * See {@linkcode Task#map} for the opposite case.
+   *
+   * @category Task#Basic
+   *
+   * @example
+   * ```typescript
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.fail(Error("oops"))
+   *   .mapErr((e) => TypeError(e.message));
+   *
+   * const res = await task; // Err<TypeError>
+   * ```
+   */
   mapErr<E2>(mapFn: (v: E) => E2 | PromiseLike<E2>): Task<T, E2> {
     return new Task(this.#promise.then(async (res) => {
       if (res.isOk()) return res;
@@ -389,6 +477,27 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Use this to produce a new `Task<T2, E2>` from the encapsulated
+   * value `<T>`. Canonical `.flatMap()` or `.chain()` method.
+   *
+   * In case of `Err<E>`, this method short-circuits.
+   * See {@linkcode Task#orElse} for the opposite case.
+   *
+   * @category Task#Intermediate
+   *
+   * @example
+   * ```typescript
+   * import { Err, Ok, Task } from "@aedge-io/grugway";
+   *
+   * const safeParse = async (s: string) => {
+   *   const n = Number(s);
+   *   return Number.isNaN(n) ? Err(TypeError("NaN")) : Ok(n);
+   * };
+   *
+   * const t = Task.succeed("42").andThen(safeParse); // Task<number, TypeError>
+   * ```
+   */
   andThen<T2, E2>(
     thenFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T2, E | E2> {
@@ -398,6 +507,25 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Use this to produce a new `Task<T2, E2>` from the encapsulated
+   * error `<E>`. Useful for recovery or error transformation.
+   *
+   * In case of `Ok<T>`, this method short-circuits.
+   * See {@linkcode Task#andThen} for the opposite case.
+   *
+   * @category Task#Intermediate
+   *
+   * @example
+   * ```typescript
+   * import { Ok, Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.fail(Error("oops"))
+   *   .orElse((e) => Ok(e.message));
+   *
+   * const res = await task; // Ok<string>
+   * ```
+   */
   orElse<T2, E2>(
     elseFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T | T2, E2> {
@@ -432,7 +560,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { Task } from "./task.ts";
+   * import { Task } from "@aedge-io/grugway";
    *
    * function getPath(): Task<string, Error> { return Task.succeed("/home")};
    * function isReadableDir(path: string): Task<void, TypeError> { return Task.succeed(undefined) };
@@ -480,7 +608,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    *
    * @example
    * ```typescript
-   * import { Task } from "./task.ts";
+   * import { Task } from "@aedge-io/grugway";
    *
    * function getConfig(): Task<string, RangeError> { return Task.succeed("secret")};
    * function getFallback(err: RangeError): Task<string, Error> { return Task.succeed("default")};
@@ -503,6 +631,27 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Use this to asynchronously zip the encapsulated values of two `Ok`
+   * instances into a new `Task`
+   *
+   * If either side is `Err`, the respective `Err` is returned.
+   *
+   * |**LHS zip RHS** |**RHS: Ok<T2>**|**RHS: Err<E2>**|
+   * |:--------------:|:-------------:|:--------------:|
+   * | **LHS: Ok<T>** |  Ok<[T, T2]>  |     Err<E2>    |
+   * | **LHS: Err<E>**|     Err<E>    |     Err<E>     |
+   *
+   * @category Task#Advanced
+   *
+   * @example
+   * ```typescript
+   * import { Ok, Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.succeed(1).zip(Task.of(Ok("two")));
+   * const res = await task; // Ok([1, "two"])
+   * ```
+   */
   zip<T2, E2>(
     rhs: Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<[T, T2], E | E2> {
@@ -513,6 +662,22 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     );
   }
 
+  /**
+   * Use this to perform asynchronous side-effects transparently.
+   *
+   * The `tapFn` receives a deep clone of the `Result<T, E>` to ensure
+   * the original value cannot be mutated.
+   *
+   * @category Task#Intermediate
+   *
+   * @example
+   * ```typescript
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.succeed(42)
+   *   .tap((res) => console.log("got:", res.unwrap()));
+   * ```
+   */
   tap(tapFn: (v: Result<T, E>) => void | PromiseLike<void>): Task<T, E> {
     return new Task(this.#promise.then(async (res) => {
       await tapFn(res.clone());
@@ -520,6 +685,24 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Use this to asynchronously inspect the encapsulated value `<T>`.
+   *
+   * Mainly used for debugging and logging.
+   *
+   * In case of `Err<E>`, this method short-circuits.
+   * See {@linkcode Task#inspectErr} for the opposite case.
+   *
+   * @category Task#Basic
+   *
+   * @example
+   * ```typescript
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.succeed(42)
+   *   .inspect((n) => console.log("value:", n));
+   * ```
+   */
   inspect(inspectFn: (v: T) => void | PromiseLike<void>): Task<T, E> {
     return new Task(this.#promise.then(async (res) => {
       if (res.isOk()) await inspectFn(res.unwrap());
@@ -527,6 +710,24 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     }));
   }
 
+  /**
+   * Use this to asynchronously inspect the encapsulated error `<E>`.
+   *
+   * Mainly used for debugging and logging.
+   *
+   * In case of `Ok<T>`, this method short-circuits.
+   * See {@linkcode Task#inspect} for the opposite case.
+   *
+   * @category Task#Basic
+   *
+   * @example
+   * ```typescript
+   * import { Task } from "@aedge-io/grugway";
+   *
+   * const task = Task.fail(Error("oops"))
+   *   .inspectErr((e) => console.error("error:", e.message));
+   * ```
+   */
   inspectErr(inspectFn: (v: E) => void | PromiseLike<void>): Task<T, E> {
     return new Task(this.#promise.then(async (res) => {
       if (res.isErr()) await inspectFn(res.unwrap());
@@ -566,8 +767,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert";
-   * import { Result } from "../core/result.ts";
-   * import { Task } from "./task.ts";
+   * import { Result, Task } from "@aedge-io/grugway";
    *
    * const ok = Result(42) as Result<number, string>;
    * const task = Task.of(ok);
@@ -590,8 +790,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert";
-   * import { Result } from "../core/result.ts";
-   * import { Task } from "./task.ts";
+   * import { Result, Task } from "@aedge-io/grugway";
    *
    * const err = Result(Error()) as Result<number, Error>;
    * const task = Task.of(err);
@@ -616,8 +815,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert";
-   * import { Result } from "../core/result.ts";
-   * import { Task } from "./task.ts";
+   * import { Result, Task } from "@aedge-io/grugway";
    *
    * const err = Result(Error("foo")) as Result<number, Error>;
    * const task = Task.of(err);
@@ -647,7 +845,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert"
-   * import { Err, Ok, Result, Task } from "../mod.ts";
+   * import { Err, Ok, Result, Task } from "@aedge-io/grugway";
    *
    * const success = Task.succeed(42);
    * const failure = Task.fail(Error());
@@ -704,7 +902,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert";
-   * import { Task } from "./task.ts"
+   * import { Task } from "@aedge-io/grugway"
    *
    * const tag = Task.succeed(42).toString();
    *
@@ -730,7 +928,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert";
-   * import { Task } from "./task.ts"
+   * import { Task } from "@aedge-io/grugway"
    *
    * const task = Task.succeed({ a: 1, b: 2 });
    *
