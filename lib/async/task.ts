@@ -124,6 +124,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    */
   static of<T>(value: Ok<T> | PromiseLike<Ok<T>>): Task<T, never>;
   static of<E>(value: Err<E> | PromiseLike<Err<E>>): Task<never, E>;
+  static of<T, E>(value: Result<T, E> | PromiseLike<Result<T, E>>): Task<T, E>;
   static of<T, E>(
     value: Result<T, E> | PromiseLike<Result<T, E>>,
   ): Task<T, E> {
