@@ -1,5 +1,4 @@
-import { Task } from "../../../async/task.ts";
-import { Err, Ok, type Result } from "../../../core/result.ts";
+import { Err, Ok, type Result, Task } from "@aedge-io/grugway";
 
 export interface ResponseLike {
   ok: boolean;
