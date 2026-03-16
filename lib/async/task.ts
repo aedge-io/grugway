@@ -736,24 +736,6 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   }
 
   /**
-   * @deprecated (will be removed in 1.0.0) use {@linkcode Task#andEnsure} instead
-   */
-  trip<T2, E2>(
-    tripFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
-  ): Task<T, E | E2> {
-    return this.andEnsure(tripFn);
-  }
-
-  /**
-   * @deprecated (will be removed in 1.0.0) use {@linkcode Task#orEnsure} instead
-   */
-  rise<T2, E2>(
-    riseFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
-  ): Task<T | T2, E> {
-    return this.orEnsure(riseFn);
-  }
-
-  /**
    * Use this to get the wrapped value out of an `Task<T, E>` instance
    *
    * Returns the wrapped value of type `<T>` in case of `Ok<T>` OR

@@ -589,9 +589,6 @@ export interface IOption<T> {
    * |  LHS: Some<T>  |    Some<T>   |     None    |
    * |  LHS:  None    |      None    |     None    |
    *
-   * Can be used to perform synchronous side-effects which can derail the
-   * current `Option<T>`
-   *
    * @category Option#Advanced
    *
    * @example
@@ -621,7 +618,7 @@ export interface IOption<T> {
    *   });
    * }
    *
-   * const path = Some("~/.dotfiles/README.md)
+   * const path = Some("~/.dotfiles/README.md")
    *
    * const maybeConfig = path
    *   .andEnsure(isReadableDir)
@@ -631,11 +628,6 @@ export interface IOption<T> {
    * ```
    */
   andEnsure<U>(ensureFn: (value: T) => Option<U>): Option<T>;
-
-  /**
-   * @deprecated (will be removed in 1.0.0) Use {@link IOption#andEnsure} instead
-   */
-  trip<U>(tripFn: (value: T) => Option<U>): Option<T>;
 
   /**
    * Logical AND ( && )
@@ -1202,9 +1194,6 @@ class _None<T = never> implements IOption<never> {
   andEnsure<U>(ensureFn: (value: never) => Option<U>): None {
     return this;
   }
-  trip<U>(tripFn: (value: never) => Option<U>): None {
-    return this;
-  }
   toTag(): string {
     return Object.prototype.toString.call(this);
   }
@@ -1292,10 +1281,6 @@ class _Some<T> implements IOption<T> {
   }
   andEnsure<U>(ensureFn: (value: T) => Option<U>): Option<T> {
     const lhs = ensureFn(this.#value);
-    return lhs.and(this);
-  }
-  trip<U>(tripFn: (value: T) => Option<U>): Option<T> {
-    const lhs = tripFn(this.#value);
     return lhs.and(this);
   }
   unwrap(): T {

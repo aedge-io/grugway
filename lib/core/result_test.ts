@@ -497,51 +497,6 @@ Deno.test("grugway::Result::Ok", async (t) => {
     });
 
     await t.step(
-      ".trip() -> returns a new Err instance upon failure of tripFn",
-      () => {
-        const checkIfEven = function (n: number): Result<Empty, TypeError> {
-          if (n % 2 === 0) return Ok.empty();
-          return Err(TypeError());
-        };
-
-        const ok = Ok(41) as Result<number, Error>;
-
-        const tripped = ok.trip(checkIfEven);
-
-        assertType<
-          IsExact<typeof tripped, Result<number, Error> | Err<TypeError>>
-        >(
-          true,
-        );
-        assertStrictEquals(tripped.isErr(), true);
-        assertInstanceOf(tripped.unwrap(), TypeError);
-      },
-    );
-
-    await t.step(
-      ".trip() -> retains original Ok instance upon success of tripFn",
-      () => {
-        const checkIfEven = function (n: number): Result<Empty, TypeError> {
-          if (n % 2 === 0) return Ok.empty();
-          return Err(TypeError());
-        };
-
-        const ok = Ok(42) as Result<number, Error>;
-
-        const tripped = ok.trip(checkIfEven);
-
-        assertType<
-          IsExact<typeof tripped, Result<number, Error> | Err<TypeError>>
-        >(
-          true,
-        );
-        assertStrictEquals(tripped, ok);
-        assertStrictEquals(tripped.isOk(), true);
-        assertStrictEquals(tripped.unwrap(), 42);
-      },
-    );
-
-    await t.step(
       ".andEnsure() -> returns a new Err instance upon failure of ensureFn",
       () => {
         const checkIfEven = function (n: number): Result<Empty, TypeError> {
@@ -585,24 +540,6 @@ Deno.test("grugway::Result::Ok", async (t) => {
         assertStrictEquals(ensured.unwrap(), 42);
       },
     );
-
-    await t.step(".rise() -> short-circuits and returns immediately", () => {
-      const recover = function (e: Error): Result<string, TypeError> {
-        const recovered = e.cause as string ?? "xDefaultx";
-        return Ok(recovered);
-      };
-
-      const ok = Ok("thing") as Result<string, Error>;
-
-      const risen = ok.rise(recover);
-
-      assertType<IsExact<typeof risen, Result<string, Error>>>(
-        true,
-      );
-      assertStrictEquals(risen, ok);
-      assertStrictEquals(risen.isOk(), true);
-      assertStrictEquals(risen.unwrap(), "thing");
-    });
 
     await t.step(
       ".orEnsure() -> short-circuits and returns immediately",
@@ -1104,26 +1041,6 @@ Deno.test("grugway::Result::Err", async (t) => {
       assertStrictEquals(flattened.isErr(), true);
     });
 
-    await t.step(".trip() -> short-circuits and returns immediately", () => {
-      let count = 0;
-      const noop = function (): Result<Empty, TypeError> {
-        count += 1;
-        return Ok.empty();
-      };
-
-      const err = Err(Error()) as Result<string, Error>;
-
-      const tripped = err.trip(noop);
-
-      assertType<
-        IsExact<typeof tripped, Ok<string> | Err<Error> | Err<TypeError>>
-      >(
-        true,
-      );
-      assertStrictEquals(count, 0);
-      assertStrictEquals(tripped, err);
-    });
-
     await t.step(
       ".andEnsure() -> short-circuits and returns immediately",
       () => {
@@ -1144,44 +1061,6 @@ Deno.test("grugway::Result::Err", async (t) => {
         );
         assertStrictEquals(count, 0);
         assertStrictEquals(ensured, err);
-      },
-    );
-
-    await t.step(
-      ".rise() -> returns the new Ok instance upon success of riseFn",
-      () => {
-        const recover = function (e: Error): Result<string, TypeError> {
-          const recovered = e.cause as string ?? "xDefaultx";
-          return Ok(recovered);
-        };
-
-        const err = Err(Error()) as Result<number, Error>;
-
-        const risen = err.rise(recover);
-
-        assertType<IsExact<typeof risen, Ok<string> | Result<number, Error>>>(
-          true,
-        );
-        assertStrictEquals(risen.isOk(), true);
-      },
-    );
-
-    await t.step(
-      ".rise() -> passes on the original Err variant if riseFn fails",
-      () => {
-        const recover = function (_: Error): Result<string, TypeError> {
-          return Err(TypeError());
-        };
-
-        const err = Err(Error()) as Result<number, Error>;
-
-        const risen = err.rise(recover);
-
-        assertType<IsExact<typeof risen, Ok<string> | Result<number, Error>>>(
-          true,
-        );
-        assertStrictEquals(risen.isErr(), true);
-        assertStrictEquals(risen, err);
       },
     );
 
