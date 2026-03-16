@@ -1,23 +1,4 @@
 import { asInfallible, Err, Ok, type Result } from "../core/result.ts";
-import {
-  andEnsureTask,
-  chainTaskFailure,
-  chainTaskSuccess,
-  cloneTask,
-  inspectTaskFailure,
-  inspectTaskSuccess,
-  iterTask,
-  mapTaskFailure,
-  mapTaskSuccess,
-  mapTaskSuccessOr,
-  mapTaskSuccessOrElse,
-  orEnsureTask,
-  tapTask,
-  unwrapTask,
-  unwrapTaskOr,
-  unwrapTaskOrElse,
-  zipTask,
-} from "./_internal.ts";
 
 /**
  * This is the interface of the return value of {@linkcode Task.deferred}
@@ -369,41 +350,61 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   }
 
   clone(): Task<T, E> {
-    return new Task(cloneTask(this));
+    return new Task(this.#promise.then((res) => res.clone()));
   }
 
   map<T2>(mapFn: (v: T) => T2 | PromiseLike<T2>): Task<T2, E> {
-    return new Task(mapTaskSuccess(this, mapFn));
+    return new Task(this.#promise.then(async (res) => {
+      if (res.isErr()) return res;
+      return Ok(await mapFn(res.unwrap()));
+    }));
   }
 
   mapOr<T2>(
     mapFn: (v: T) => T2 | PromiseLike<T2>,
     orValue: T2 | PromiseLike<T2>,
   ): Task<T2, never> {
-    return new Task(mapTaskSuccessOr(this, mapFn, orValue));
+    return new Task(this.#promise.then(async (res) => {
+      const mapped = res.isErr() ? await orValue : await mapFn(res.unwrap());
+      return Ok(mapped);
+    }));
   }
 
   mapOrElse<T2>(
     mapFn: (v: T) => T2 | PromiseLike<T2>,
     orFn: (e: E) => T2 | PromiseLike<T2>,
   ): Task<T2, never> {
-    return new Task(mapTaskSuccessOrElse(this, mapFn, orFn));
+    return new Task(this.#promise.then(async (res) => {
+      const mapped = res.isErr()
+        ? await orFn(res.unwrap())
+        : await mapFn(res.unwrap());
+      return Ok(mapped);
+    }));
   }
 
   mapErr<E2>(mapFn: (v: E) => E2 | PromiseLike<E2>): Task<T, E2> {
-    return new Task(mapTaskFailure(this, mapFn));
+    return new Task(this.#promise.then(async (res) => {
+      if (res.isOk()) return res;
+      return Err(await mapFn(res.unwrap()));
+    }));
   }
 
   andThen<T2, E2>(
     thenFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T2, E | E2> {
-    return new Task(chainTaskSuccess(this, thenFn));
+    return new Task<T2, E | E2>(this.#promise.then((res) => {
+      if (res.isErr()) return res;
+      return thenFn(res.unwrap());
+    }));
   }
 
   orElse<T2, E2>(
     elseFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T | T2, E2> {
-    return new Task(chainTaskFailure(this, elseFn));
+    return new Task<T | T2, E2>(this.#promise.then((res) => {
+      if (res.isOk()) return res;
+      return elseFn(res.unwrap());
+    }));
   }
 
   /**
@@ -447,7 +448,11 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   andEnsure<T2, E2>(
     ensureFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T, E | E2> {
-    return new Task(andEnsureTask(this, ensureFn));
+    return new Task(this.#promise.then(async (original) => {
+      if (original.isErr()) return original;
+      const res = await ensureFn(original.unwrap());
+      return res.and(original);
+    }));
   }
 
   /**
@@ -491,25 +496,42 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   orEnsure<T2, E2>(
     ensureFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T | T2, E> {
-    return new Task(orEnsureTask(this, ensureFn));
+    return new Task(this.#promise.then(async (original) => {
+      if (original.isOk()) return original;
+      const res = await ensureFn(original.unwrap());
+      return res.or(original);
+    }));
   }
 
   zip<T2, E2>(
     rhs: Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<[T, T2], E | E2> {
-    return new Task(zipTask(this, rhs));
+    return new Task<[T, T2], E | E2>(
+      this.#promise.then(async (res) => {
+        return res.zip(await rhs);
+      }),
+    );
   }
 
   tap(tapFn: (v: Result<T, E>) => void | PromiseLike<void>): Task<T, E> {
-    return new Task(tapTask(this, tapFn));
+    return new Task(this.#promise.then(async (res) => {
+      await tapFn(res.clone());
+      return res;
+    }));
   }
 
   inspect(inspectFn: (v: T) => void | PromiseLike<void>): Task<T, E> {
-    return new Task(inspectTaskSuccess(this, inspectFn));
+    return new Task(this.#promise.then(async (res) => {
+      if (res.isOk()) await inspectFn(res.unwrap());
+      return res;
+    }));
   }
 
   inspectErr(inspectFn: (v: E) => void | PromiseLike<void>): Task<T, E> {
-    return new Task(inspectTaskFailure(this, inspectFn));
+    return new Task(this.#promise.then(async (res) => {
+      if (res.isErr()) await inspectFn(res.unwrap());
+      return res;
+    }));
   }
 
   /**
@@ -518,7 +540,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   trip<T2, E2>(
     tripFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T, E | E2> {
-    return new Task(andEnsureTask(this, tripFn));
+    return this.andEnsure(tripFn);
   }
 
   /**
@@ -527,7 +549,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   rise<T2, E2>(
     riseFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T | T2, E> {
-    return new Task(orEnsureTask(this, riseFn));
+    return this.orEnsure(riseFn);
   }
 
   /**
@@ -555,8 +577,8 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * assert(union === 42);
    * ```
    */
-  unwrap(): Promise<T | E> {
-    return unwrapTask(this);
+  async unwrap(): Promise<T | E> {
+    return (await this.#promise).unwrap();
   }
 
   /**
@@ -579,8 +601,10 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * assert(union === "foo");
    * ```
    */
-  unwrapOr<T2>(orValue: T2 | PromiseLike<T2>): Promise<T | T2> {
-    return unwrapTaskOr(this, orValue);
+  async unwrapOr<T2>(orValue: T2 | PromiseLike<T2>): Promise<T | T2> {
+    const res = await this.#promise;
+    if (res.isOk()) return res.unwrap();
+    return await orValue;
   }
 
   /**
@@ -605,8 +629,12 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * assert(union === "foo");
    * ```
    */
-  unwrapOrElse<T2>(orFn: (e: E) => T2 | PromiseLike<T2>): Promise<T | T2> {
-    return unwrapTaskOrElse(this, orFn);
+  async unwrapOrElse<T2>(
+    orFn: (e: E) => T2 | PromiseLike<T2>,
+  ): Promise<T | T2> {
+    const res = await this.#promise;
+    if (res.isOk()) return res.unwrap();
+    return await orFn(res.unwrap());
   }
 
   /**
@@ -653,8 +681,10 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * main().then(() => console.log("Done"));
    * ```
    */
-  iter(): AsyncIterableIterator<T> {
-    return iterTask(this);
+  async *iter(): AsyncIterableIterator<T> {
+    const res = await this.#promise;
+    if (res.isErr()) return;
+    yield res.unwrap();
   }
 
   /**
