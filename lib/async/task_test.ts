@@ -185,6 +185,25 @@ Deno.test("grugway::Task", async (t) => {
     );
 
     await t.step(
+      ".fromFallible() -> returns a Task<T, E> with Ok<T> if the function succeeds",
+      async () => {
+        const produceFive = () => 5;
+        const produceAsyncFive = async () => 5;
+        const errMapFn = (e: unknown) => TypeError("Unexpected", { cause: e });
+
+        const sync = await Task.fromFallible(produceFive, errMapFn);
+        const async_ = await Task.fromFallible(produceAsyncFive, errMapFn);
+
+        assertType<IsExact<typeof sync, Result<number, TypeError>>>(true);
+        assertType<IsExact<typeof async_, Result<number, TypeError>>>(true);
+        assertStrictEquals(sync.isOk(), true);
+        assertStrictEquals(sync.unwrap(), 5);
+        assertStrictEquals(async_.isOk(), true);
+        assertStrictEquals(async_.unwrap(), 5);
+      },
+    );
+
+    await t.step(
       ".liftFallible() -> composes functions and constructors correctly",
       async () => {
         async function toSpecialString(s: string): Promise<string> {
@@ -381,6 +400,21 @@ Deno.test("grugway::Task", async (t) => {
       );
 
       await t.step(
+        ".map() -> short-circuits and returns Err if the Task is failed",
+        async () => {
+          const te = TypeError("fail");
+          const task: Task<number, TypeError> = Task.fail(te);
+
+          const mapped = task.map((x) => x + 1);
+          const res = await mapped;
+
+          assertType<IsExact<typeof mapped, Task<number, TypeError>>>(true);
+          assertStrictEquals(res.isErr(), true);
+          assertStrictEquals(res.unwrap(), te);
+        },
+      );
+
+      await t.step(
         ".mapOr() -> applies mapFn to value in case of Ok",
         async () => {
           const task: Task<number, TypeError> = Task.succeed(21);
@@ -462,6 +496,20 @@ Deno.test("grugway::Task", async (t) => {
       );
 
       await t.step(
+        ".mapErr() -> short-circuits and returns Ok if the Task is successful",
+        async () => {
+          const task: Task<number, TypeError> = Task.succeed(42);
+
+          const mapped = task.mapErr((e) => RangeError(e.message));
+          const res = await mapped;
+
+          assertType<IsExact<typeof mapped, Task<number, RangeError>>>(true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
+        },
+      );
+
+      await t.step(
         ".andThen() -> returns new Task instance with applied fn to value",
         async () => {
           const task = Task.succeed("1");
@@ -485,6 +533,25 @@ Deno.test("grugway::Task", async (t) => {
       );
 
       await t.step(
+        ".andThen() -> short-circuits and returns Err if the Task is failed",
+        async () => {
+          const te = TypeError("fail");
+          const task: Task<number, TypeError> = Task.fail(te);
+
+          const thenFn = (n: number): Result<string, RangeError> =>
+            Ok(n.toString());
+          const chained = task.andThen(thenFn);
+          const res = await chained;
+
+          assertType<
+            IsExact<typeof chained, Task<string, TypeError | RangeError>>
+          >(true);
+          assertStrictEquals(res.isErr(), true);
+          assertStrictEquals(res.unwrap(), te);
+        },
+      );
+
+      await t.step(
         ".orElse() -> returns a new Task instance with applied fn to err",
         async () => {
           const task = Task.fail(
@@ -504,6 +571,24 @@ Deno.test("grugway::Task", async (t) => {
           assertStrictEquals(task === chained, false);
           assertStrictEquals(res.isOk(), true);
           assertStrictEquals(res.unwrap(), 0);
+        },
+      );
+
+      await t.step(
+        ".orElse() -> short-circuits and returns Ok if the Task is successful",
+        async () => {
+          const task: Task<number, TypeError> = Task.succeed(42);
+
+          const elseFn = (e: TypeError): Result<string, RangeError> =>
+            Err(RangeError(e.message));
+          const chained = task.orElse(elseFn);
+          const res = await chained;
+
+          assertType<
+            IsExact<typeof chained, Task<number | string, RangeError>>
+          >(true);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
         },
       );
 
@@ -843,6 +928,61 @@ Deno.test("grugway::Task", async (t) => {
           assertStrictEquals(tapped?.isErr(), true);
         },
       );
+
+      await t.step(
+        ".inspect() -> is a no-op in case of Err",
+        async () => {
+          let called = false;
+          const te = TypeError("fail");
+          const task: Task<number, TypeError> = Task.fail(te);
+
+          const inspected = task.inspect(() => {
+            called = true;
+          });
+          const res = await inspected;
+
+          assertType<IsExact<typeof inspected, Task<number, TypeError>>>(true);
+          assertStrictEquals(called, false);
+          assertStrictEquals(res.isErr(), true);
+          assertStrictEquals(res.unwrap(), te);
+        },
+      );
+
+      await t.step(
+        ".inspectErr() -> is a no-op in case of Ok",
+        async () => {
+          let called = false;
+          const task: Task<number, TypeError> = Task.succeed(42);
+
+          const inspected = task.inspectErr(() => {
+            called = true;
+          });
+          const res = await inspected;
+
+          assertType<IsExact<typeof inspected, Task<number, TypeError>>>(true);
+          assertStrictEquals(called, false);
+          assertStrictEquals(res.isOk(), true);
+          assertStrictEquals(res.unwrap(), 42);
+        },
+      );
+
+      await t.step(
+        ".inspectErr() -> calls provided inspectFn in case of Err",
+        async () => {
+          let called = false;
+          const task: Task<number, number> = Task.fail(42);
+
+          const inspected = task.inspectErr(() => {
+            called = true;
+          });
+          const res = await inspected;
+
+          assertType<IsExact<typeof inspected, Task<number, number>>>(true);
+          assertStrictEquals(called, true);
+          assertStrictEquals(res.isOk(), false);
+          assertStrictEquals(res.unwrap(), 42);
+        },
+      );
     });
 
     await t.step("Task<T, E> -> Unwrap Methods", async (t) => {
@@ -859,6 +999,19 @@ Deno.test("grugway::Task", async (t) => {
       });
 
       await t.step(
+        ".unwrapOr() -> returns the wrapped value in case of Ok<T>",
+        async () => {
+          const task: Task<number, TypeError> = Task.succeed(42);
+
+          const unwrapped = task.unwrapOr("foo");
+          const value = await unwrapped;
+
+          assertType<IsExact<typeof unwrapped, Promise<number | string>>>(true);
+          assertStrictEquals(value, 42);
+        },
+      );
+
+      await t.step(
         ".unwrapOr() -> returns the fallback value in case of Err<E>",
         async () => {
           const task: Task<number, TypeError> = Task.fail(TypeError());
@@ -868,6 +1021,19 @@ Deno.test("grugway::Task", async (t) => {
 
           assertType<IsExact<typeof unwrapped, Promise<number | string>>>(true);
           assertStrictEquals(value, "foo");
+        },
+      );
+
+      await t.step(
+        ".unwrapOrElse() -> returns the wrapped value in case of Ok<T>",
+        async () => {
+          const task: Task<number, TypeError> = Task.succeed(42);
+
+          const unwrapped = task.unwrapOrElse(async (err) => err.message);
+          const value = await unwrapped;
+
+          assertType<IsExact<typeof unwrapped, Promise<number | string>>>(true);
+          assertStrictEquals(value, 42);
         },
       );
 
