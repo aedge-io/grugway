@@ -1,5 +1,5 @@
-import type { Task } from "../../../async/task.ts";
-import { Err, Ok } from "../../../core/result.ts";
+import type { Task } from "@aedge-io/grugway";
+import { Err, Ok } from "@aedge-io/grugway";
 
 import {
   assert,

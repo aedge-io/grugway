@@ -1,4 +1,3 @@
-export * from "./adapters/web/fetch/mod.ts";
 export * from "./async/task.ts";
 export * as Tasks from "./async/tasks.ts";
 export { Panic, panic, unsafeCastTo } from "./core/errors.ts";
