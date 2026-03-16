@@ -46,11 +46,25 @@ export interface DeferredTask<T, E> {
  *
  * @category Task#Basic
  */
-export class Task<T, E> implements PromiseLike<Result<T, E>> {
+export class Task<T, E> implements Promise<Result<T, E>> {
   readonly #promise: Promise<Result<T, E>>;
 
   private constructor(promise: Promise<Result<T, E>>) {
     this.#promise = promise;
+  }
+
+  /**
+   * Make `task instanceof Promise` return `true` without subclassing.
+   *
+   * This is needed because some libraries (incorrectly) check
+   * `value instanceof Promise` instead of duck-typing via `.then`.
+   *
+   * By placing `Promise.prototype` in `Task`'s prototype chain, the
+   * `instanceof` operator walks the chain and finds it — at zero
+   * runtime cost per-instance (single `setPrototypeOf` at module load).
+   */
+  static {
+    Object.setPrototypeOf(Task.prototype, Promise.prototype);
   }
 
   /**
@@ -70,6 +84,19 @@ export class Task<T, E> implements PromiseLike<Result<T, E>> {
       | undefined,
   ): Promise<TResult1 | TResult2> {
     return this.#promise.then(onfulfilled, onrejected);
+  }
+
+  catch<TResult = never>(
+    onrejected?:
+      | ((reason: unknown) => TResult | PromiseLike<TResult>)
+      | null
+      | undefined,
+  ): Promise<Result<T, E> | TResult> {
+    return this.#promise.catch(onrejected);
+  }
+
+  finally(onfinally?: (() => void) | null | undefined): Promise<Result<T, E>> {
+    return this.#promise.finally(onfinally);
   }
 
   /**
