@@ -1,5 +1,5 @@
 //deno-lint-ignore-file require-await
-import { asInfallible, Err, Ok, type Result } from "../core/result.ts";
+import { asInfallible, Err, Ok, Result } from "../core/result.ts";
 import { Task } from "./task.ts";
 import { assertInstanceOf, assertStrictEquals } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
@@ -35,6 +35,7 @@ Deno.test("grugway::Task", async (t) => {
       const res = await task;
 
       assertStrictEquals(task instanceof Task, true);
+      assertStrictEquals(task instanceof Promise, true);
       assertStrictEquals(res.isErr(), true);
       assertInstanceOf(res.unwrap(), TimeoutError);
 
@@ -257,6 +258,50 @@ Deno.test("grugway::Task", async (t) => {
   });
 
   await t.step("Task<T, E> -> Instance Methods", async (t) => {
+    await t.step("Task<T, E> -> Promise compatibility", async (t) => {
+      await t.step(
+        ".then() -> mirros native Promise<Result<T, E>>",
+        async () => {
+          const ok = Result("yes");
+          const promise = Promise.resolve(ok);
+          const task = Task.of(ok);
+
+          type taskThen = typeof task["then"];
+          type promiseThen = typeof promise["then"];
+
+          assertType<IsExact<taskThen, promiseThen>>(true);
+        },
+      );
+
+      await t.step(
+        ".catch() -> mirros native Promise<Result<T, E>>",
+        async () => {
+          const ok = Result("yes");
+          const promise = Promise.resolve(ok);
+          const task = Task.of(ok);
+
+          type taskCatch = typeof task["catch"];
+          type promiseCatch = typeof promise["catch"];
+
+          assertType<IsExact<taskCatch, promiseCatch>>(true);
+        },
+      );
+
+      await t.step(
+        ".finally() -> mirros native Promise<Result<T, E>>",
+        async () => {
+          const ok = Result("yes");
+          const promise = Promise.resolve(ok);
+          const task = Task.of(ok);
+
+          type taskFinally = typeof task["finally"];
+          type promiseFinally = typeof promise["finally"];
+
+          assertType<IsExact<taskFinally, promiseFinally>>(true);
+        },
+      );
+    });
+
     await t.step("Task<T, E> -> Map Methods", async (t) => {
       await t.step(
         ".map() -> returns new Task instance with applied mapFn to value",
