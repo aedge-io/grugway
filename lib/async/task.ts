@@ -1,5 +1,4 @@
 import { asInfallible, Err, Ok, type Result } from "../core/result.ts";
-import type { ExecutorFn } from "./_internal.ts";
 import {
   andEnsureTask,
   chainTaskFailure,
@@ -34,8 +33,10 @@ export interface DeferredTask<T, E> {
  *
  * `Task<T, E>` is a composeable extension of `Promise<Result<T, E>>`
  *
- * It is a `Promise` sub-class, which never rejects, but always resolves.
- * Either with an `Ok<T>` or an `Err<E>`
+ * It wraps a `Promise<Result<T, E>>` via composition, implementing the
+ * `Promise` interface so it can be `await`ed directly.
+ *
+ * It never rejects, but always resolves — either with an `Ok<T>` or an `Err<E>`
  *
  * It supports almost the same API as {@linkcode Result} and allows for
  * the same composition patterns as {@linkcode Result}
@@ -45,9 +46,58 @@ export interface DeferredTask<T, E> {
  *
  * @category Task#Basic
  */
-export class Task<T, E> extends Promise<Result<T, E>> {
-  private constructor(executor: ExecutorFn<T, E>) {
-    super(executor);
+export class Task<T, E> implements Promise<Result<T, E>> {
+  readonly #promise: Promise<Result<T, E>>;
+
+  private constructor(promise: Promise<Result<T, E>>) {
+    this.#promise = promise;
+  }
+
+  /**
+   * Make `task instanceof Promise` return `true` without subclassing.
+   *
+   * This is done to provide drop-in parity with native Promises, as some libraries
+   * are (IMO needlessly) invariant over `PromiseLike` types and test for `thenability`
+   * via `value instanceof Promise`
+   */
+  static {
+    Object.setPrototypeOf(Task.prototype, Promise.prototype);
+  }
+
+  /**
+   * =======================
+   *   PROMISE INTERFACE
+   * =======================
+   */
+
+  then<TResult1 = Result<T, E>, TResult2 = never>(
+    onfulfilled?:
+      | ((value: Result<T, E>) => TResult1 | PromiseLike<TResult1>)
+      | null
+      | undefined,
+    onrejected?:
+      /* as in original Promise.then */
+      //deno-lint-ignore no-explicit-any
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | null
+      | undefined,
+  ): Promise<TResult1 | TResult2> {
+    return this.#promise.then(onfulfilled, onrejected);
+  }
+
+  catch<TResult = never>(
+    onrejected?:
+      /* as in original Promise.catch */
+      //deno-lint-ignore no-explicit-any
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | null
+      | undefined,
+  ): Promise<Result<T, E> | TResult> {
+    return this.#promise.catch(onrejected);
+  }
+
+  finally(onfinally?: (() => void) | null | undefined): Promise<Result<T, E>> {
+    return this.#promise.finally(onfinally);
   }
 
   /**
@@ -75,7 +125,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   static of<T, E>(
     value: Result<T, E> | PromiseLike<Result<T, E>>,
   ): Task<T, E> {
-    return new Task<T, E>((resolve) => resolve(value));
+    return new Task(Promise.resolve(value));
   }
 
   /**
@@ -91,7 +141,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * ```
    */
   static succeed<T>(value: T): Task<T, never> {
-    return new Task((resolve) => resolve(Ok(value)));
+    return new Task(Promise.resolve(Ok(value)));
   }
 
   /**
@@ -107,7 +157,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * ```
    */
   static fail<E>(error: E): Task<never, E> {
-    return new Task((resolve) => resolve(Err(error)));
+    return new Task(Promise.resolve(Err(error)));
   }
 
   /**
@@ -142,9 +192,10 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    */
   static deferred<T, E>(): DeferredTask<T, E> {
     let resolveBinding: (res: Result<T, E>) => void;
-    const task = new Task<T, E>((resolve) => {
+    const promise = new Promise<Result<T, E>>((resolve) => {
       resolveBinding = resolve;
     });
+    const task = new Task<T, E>(promise);
     const succeed = (value: T) => resolveBinding(Ok(value));
     const fail = (error: E) => resolveBinding(Err(error));
 
@@ -178,7 +229,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
     const p = new Promise<Result<T, E>>((resolve) => resolve(fn()))
       .catch(asInfallible);
 
-    return new Task<T, E>((resolve) => resolve(p));
+    return new Task<T, E>(p);
   }
 
   /**
@@ -245,7 +296,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
     const p = new Promise<T>((resolve) => resolve(fn()))
       .then((v) => Ok(v), (e) => Err(errorMapFn(e)));
 
-    return new Task<T, E>((resolve) => resolve(p));
+    return new Task<T, E>(p);
   }
 
   /**
@@ -289,7 +340,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
       const p = new Promise<R>((resolve) => resolve(fn(...args)))
         .then((v) => ctor(v), (e) => Err(errorMapFn(e)));
 
-      return new Task<T, E>((resolve) => resolve(p));
+      return new Task<T, E>(p);
     };
   }
 
@@ -313,41 +364,41 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   }
 
   clone(): Task<T, E> {
-    return Task.of(cloneTask(this));
+    return new Task(cloneTask(this));
   }
 
   map<T2>(mapFn: (v: T) => T2 | PromiseLike<T2>): Task<T2, E> {
-    return Task.of(mapTaskSuccess(this, mapFn));
+    return new Task(mapTaskSuccess(this, mapFn));
   }
 
   mapOr<T2>(
     mapFn: (v: T) => T2 | PromiseLike<T2>,
     orValue: T2 | PromiseLike<T2>,
   ): Task<T2, never> {
-    return Task.of(mapTaskSuccessOr(this, mapFn, orValue));
+    return new Task(mapTaskSuccessOr(this, mapFn, orValue));
   }
 
   mapOrElse<T2>(
     mapFn: (v: T) => T2 | PromiseLike<T2>,
     orFn: (e: E) => T2 | PromiseLike<T2>,
   ): Task<T2, never> {
-    return Task.of(mapTaskSuccessOrElse(this, mapFn, orFn));
+    return new Task(mapTaskSuccessOrElse(this, mapFn, orFn));
   }
 
   mapErr<E2>(mapFn: (v: E) => E2 | PromiseLike<E2>): Task<T, E2> {
-    return Task.of(mapTaskFailure(this, mapFn));
+    return new Task(mapTaskFailure(this, mapFn));
   }
 
   andThen<T2, E2>(
     thenFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T2, E | E2> {
-    return Task.of(chainTaskSuccess(this, thenFn));
+    return new Task(chainTaskSuccess(this, thenFn));
   }
 
   orElse<T2, E2>(
     elseFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T | T2, E2> {
-    return Task.of(chainTaskFailure(this, elseFn));
+    return new Task(chainTaskFailure(this, elseFn));
   }
 
   /**
@@ -391,7 +442,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   andEnsure<T2, E2>(
     ensureFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T, E | E2> {
-    return Task.of(andEnsureTask(this, ensureFn));
+    return new Task(andEnsureTask(this, ensureFn));
   }
 
   /**
@@ -435,25 +486,25 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   orEnsure<T2, E2>(
     ensureFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T | T2, E> {
-    return Task.of(orEnsureTask(this, ensureFn));
+    return new Task(orEnsureTask(this, ensureFn));
   }
 
   zip<T2, E2>(
     rhs: Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<[T, T2], E | E2> {
-    return Task.of(zipTask(this, rhs));
+    return new Task(zipTask(this, rhs));
   }
 
   tap(tapFn: (v: Result<T, E>) => void | PromiseLike<void>): Task<T, E> {
-    return Task.of(tapTask(this, tapFn));
+    return new Task(tapTask(this, tapFn));
   }
 
   inspect(inspectFn: (v: T) => void | PromiseLike<void>): Task<T, E> {
-    return Task.of(inspectTaskSuccess(this, inspectFn));
+    return new Task(inspectTaskSuccess(this, inspectFn));
   }
 
   inspectErr(inspectFn: (v: E) => void | PromiseLike<void>): Task<T, E> {
-    return Task.of(inspectTaskFailure(this, inspectFn));
+    return new Task(inspectTaskFailure(this, inspectFn));
   }
 
   /**
@@ -462,7 +513,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   trip<T2, E2>(
     tripFn: (v: T) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T, E | E2> {
-    return Task.of(andEnsureTask(this, tripFn));
+    return new Task(andEnsureTask(this, tripFn));
   }
 
   /**
@@ -471,7 +522,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
   rise<T2, E2>(
     riseFn: (v: E) => Result<T2, E2> | PromiseLike<Result<T2, E2>>,
   ): Task<T | T2, E> {
-    return Task.of(orEnsureTask(this, riseFn));
+    return new Task(orEnsureTask(this, riseFn));
   }
 
   /**
@@ -625,7 +676,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * assert(tag === "[object grugway.Task]");
    * ```
    */
-  override toString(): string {
+  toString(): string {
     return Object.prototype.toString.call(this);
   }
 
@@ -654,7 +705,7 @@ export class Task<T, E> extends Promise<Result<T, E>> {
    * assert(toString.call(Task) === "[object grugway.Task]");
    * ```
    */
-  override get [Symbol.toStringTag](): string {
+  get [Symbol.toStringTag](): string {
     return "grugway.Task";
   }
 
