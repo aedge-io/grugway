@@ -122,6 +122,8 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * const task = Task.of(produceRes());
    * ```
    */
+  static of<T>(value: Ok<T> | PromiseLike<Ok<T>>): Task<T, never>;
+  static of<E>(value: Err<E> | PromiseLike<Err<E>>): Task<never, E>;
   static of<T, E>(
     value: Result<T, E> | PromiseLike<Result<T, E>>,
   ): Task<T, E> {
@@ -261,7 +263,9 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     promise: Promise<T>,
     errorMapFn: (reason: unknown) => E,
   ): Task<T, E> {
-    return Task.fromFallible(() => promise, errorMapFn);
+    return new Task<T, E>(
+      promise.then((v) => Ok(v), (e) => Err(errorMapFn(e))),
+    );
   }
 
   /**
