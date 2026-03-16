@@ -1,13 +1,16 @@
 //deno-lint-ignore-file
 import { Err } from "../lib/core/result.ts";
 
+const sink: unknown[] = [null];
+
 Deno.bench({
   name: "Sync Exception Propagation",
   group: "Sync::Propagation",
   fn: () => {
     try {
-      Exceptions.rethrow();
+      sink[0] = Exceptions.rethrow();
     } catch (e) {
+      sink[0] = e;
     }
   },
 });
@@ -17,7 +20,7 @@ Deno.bench({
   group: "Sync::Propagation",
   baseline: true,
   fn: () => {
-    Errors.linearReturn();
+    sink[0] = Errors.linearReturn();
   },
 });
 
