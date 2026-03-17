@@ -78,7 +78,7 @@ export function panic<E>(err?: E): never {
  * @example
  * ```typescript
  * import { assert } from "@std/assert"
- * import { Err, Ok, Result, asInfallible } from "./result.ts"
+ * import { Err, Ok, Result, asInfallible } from "@aedge-io/grugway";
  *
  * //Let's re-implement `Result.from`
  *

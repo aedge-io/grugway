@@ -1,7 +1,6 @@
 //deno-lint-ignore-file
-import { asInfallible, Err, Ok, Result } from "../lib/core/result.ts";
-import { Task } from "../lib/async/task.ts";
-import { Option } from "../lib/core/option.ts";
+
+import { asInfallible, Err, Ok, Option, Result, Task } from "@aedge-io/grugway";
 
 const str = "foo";
 const ERR = Err(str);
