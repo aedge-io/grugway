@@ -25,7 +25,7 @@ export function extractIntegrityMetadata(
 }
 
 export function removeIntegrityTag(tagged: string): string {
-  return tagged.replace(MD_INTEGRITY_MATCHER, "").trim();
+  return tagged.replaceAll(MD_INTEGRITY_MATCHER, "").trim();
 }
 
 export function updateIntegrityTag(

@@ -213,32 +213,6 @@ async fns can be mixed freely in `.map()` / `.andThen()`.
 
 ---
 
-## Fetch Adapter
-
-```typescript
-import {
-  FailedRequest,
-  FetchException,
-  liftFetch,
-  toFetchResult,
-} from "aedge-io/grugway";
-```
-
-- `liftFetch(fetch)` — lifts fetch-like fn into `Task` context. Non-ok responses
-  → `Err<FailedRequest>`, network errors → `Err<FetchException>`
-- `toFetchResult(response)` — `response.ok` → `Ok(response)`, else
-  `Err(FailedRequest)`
-
-```typescript
-const safeFetch = liftFetch(fetch);
-const user = await safeFetch("https://api.example.com/user/1")
-  .map(async (resp) => await resp.json() as User)
-  .inspectErr(console.error) // FailedRequest | FetchException
-  .unwrapOr(defaultUser);
-```
-
----
-
 ## Common Patterns
 
 **Railway oriented processing:**
@@ -279,7 +253,7 @@ const safeParse = Result.liftFallible(
 Ok(rawString).andThen(safeParse);
 ```
 
-**Parse, don't validate:**
+**Parse, don't validate #1:**
 
 ```typescript
 const safeParse = Result.liftFallible(
@@ -290,6 +264,16 @@ const safeParse = Result.liftFallible(
 const version = Option(Deno.args[0])
   .okOr(new Error("No version provided"))
   .andThen(safeParse);
+```
+
+**Parse, don't validate #2:**
+
+```typescript
+const value: unknown = untypedApi.get("value");
+
+Option.fromCoercible(value) // all falsy values are `None`
+  .filter((value) => Array.isArray) // also performs type narrowing
+  .okOrElse(() => Error("Expected an array value"));
 ```
 
 **Sensible balance:**
