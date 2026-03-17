@@ -41,17 +41,12 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * const maybeStr = Option.from("something" as string | undefined);
+   * const opt = Option.from("something" as string | undefined);
    *
-   * function assertSome<T>(o: Option<T>): asserts o is Some<T> {
-   *   if(o.isSome()) return;
-   *   throw TypeError("Expected Some. Received: None!");
+   * if (opt.isSome()) {
+   *   const str: string = opt.unwrap(); // narrowed to Some<string>
+   *   assert(str === "something");
    * }
-   *
-   * assertSome(maybeStr);
-   * const str: string = maybeStr.unwrap();
-   *
-   * assert(str === "something");
    * ```
    */
   isSome(): this is Some<T>;
@@ -66,18 +61,14 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * const maybeStr = Option.from("something" as string | undefined);
+   * const opt = Option.from("something" as string | undefined);
    *
-   * function expect<T>(o: Option<T>): T {
-   *   if(o.isNone()) {
-   *     throw TypeError("Expected Some. Received: None!");
-   *   }
-   *   return o.unwrap() // here `Option<T>` is narrowed to `Some<T>`
+   * if (opt.isNone()) {
+   *   // opt is narrowed to None here
+   *   assert(opt.unwrap() === undefined);
    * }
    *
-   * const str: string = expect(maybeStr);
-   *
-   * assert(str === "something");
+   * // after the guard, opt is narrowed to Some<string>
    * ```
    */
   isNone(): this is None;
@@ -135,27 +126,15 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * //This really is an anti-example - don't do that
+   * const rec = { a: 1, b: 2 };
+   * const original = Option.from(rec);
+   * const cloned = original.clone();
    *
-   * const rec = { a: "some", b: "thing" };
-   * const maybeRec = Option.from(rec);
-   * const encode = JSON.stringify;
-   * function mutate(rec: Record<string, string>): Record<string, string> {
-   *   if ("a" in rec) {
-   *     delete rec.a;
-   *   }
-   *
-   *   return rec;
+   * if (original.isSome() && cloned.isSome()) {
+   *   assert(original.unwrap() === rec);   // same reference
+   *   assert(cloned.unwrap() !== rec);      // different reference
+   *   assert(cloned.unwrap().a === rec.a);  // same values
    * }
-   *
-   * const maybeRecMutated = maybeRec.clone().map(mutate);
-   *
-   * const recUnwrapped = maybeRec.unwrap();
-   * const mutatedUnwrapped = maybeRecMutated.unwrap();
-   *
-   * assert(recUnwrapped === rec); // Same reference
-   * assert(mutatedUnwrapped !== rec);
-   * assert(encode(recUnwrapped) !== encode(mutatedUnwrapped));
    * ```
    */
   clone(): Option<T>;
@@ -297,39 +276,16 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * function randomize(n: number): Option<number> {
-   *   return Option.from(Math.random() * n);
-   * }
-   *
    * function greaterThanTen(n: number): Option<number> {
-   *   return n > 10  ? Some(n) : None;
+   *   return n > 10 ? Some(n) : None;
    * }
    *
-   * const none = Option.fromCoercible(0);
-   * const small = Option(10);
-   * const big = Option(100);
-   * const nested = Option(big);
+   * const some = Option(100).andThen(greaterThanTen);
+   * const none = Option(5).andThen(greaterThanTen);
    *
-   * const alwaysNone = none
-   *   .andThen(randomize)            // -> None; short-circuit'd
-   *   .andThen(greaterThanTen);      // -> same as above
-   *
-   * const less = small
-   *   .andThen(randomize)            // -> Some<number>
-   *   .andThen(greaterThanTen);      // -> None
-   *
-   * const greater = big
-   *   .andThen(randomize)            // -> Some<number>
-   *   .andThen(greaterThanTen);      // -> Some<number>
-   *
-   * const flattened = nested         // -> Some<Some<number>>
-   *   .andThen(Option.id<number>)    // -> Some<number>
-   *   .andThen(greaterThanTen);      // -> Some<number>
-   *
-   * assert(alwaysNone.isNone() === true);
-   * assert(less.isNone() === true);
-   * assert(greater.isSome() === true);
-   * assert(flattened.isSome() === true);
+   * assert(some.isSome() === true);
+   * assert(some.unwrap() === 100);
+   * assert(none.isNone() === true);
    * ```
    */
   andThen<U>(thenFn: (arg: Readonly<T>) => Option<U>): Option<U>;
@@ -383,26 +339,11 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * const maybeStr = Option.from("something" as string | undefined);
-   * const maybeUndef = Option.from(undefined as string | undefined);
+   * const some = Some("thing");
+   * const none = None;
    *
-   * // This is in fact a type assertion
-   * function expect<T>(o: Option<T>): T {
-   *   if(o.isNone()) {
-   *     throw TypeError("Expected Some. Received: None!");
-   *   }
-   *   return o.unwrap() // here `Option<T>` is narrowed to `Some<T>`
-   * }
-   *
-   * function makeLoud(str: string): string {
-   *   return str.toUpperCase().concat("!!!");
-   * }
-   *
-   * const str: string = makeLoud(expect(maybeStr));
-   * const undef: string | undefined = maybeUndef.unwrap();
-
-   * assert(str === "SOMETHING!!!");
-   * assert(undef === undefined);
+   * assert(some.unwrap() === "thing");
+   * assert(none.unwrap() === undefined);
    * ```
    */
   unwrap(): T | undefined;
@@ -493,13 +434,9 @@ interface IOption<T> {
    * import { Option, None, Some } from "./option.ts";
    * import { Result } from "./result.ts";
    *
-   * function errFn(): TypeError {
-   *   return new TypeError("Something went wrong!");
-   * }
-   *
    * const opt = Option.fromCoercible("");
    *
-   * const res: Result<string, TypeError> = opt.okOrElse(errFn);
+   * const res = opt.okOrElse(() => new TypeError("Something went wrong!"));
    *
    * assert(res.isErr() === true);
    * ```
@@ -589,39 +526,20 @@ interface IOption<T> {
    * @category Option#Advanced
    *
    * @example
-   * ```
+   * ```typescript
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
-   * import { existsSync } from "https://deno.land/std@0.199.0/fs/mod.ts";
    *
-   * interface Config {
-   *   rootDir: string;
-   *   cmd: string;
+   * function isPositive(n: number): Option<true> {
+   *   return n > 0 ? Some(true as const) : None;
    * }
    *
-   * function isReadableDir(path: string): Option<true> {
-   *   return Option.fromCoercible(
-   *     existsSync(path, {
-   *       isReadable: true,
-   *       isDirectory: true,
-   *     });
-   *   );
-   * }
+   * const pos = Some(42).andEnsure(isPositive);   // Some(42)
+   * const neg = Some(-1).andEnsure(isPositive);   // None
    *
-   * function finalizeConfig(path: string): Option<Config> {
-   *   return Some({
-   *     rootDir: path,
-   *     cmd: "git add -A"
-   *   });
-   * }
-   *
-   * const path = Some("~/.dotfiles/README.md")
-   *
-   * const maybeConfig = path
-   *   .andEnsure(isReadableDir)
-   *   .andThen(finalizeConfig);
-   *
-   * assert(maybeConfig.isNone() === true);
+   * assert(pos.isSome() === true);
+   * assert(pos.unwrap() === 42);
+   * assert(neg.isNone() === true);
    * ```
    */
   andEnsure<U>(ensureFn: (value: T) => Option<U>): Option<T>;
@@ -642,61 +560,11 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * // Given a config interface...
-   * type ConfigJSON = {
-   *   enableDebugLogs?: boolean;
-   *   enableTelemetry?: boolean;
-   *   enableCrashReports?: boolean;
-   * }
-   * type Config = {
-   *   enableDebugLogs: Option<true>;
-   *   enableTelemetry: Option<true>;
-   *   enableCrashReports: Option<true>;
-   * }
-   * function parseConfig(json: ConfigJSON): Config {
-   *   return {
-   *     enableDebugLogs: Option.fromCoercible(json.enableDebugLogs),
-   *     enableTelemetry: Option.fromCoercible(json.enableTelemetry),
-   *     enableCrashReports: Option.fromCoercible(json.enableCrashReports),
-   *   };
-   * }
+   * const some = Some("a");
+   * const other = Some("b");
    *
-   * // which may require an expensive setup...
-   * async function expensiveSetup(): Promise<void> {
-   *   // ...this might take a while...
-   *   return;
-   * }
-   * async function selectiveSetup(c: Config): Promise<void> {
-   *   // ...match the options here etc
-   *   return;
-   * }
-   *
-   * // ...its possible to decide whether or not the expnsive is necessary
-   * async function main(): Promise<void> {
-   *   const configJSON = await import("path/to/config.json", {
-   *     assert: { type: "json" },
-   *   });
-   *   const config = parseConfig(configJSON as ConfigJSON);
-   *
-   *   const {
-   *     enableDebugLogs,
-   *     enableTelemetry,
-   *     enableCrashReports,
-   *   } = config;
-   *
-   *   if (
-   *     enableDebugLogs
-   *      .and(enableTelemetry)
-   *      .and(enableCrashReports)
-   *      .isSome()
-   *   ) {
-   *     await expensiveSetup();
-   *   } else {
-   *     await selectiveSetup(config);
-   *   }
-   *
-   *   return;
-   * }
+   * assert(some.and(other).unwrap() === "b");  // returns RHS
+   * assert(None.and(some).isNone() === true);   // short-circuits
    * ```
    */
   and<U>(rhs: Option<U>): Some<T> | Some<U> | None;
@@ -744,42 +612,13 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * // A small config utility
-   * // Contrived, but should do the trick
+   * const a = Some(1);
+   * const b = Some(2);
    *
-   * type Path = string
-   *
-   * // Only one of those SHOULD be `Some`
-   * type Extra = {
-   *   workDir: Option<Path>;
-   *   homeDir: Option<Path>;
-   * }
-   * type Config = {
-   *   alias: string;
-   *   defaultCmd: string;
-   *   targetDir?: Path;
-   * }
-   * const createConfig = function(c: Config, ext: Extra): Config {
-   *   const { workDir, homeDir } = ext;
-   *
-   *   if (workDir.xor(homeDir).isNone()) return c;
-   *
-   *   // here it doesn't matter which of those is `Some`
-   *   return { ...c, targetDir: workDir.or(homeDir).unwrap() };
-   * }
-   *
-   * // Setup the parts
-   * const extra = {
-   *   workDir: Some("~/workbench"),
-   *   homeDir: None,
-   * }
-   * const baseConfig = {
-   *   alias: "gcm",
-   *   defaultCmd: "git commit -m",
-   * }
-   * const config = createConfig(baseConfig, extra);
-   *
-   * assert(config.targetDir === "~/workbench");
+   * assert(a.xor(None).unwrap() === 1);   // one is Some  -> Some
+   * assert(None.xor(a).unwrap() === 1);    // one is Some  -> Some
+   * assert(a.xor(b).isNone() === true);    // both are Some -> None
+   * assert(None.xor(None).isNone() === true); // both None -> None
    * ```
    */
   xor<U>(rhs: Option<U>): Some<T> | Some<U> | None;
@@ -802,33 +641,13 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * type UserRecord = {
-   *   id: string;
-   *   name: string;
-   *   email: string;
-   * }
+   * let logged = false;
+   * const some = Some("thing");
    *
-   * const getUserRecord = function(id: string): UserRecord | undefined {
-   *   if (id !== "1") return undefined;
-   *   return { id: "1", name: "Allen", email: "allen@example.com" };
-   * }
+   * const same = some.tap((opt) => { logged = opt.isSome(); });
    *
-   * const logMut = function (opt: Option<UserRecord>) {
-   *   if (opt.isSome()) {
-   *     const rec = opt.unwrap();
-   *     rec.name = "***";
-   *     rec.email = "***";
-   *     console.log(JSON.stringify(rec));
-   *   }
-   *   console.log("No UserRecord found!");
-   * };
-   *
-   * const maybeUserRec = Option.from(getUserRecord("1"));
-   * const maybeEmail = maybeUserRec
-   *                     .tap(logMut)
-   *                     .map((rec) => rec.email);
-   *
-   * assert(maybeEmail.unwrap() === "allen@example.com");
+   * assert(same === some);  // returns the original instance
+   * assert(logged); // side-effect was performed
    * ```
    */
   tap(tapFn: (arg: Option<T>) => void): Option<T>;
@@ -982,26 +801,14 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * const opt = Option.from(42);
+   * const some = Some(42);
+   * const iter = some.iter();
    *
-   * let count = 0;
-   * let yieldedValue = undefined;
+   * assert(iter.next().value === 42);
+   * assert(iter.next().done === true);
    *
-   * for (const value of opt.iter()) {
-   *   count += 1;
-   *   yieldedValue = value;
-   * }
-   *
-   * const fresh = opt.iter();
-   * const first = fresh.next();
-   * const exhausted = fresh.next();
-   *
-   * assert(count === 1);
-   * assert(yieldedValue === 42);
-   * assert(first.done === false);
-   * assert(first.value === 42);
-   * assert(exhausted.done === true);
-   * assert(exhausted.value === undefined);
+   * const none = None;
+   * assert(none.iter().next().done === true);
    * ```
    */
   iter(): IterableIterator<T>;
@@ -1023,29 +830,11 @@ interface IOption<T> {
    * import { assert } from "@std/assert";
    * import { Option, None, Some } from "./option.ts";
    *
-   * const arr = [1, 2, 3];
-   * const someArr = Some(arr);
-   * const none = Option.from(undefined);
+   * const someArr = Some([1, 2, 3]);
+   * const none = None;
    *
-   * const loop = () => {
-   *   let count = 0;
-   *   for (const _item of none) {
-   *     count += 1;
-   *   }
-   *   return count;
-   * };
-   * const arrCopy = [ ...someArr ];
-   * const noneArrCopy = [ ...none ];
-   * const iterCount = loop();
-   * const iterRes = none[Symbol.iterator]().next();
-   *
-   * const encode = JSON.stringify;
-   *
-   * assert(iterCount === 0);
-   * assert(iterRes.done === true);
-   * assert(iterRes.value === undefined);
-   * assert(encode(arrCopy) === encode(arr));
-   * assert(encode(noneArrCopy) === encode([]));
+   * assert(JSON.stringify([...someArr]) === "[1,2,3]");
+   * assert([...none].length === 0);
    * ```
    */
   [Symbol.iterator](): IterableIterator<
@@ -1436,15 +1225,9 @@ export function Some<T>(value: NonNullish<T>): Some<NonNullish<T>> {
  * import { Option, None, Some } from "./option.ts";
  * import { Empty } from "./type_utils.ts";
  *
- * function doStuff(): Option<Empty> {
- *   return Some.empty();
- * }
+ * const ok = Some.empty();
  *
- * const res = doStuff()
- *   .okOrElse(() => TypeError("Invalid")) // conversion to Result
- *   .ok(); //convert back to Some<Empty>
- *
- * assert(res.isSome() === true);
+ * assert(ok.isSome() === true);
  * ```
  */
 Some.empty = function empty(): Some<Empty> {
@@ -1476,22 +1259,12 @@ Object.defineProperty(Some, Symbol.toStringTag, {
  * import { assert } from "@std/assert";
  * import { Option, None, Some } from "./option.ts";
  *
- * const none = None;
- * const rec = { a: 1, b: none };
- * const arr = [ ...none ];
- *
- * const encode = JSON.stringify;
- *
- * assert(none instanceof Option === true);
- * assert(none.isNone() === true);
- * assert(none.isSome() === false);
- * assert(none.unwrap() === undefined);
- * assert(String(none) === "");
- * assert(Number(none) === 0);
- * assert(none[Symbol.toPrimitive]() === false);
- * assert(Boolean(none) === true); //object always evaluate to true
- * assert(encode(rec) === encode({ a: 1 }));
- * assert(arr.length === 0);
+ * assert(None instanceof Option === true);
+ * assert(None.isNone() === true);
+ * assert(None.unwrap() === undefined);
+ * assert(String(None) === "");
+ * assert([...None].length === 0);
+ * assert(JSON.stringify({ a: 1, b: None }) === '{"a":1}');
  * ```
  */
 export type None = _None;
@@ -1569,14 +1342,9 @@ Object.defineProperty(Option, Symbol.toStringTag, {
  * import { assert } from "@std/assert";
  * import { Option, None, Some } from "./option.ts";
  *
- * const str: string | undefined = "thing";
- * const undef: string | undefined = undefined;
+ * const some = Option.from("thing" as string | undefined);
+ * const none = Option.from(undefined as string | undefined);
  *
- * const some: Option<string> = Option.from(str);
- * const none: Option<string> = Option.from(undef);
- *
- * assert(some instanceof Option === true);
- * assert(none instanceof Option === true);
  * assert(some.isSome() === true);
  * assert(none.isNone() === true);
  * ```
@@ -1677,30 +1445,14 @@ Option.fromCoercible = function fromCoercible<T>(
  * import { assert } from "@std/assert";
  * import { Option, None, Some } from "./option.ts";
  *
- * type UserRecord = {
- *   name: string;
- *   email: string;
- *   role: string;
- *   org: string;
- *   lastSeen: Date;
- *   scopes: string[];
- * }
- * const record: UserRecord = {
- *   name: "Allen",
- *   email: "allen@example.com",
- *   role: "Staff",
- *   org: "Sales",
- *   lastSeen: new Date(2023,2, 23),
- *   scopes: ["read:sales", "write:sales", "read:customer"],
- * }
+ * const double = (n: number) => n * 2;
+ * const maybeFn = Option.from(double);
+ * const maybeArg = Option.from(21);
  *
- * const extractScopes = (rec: UserRecord): string[] => rec.scopes;
- * const maybeAction = Option.from(extractScopes);
- * const maybeRec = Option.from(record);
+ * const result = Option.apply(maybeFn, maybeArg);
  *
- * const maybeScopes = Option.apply(maybeAction, maybeRec);
- *
- * assert(maybeScopes.isSome() === true);
+ * assert(result.isSome() === true);
+ * assert(result.unwrap() === 42);
  * ```
  */
 Option.apply = function apply<Args extends Readonly<unknown>, R>(
@@ -1744,50 +1496,13 @@ Option.id = function id<T>(
  * import { assert } from "@std/assert";
  * import { Option, None, Some } from "./option.ts";
  *
- * // Suppose this function is imported from a fancy library
- * function chainDivide(n: number, ...divisors: number[]) {
- *   return divisors.reduce((acc, divisor) => acc /= divisor, n);
- * }
+ * function double(n: number) { return n * 2; }
  *
- * // These two live somewhere in your codebase
- * function getDivident(): Option<number> {
- *   return Option.from(42);
- * }
- * function getDivisors(): Option<number[]> {
- *   return Option.from([7, 3, 2]);
- * }
+ * // lift wraps the return value in Option using the provided ctor
+ * const lifted = Option.lift(double, Option.fromCoercible);
  *
- * // We now could manually compose a function like this...
- *
- * function wrappedDiv(n: number, ...divisors: number[]) {
- *   const res = chainDivide(n, ...divisors);
- *
- *   if (
- *     res === 0 ||Number.isNaN(res) || !Number.isFinite(res)
- *   ) return None;
- *   return Some(res);
- * }
- *
- *
- * // ...or we could just use the `lift()` function with an appropriate ctor
-
- * const liftedDiv = Option.lift(chainDivide, Option.fromCoercible);
- *
- *
- * // If the ctor parameter is omitted, `Option.from()` is used per default
- *
- * const liftedWithDefault = Option.lift(chainDivide);
- *
- * const divident = getDivident();
- * const divisors = getDivisors();
- * const args = divident.zip(divisors);
- *
- * const someWrapped = args.andThen(args => wrappedDiv(args[0], ...args[1]));
- * const someLifted = args.andThen(args => liftedDiv(args[0], ...args[1]));
- *
- * assert(someWrapped.isSome() === true);
- * assert(someLifted.isSome() === true);
- * assert(someWrapped.unwrap() === someLifted.unwrap());
+ * assert(lifted(21).unwrap() === 42);
+ * assert(lifted(0).isNone() === true); // 0 is falsy -> None
  * ```
  */
 Option.lift = function lift<
