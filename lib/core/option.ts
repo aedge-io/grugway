@@ -24,15 +24,12 @@ import {
 import { Err, Ok, type Result } from "./result.ts";
 import { assertNotNullish } from "./assert.ts";
 
-/**
- * ==============
- * BASE INTERFACE
- * ==============
+/*
+ ********************************************************************
+ * base interface
+ ********************************************************************
  */
 
-/**
- * The base interface implemented by {@linkcode Some} and {@linkcode None}
- */
 interface IOption<T> {
   /**
    * Type predicate - use this to narrow an `Option<T>` to `Some<T>`
@@ -1109,10 +1106,10 @@ interface IOption<T> {
   [Symbol.toStringTag]: string;
 }
 
-/**
- * ==============
- * IMPLEMENTATION
- * ==============
+/*
+ ********************************************************************
+ * implementation
+ ********************************************************************
  */
 
 // By declaring an unused, generic type parameter, we get a nicer alias.
@@ -1371,18 +1368,13 @@ class _Some<T> implements IOption<T> {
   }
 }
 
-/**
- * ==============
- *   MODULE API
- * ==============
- *
- * By leveraging declaration merging and the fact that types and values
- * live in seperate namespaces, the API feels way more ergonomic
+/*
+ ********************************************************************
+ * module API
+ ********************************************************************
  */
 
 /**
- * # Some<T>
- *
  * `Some<T>` represents the encapsulation of a value of type `<T>`
  * An instance of `Some` can only be constructed from non-nullish values,
  * so the construction explicitely asserts that the value is not nullish
@@ -1402,7 +1394,6 @@ class _Some<T> implements IOption<T> {
  *
  * Please checkout {@linkcode None} for the opposite case.
  *
- * @implements {IOption<T>} - {@linkcode IOption} Base interface
  * @throws {Panic}
  *
  * @example
@@ -1428,40 +1419,37 @@ export type Some<T> = _Some<T>;
 export function Some<T>(value: NonNullish<T>): Some<NonNullish<T>> {
   return new _Some(value);
 }
-//deno-lint-ignore no-namespace
-export namespace Some {
-  /**
-   * Use this to signal some kind of success irrespective of
-   * the wrapped type as alternative to `Some<void>`
-   *
-   * Seldom useful in a pure `Option<T>` context, mostly provided
-   * for compatibility with `Result<T, E>`, where using `Ok<void>`
-   * to signal a successful operation would evaluate to `None`, if
-   * converted into an `Option<T>`
-   *
-   * @category Option#Intermediate
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Option, None, Some } from "./option.ts";
-   * import { Empty } from "./type_utils.ts";
-   *
-   * function doStuff(): Option<Empty> {
-   *   return Some.empty();
-   * }
-   *
-   * const res = doStuff()
-   *   .okOrElse(() => TypeError("Invalid")) // conversion to Result
-   *   .ok(); //convert back to Some<Empty>
-   *
-   * assert(res.isSome() === true);
-   * ```
-   */
-  export function empty(): Some<Empty> {
-    return Some(EMPTY);
-  }
-}
+/**
+ * Use this to signal some kind of success irrespective of
+ * the wrapped type as alternative to `Some<void>`
+ *
+ * Seldom useful in a pure `Option<T>` context, mostly provided
+ * for compatibility with `Result<T, E>`, where using `Ok<void>`
+ * to signal a successful operation would evaluate to `None`, if
+ * converted into an `Option<T>`
+ *
+ * @category Option#Intermediate
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Option, None, Some } from "./option.ts";
+ * import { Empty } from "./type_utils.ts";
+ *
+ * function doStuff(): Option<Empty> {
+ *   return Some.empty();
+ * }
+ *
+ * const res = doStuff()
+ *   .okOrElse(() => TypeError("Invalid")) // conversion to Result
+ *   .ok(); //convert back to Some<Empty>
+ *
+ * assert(res.isSome() === true);
+ * ```
+ */
+Some.empty = function empty(): Some<Empty> {
+  return Some(EMPTY);
+};
 Object.defineProperty(Some, Symbol.hasInstance, {
   value: <T>(lhs: unknown): lhs is Some<T> => {
     return lhs instanceof _Some;
@@ -1472,7 +1460,6 @@ Object.defineProperty(Some, Symbol.toStringTag, {
 });
 
 /**
- * # None
  * `None` represents the absence of a value and is the opinionated, composable
  * equivalent of `undefined`.
  *
@@ -1520,7 +1507,6 @@ Object.defineProperty(None, Symbol.toStringTag, {
 Object.freeze(None);
 
 /**
- * # Option<T>
  * `Option<T>` represents:
  *  - EITHER the encapsulation of a value of type `<T>` via {@linkcode Some<T>}
  *  - OR the absence of a value via {@linkcode None}
@@ -1535,9 +1521,9 @@ Object.freeze(None);
  * be nullish
  * It's impossible to create an instance of `Some<null | undefined>`
  *
- * The namespace provides additional constructors when it's desired that
+ * Additional constructors are provided when it's desired that
  * the return type is invariant over fallible (i.e. Error) or falsy types.
- * The namespace {@linkcode Options} provides a couple of collection helpers.
+ * The {@linkcode Options} module provides a couple of collection helpers.
  *
  * @property {<T>(value: T) => Option<NonNullish<T>>} from - alias for Option()
  * @property {<T>(value: T) => Option<Infallible<T>>} fromFallible - also returns None for instances of Error
@@ -1573,292 +1559,292 @@ Object.defineProperty(Option, Symbol.toStringTag, {
   value: "grugway.Option",
 });
 
-//deno-lint-ignore no-namespace
-export namespace Option {
-  /**
-   * Alias for Option()
-   *
-   * @category Option#Basic
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Option, None, Some } from "./option.ts";
-   *
-   * const str: string | undefined = "thing";
-   * const undef: string | undefined = undefined;
-   *
-   * const some: Option<string> = Option.from(str);
-   * const none: Option<string> = Option.from(undef);
-   *
-   * assert(some instanceof Option === true);
-   * assert(none instanceof Option === true);
-   * assert(some.isSome() === true);
-   * assert(none.isNone() === true);
-   * ```
-   */
-  export function from<T>(value: T): Option<NonNullish<T>> {
-    return isNotNullish(value) ? Some(value) : None;
-  }
+/**
+ * Alias for Option()
+ *
+ * @category Option#Basic
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Option, None, Some } from "./option.ts";
+ *
+ * const str: string | undefined = "thing";
+ * const undef: string | undefined = undefined;
+ *
+ * const some: Option<string> = Option.from(str);
+ * const none: Option<string> = Option.from(undef);
+ *
+ * assert(some instanceof Option === true);
+ * assert(none instanceof Option === true);
+ * assert(some.isSome() === true);
+ * assert(none.isNone() === true);
+ * ```
+ */
+Option.from = function from<T>(value: T): Option<NonNullish<T>> {
+  return isNotNullish(value) ? Some(value) : None;
+};
 
-  /**
-   * Use this if instances of `Error` should be evaluated to `None`
-   *
-   * Behaves like Option.from() but also returns None for instances of Error
-   *
-   * @category Option#Intermediate
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Option, None, Some } from "./option.ts";
-   *
-   * const str = "thing" as string | undefined;
-   * const undef = undefined as string | undefined;
-   * const err = new Error() as string | Error | TypeError;
-   *
-   * const some: Option<string> = Option.fromFallible(str);
-   * const none: Option<string> = Option.fromFallible(undef);
-   * const alsoNone: Option<string> = Option.fromFallible(err);
-   *
-   * assert(some instanceof Option === true);
-   * assert(none instanceof Option === true);
-   * assert(alsoNone instanceof Option === true);
-   * assert(some.isSome() === true);
-   * assert(none.isNone() === true);
-   * assert(alsoNone.isNone() === true);
-   * ```
-   */
-  export function fromFallible<T>(value: T): Option<Infallible<T>> {
-    if (isInfallible(value)) return Option.from(value);
-    return None;
-  }
+/**
+ * Use this if instances of `Error` should be evaluated to `None`
+ *
+ * Behaves like Option.from() but also returns None for instances of Error
+ *
+ * @category Option#Intermediate
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Option, None, Some } from "./option.ts";
+ *
+ * const str = "thing" as string | undefined;
+ * const undef = undefined as string | undefined;
+ * const err = new Error() as string | Error | TypeError;
+ *
+ * const some: Option<string> = Option.fromFallible(str);
+ * const none: Option<string> = Option.fromFallible(undef);
+ * const alsoNone: Option<string> = Option.fromFallible(err);
+ *
+ * assert(some instanceof Option === true);
+ * assert(none instanceof Option === true);
+ * assert(alsoNone instanceof Option === true);
+ * assert(some.isSome() === true);
+ * assert(none.isNone() === true);
+ * assert(alsoNone.isNone() === true);
+ * ```
+ */
+Option.fromFallible = function fromFallible<T>(
+  value: T,
+): Option<Infallible<T>> {
+  if (isInfallible(value)) return Option.from(value);
+  return None;
+};
 
-  /**
-   * Use this if all falsy values should be evaluated to `None`
-   *
-   * Behaves like Option.from() but returns None for falsy values
-   * This is also reflected in the return type in case of unions
-   *
-   * @category Option#Intermediate
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Option, None, Some } from "./option.ts";
-   *
-   * type Bit = 1 | 0;
-   * type Maybe = "thing" | "";
-   * const str = "thing" as Maybe;
-   * const bit = 0 as Bit;
-   *
-   * const some: Option<"thing"> = Option.fromCoercible(str);
-   * const none: Option<1> = Option.fromCoercible(bit);
-   *
-   * assert(some instanceof Option === true);
-   * assert(none instanceof Option === true);
-   * assert(some.isSome() === true);
-   * assert(none.isNone() === true);
-   * ```
-   */
-  export function fromCoercible<T>(value: T): Option<Truthy<T>> {
-    if (isTruthy(value)) return Option.from(value);
-    return None;
-  }
+/**
+ * Use this if all falsy values should be evaluated to `None`
+ *
+ * Behaves like Option.from() but returns None for falsy values
+ * This is also reflected in the return type in case of unions
+ *
+ * @category Option#Intermediate
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Option, None, Some } from "./option.ts";
+ *
+ * type Bit = 1 | 0;
+ * type Maybe = "thing" | "";
+ * const str = "thing" as Maybe;
+ * const bit = 0 as Bit;
+ *
+ * const some: Option<"thing"> = Option.fromCoercible(str);
+ * const none: Option<1> = Option.fromCoercible(bit);
+ *
+ * assert(some instanceof Option === true);
+ * assert(none instanceof Option === true);
+ * assert(some.isSome() === true);
+ * assert(none.isNone() === true);
+ * ```
+ */
+Option.fromCoercible = function fromCoercible<T>(
+  value: T,
+): Option<Truthy<T>> {
+  if (isTruthy(value)) return Option.from(value);
+  return None;
+};
 
-  /**
-   * Use this to apply an `Option<T>` to a handler of type `Option<MapFn>`
-   *
-   * |  fn( arg )      |   arg: Some<T> |   arg: None   |
-   * |-----------------|----------------|---------------|
-   * | fn: Some<MapFn> | Some<MapFn<T>> |     None      |
-   * | fn:    None     |      None      |     None      |
-   *
-   * This emulates the typical behavior of `Applicative` in functional
-   * languages
-   *
-   * NOTE: `Some<T>` and `None` are not applicative functors
-   * as this capability is exposed via the type/namespace and not the
-   * instances
-   *
-   * See [`Applicative`](https://en.wikipedia.org/wiki/Applicative_functor)
-   *
-   * @category Option#Advanced
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Option, None, Some } from "./option.ts";
-   *
-   * type UserRecord = {
-   *   name: string;
-   *   email: string;
-   *   role: string;
-   *   org: string;
-   *   lastSeen: Date;
-   *   scopes: string[];
-   * }
-   * const record: UserRecord = {
-   *   name: "Allen",
-   *   email: "allen@example.com",
-   *   role: "Staff",
-   *   org: "Sales",
-   *   lastSeen: new Date(2023,2, 23),
-   *   scopes: ["read:sales", "write:sales", "read:customer"],
-   * }
-   *
-   * const extractScopes = (rec: UserRecord): string[] => rec.scopes;
-   * const maybeAction = Option.from(extractScopes);
-   * const maybeRec = Option.from(record);
-   *
-   * const maybeScopes = Option.apply(maybeAction, maybeRec);
-   *
-   * assert(maybeScopes.isSome() === true);
-   * ```
-   */
-  export function apply<Args extends Readonly<unknown>, R>(
-    fn: Option<(args: Args) => R>,
-    arg: Option<Args>,
-  ): Option<NonNullish<R>> {
-    if (fn.isNone() || arg.isNone()) return None;
-    return Option.from(fn.unwrap()(arg.unwrap()));
-  }
+/**
+ * Use this to apply an `Option<T>` to a handler of type `Option<MapFn>`
+ *
+ * |  fn( arg )      |   arg: Some<T> |   arg: None   |
+ * |-----------------|----------------|---------------|
+ * | fn: Some<MapFn> | Some<MapFn<T>> |     None      |
+ * | fn:    None     |      None      |     None      |
+ *
+ * This emulates the typical behavior of `Applicative` in functional
+ * languages
+ *
+ * NOTE: `Some<T>` and `None` are not applicative functors
+ * as this capability is exposed via the type and not the instances
+ *
+ * See [`Applicative`](https://en.wikipedia.org/wiki/Applicative_functor)
+ *
+ * @category Option#Advanced
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Option, None, Some } from "./option.ts";
+ *
+ * type UserRecord = {
+ *   name: string;
+ *   email: string;
+ *   role: string;
+ *   org: string;
+ *   lastSeen: Date;
+ *   scopes: string[];
+ * }
+ * const record: UserRecord = {
+ *   name: "Allen",
+ *   email: "allen@example.com",
+ *   role: "Staff",
+ *   org: "Sales",
+ *   lastSeen: new Date(2023,2, 23),
+ *   scopes: ["read:sales", "write:sales", "read:customer"],
+ * }
+ *
+ * const extractScopes = (rec: UserRecord): string[] => rec.scopes;
+ * const maybeAction = Option.from(extractScopes);
+ * const maybeRec = Option.from(record);
+ *
+ * const maybeScopes = Option.apply(maybeAction, maybeRec);
+ *
+ * assert(maybeScopes.isSome() === true);
+ * ```
+ */
+Option.apply = function apply<Args extends Readonly<unknown>, R>(
+  fn: Option<(args: Args) => R>,
+  arg: Option<Args>,
+): Option<NonNullish<R>> {
+  if (fn.isNone() || arg.isNone()) return None;
+  return Option.from(fn.unwrap()(arg.unwrap()));
+};
 
-  /**
-   * Use this to return the provided instance of `Option<T>`
-   * Mostly usefull for flattening or en lieu of a no-op
-   *
-   * @category Option#Basic
-   */
-  export function id<T>(
-    opt: Readonly<Option<T>> | Option<T>,
-  ): Option<T> {
-    return opt.id();
-  }
+/**
+ * Use this to return the provided instance of `Option<T>`
+ * Mostly usefull for flattening or en lieu of a no-op
+ *
+ * @category Option#Basic
+ */
+Option.id = function id<T>(
+  opt: Readonly<Option<T>> | Option<T>,
+): Option<T> {
+  return opt.id();
+};
 
-  /**
-   * Use this to compose functions and `Option` constructors
-   *
-   * Allows interleaving a given chain of operations on instances of type
-   * `Option<T>` with (sort of) arbirtrary operations by lifting them into
-   * an `Option` context
-   *
-   * This is useful in situations, where it's necessary to perform computations
-   * on the wrapped value of type `<T>`, but the available functions are
-   * invariant over the provided `map()` or `andThen()` methods' parameters
-   *
-   * Furthermore, it allows for composing functions with custom `Option`
-   * constructors to preserve certain invariants
-   *
-   * @category Option#Advanced
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Option, None, Some } from "./option.ts";
-   *
-   * // Suppose this function is imported from a fancy library
-   * function chainDivide(n: number, ...divisors: number[]) {
-   *   return divisors.reduce((acc, divisor) => acc /= divisor, n);
-   * }
-   *
-   * // These two live somewhere in your codebase
-   * function getDivident(): Option<number> {
-   *   return Option.from(42);
-   * }
-   * function getDivisors(): Option<number[]> {
-   *   return Option.from([7, 3, 2]);
-   * }
-   *
-   * // We now could manually compose a function like this...
-   *
-   * function wrappedDiv(n: number, ...divisors: number[]) {
-   *   const res = chainDivide(n, ...divisors);
-   *
-   *   if (
-   *     res === 0 ||Number.isNaN(res) || !Number.isFinite(res)
-   *   ) return None;
-   *   return Some(res);
-   * }
-   *
-   *
-   * // ...or we could just use the `lift()` function with an appropriate ctor
+/**
+ * Use this to compose functions and `Option` constructors
+ *
+ * Allows interleaving a given chain of operations on instances of type
+ * `Option<T>` with (sort of) arbirtrary operations by lifting them into
+ * an `Option` context
+ *
+ * This is useful in situations, where it's necessary to perform computations
+ * on the wrapped value of type `<T>`, but the available functions are
+ * invariant over the provided `map()` or `andThen()` methods' parameters
+ *
+ * Furthermore, it allows for composing functions with custom `Option`
+ * constructors to preserve certain invariants
+ *
+ * @category Option#Advanced
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Option, None, Some } from "./option.ts";
+ *
+ * // Suppose this function is imported from a fancy library
+ * function chainDivide(n: number, ...divisors: number[]) {
+ *   return divisors.reduce((acc, divisor) => acc /= divisor, n);
+ * }
+ *
+ * // These two live somewhere in your codebase
+ * function getDivident(): Option<number> {
+ *   return Option.from(42);
+ * }
+ * function getDivisors(): Option<number[]> {
+ *   return Option.from([7, 3, 2]);
+ * }
+ *
+ * // We now could manually compose a function like this...
+ *
+ * function wrappedDiv(n: number, ...divisors: number[]) {
+ *   const res = chainDivide(n, ...divisors);
+ *
+ *   if (
+ *     res === 0 ||Number.isNaN(res) || !Number.isFinite(res)
+ *   ) return None;
+ *   return Some(res);
+ * }
+ *
+ *
+ * // ...or we could just use the `lift()` function with an appropriate ctor
 
-   * const liftedDiv = Option.lift(chainDivide, Option.fromCoercible);
-   *
-   *
-   * // If the ctor parameter is omitted, `Option.from()` is used per default
-   *
-   * const liftedWithDefault = Option.lift(chainDivide);
-   *
-   * const divident = getDivident();
-   * const divisors = getDivisors();
-   * const args = divident.zip(divisors);
-   *
-   * const someWrapped = args.andThen(args => wrappedDiv(args[0], ...args[1]));
-   * const someLifted = args.andThen(args => liftedDiv(args[0], ...args[1]));
-   *
-   * assert(someWrapped.isSome() === true);
-   * assert(someLifted.isSome() === true);
-   * assert(someWrapped.unwrap() === someLifted.unwrap());
-   * ```
-   */
-  export function lift<
-    Args extends Readonly<unknown[]>,
-    R1,
-    R2 = NonNullish<R1>,
-  >(
-    fn: (...args: Args) => R1,
-    ctor: (arg: R1) => Option<R2> = Option.from as (arg: R1) => Option<R2>,
-  ): (...args: Args) => Option<R2> {
-    return function (...args: Readonly<Args>): Option<R2> {
+ * const liftedDiv = Option.lift(chainDivide, Option.fromCoercible);
+ *
+ *
+ * // If the ctor parameter is omitted, `Option.from()` is used per default
+ *
+ * const liftedWithDefault = Option.lift(chainDivide);
+ *
+ * const divident = getDivident();
+ * const divisors = getDivisors();
+ * const args = divident.zip(divisors);
+ *
+ * const someWrapped = args.andThen(args => wrappedDiv(args[0], ...args[1]));
+ * const someLifted = args.andThen(args => liftedDiv(args[0], ...args[1]));
+ *
+ * assert(someWrapped.isSome() === true);
+ * assert(someLifted.isSome() === true);
+ * assert(someWrapped.unwrap() === someLifted.unwrap());
+ * ```
+ */
+Option.lift = function lift<
+  Args extends Readonly<unknown[]>,
+  R1,
+  R2 = NonNullish<R1>,
+>(
+  fn: (...args: Args) => R1,
+  ctor: (arg: R1) => Option<R2> = Option.from as (arg: R1) => Option<R2>,
+): (...args: Args) => Option<R2> {
+  return function (...args: Readonly<Args>): Option<R2> {
+    return ctor(fn(...args));
+  };
+};
+
+/**
+ * Same as {@linkcode Option.lift} but with a safety net.
+ *
+ * Use this if the function to be lifted might throw. In case of an
+ * exception, `None` is returned.
+ *
+ * @category Option#Advanced
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Option, None, Some } from "./option.ts";
+ *
+ * function fallible(input: number): number {
+ *   if (input === 42) return input;
+ *   throw TypeError("Not even!");
+ * }
+ *
+ * const lifted = Option.liftFallible(fallible, Option.fromCoercible);
+ *
+ * const maybe = Option.from(42).andThen(lifted);
+ *
+ * assert(maybe.isSome() === true);
+ * assert(maybe.unwrap() === 42);
+ * ```
+ */
+Option.liftFallible = function liftFallible<
+  Args extends Readonly<unknown[]>,
+  R1,
+  R2 = NonNullish<R1>,
+>(
+  fn: (...args: Args) => R1,
+  ctor: (arg: R1) => Option<R2> = Option.from as (arg: R1) => Option<R2>,
+): (...args: Args) => Option<R2> {
+  return function (...args: Readonly<Args>): Option<R2> {
+    try {
       return ctor(fn(...args));
-    };
-  }
-
-  /**
-   * Same as {@linkcode Option.lift} but with a safety net.
-   *
-   * Use this if the function to be lifted might throw. In case of an
-   * exception, `None` is returned.
-   *
-   * @category Option#Advanced
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Option, None, Some } from "./option.ts";
-   *
-   * function fallible(input: number): number {
-   *   if (input === 42) return input;
-   *   throw TypeError("Not even!");
-   * }
-   *
-   * const lifted = Option.liftFallible(fallible, Option.fromCoercible);
-   *
-   * const maybe = Option.from(42).andThen(lifted);
-   *
-   * assert(maybe.isSome() === true);
-   * assert(maybe.unwrap() === 42);
-   * ```
-   */
-  export function liftFallible<
-    Args extends Readonly<unknown[]>,
-    R1,
-    R2 = NonNullish<R1>,
-  >(
-    fn: (...args: Args) => R1,
-    ctor: (arg: R1) => Option<R2> = Option.from as (arg: R1) => Option<R2>,
-  ): (...args: Args) => Option<R2> {
-    return function (...args: Readonly<Args>): Option<R2> {
-      try {
-        return ctor(fn(...args));
-      } catch (_) {
-        return None;
-      }
-    };
-  }
-}
+    } catch (_) {
+      return None;
+    }
+  };
+};
 
 /**
  * Use this to infer the encapsulated `<T>` type from a `Some<T>`
