@@ -1,4 +1,5 @@
-import { asInfallible, Err, Ok, type Result } from "../core/result.ts";
+import { asInfallible } from "../core/errors.ts";
+import { Err, Ok, type Result } from "../core/result.ts";
 
 /**
  * This is the interface of the return value of {@linkcode Task.deferred}
@@ -10,8 +11,6 @@ export interface DeferredTask<T, E> {
 }
 
 /**
- * # Task<T, E>
- *
  * `Task<T, E>` is a composeable equivalent of `Promise<Result<T, E>>`
  *
  * It never rejects, but always resolves. Either with an `Ok<T>` or an `Err<E>`

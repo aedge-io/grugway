@@ -1,5 +1,6 @@
 //deno-lint-ignore-file require-await
-import { asInfallible, Err, Ok, Result } from "../core/result.ts";
+import { Err, Ok, Result } from "../core/result.ts";
+import { asInfallible } from "../core/errors.ts";
 import { Task } from "./task.ts";
 import { assertInstanceOf, assertStrictEquals } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";

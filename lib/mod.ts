@@ -4,8 +4,7 @@ export * from "./core/errors.ts";
 export { None, Option, Some } from "./core/option.ts";
 export * as Options from "./core/options.ts";
 export type { InferredSomeTuple, InferredSomeUnion } from "./core/options.ts";
-export { asInfallible, Err, Ok, Result } from "./core/result.ts";
-export type { IResult } from "./core/result.ts";
+export { Err, Ok, Result } from "./core/result.ts";
 export * as Results from "./core/results.ts";
 export type {
   InferredErrTuple,
