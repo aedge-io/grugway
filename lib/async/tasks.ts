@@ -1,4 +1,5 @@
-import { type Result, Results } from "../core/result.ts";
+import type { Result } from "../core/result.ts";
+import * as Results from "../core/results.ts";
 import { Task } from "./task.ts";
 
 /**
