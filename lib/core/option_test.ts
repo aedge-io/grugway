@@ -252,6 +252,26 @@ Deno.test("grugway::Option", async (t) => {
     },
   );
   await t.step(
+    ".apply() -> returns None if fn or arg is None",
+    () => {
+      const add = (n: number) => n + 1;
+      const maybeFn = Option.from(add);
+      const noneArg = Option.from(undefined as number | undefined);
+      const noneFn = Option.from(
+        undefined as ((n: number) => number) | undefined,
+      );
+      const someArg = Option.from(42);
+
+      const noneBecauseArg = Option.apply(maybeFn, noneArg);
+      const noneBecauseFn = Option.apply(noneFn, someArg);
+      const noneBecauseBoth = Option.apply(noneFn, noneArg);
+
+      assertStrictEquals(noneBecauseArg.isNone(), true);
+      assertStrictEquals(noneBecauseFn.isNone(), true);
+      assertStrictEquals(noneBecauseBoth.isNone(), true);
+    },
+  );
+  await t.step(
     ".lift() -> composes functions and constructors correctly",
     () => {
       function chainDivide(n: number, ...divisors: number[]) {
@@ -852,6 +872,19 @@ Deno.test("grugway::Option::Some", async (t) => {
 
       assertStrictEquals(same, None);
     });
+
+    await t.step(
+      ".zip() -> returns None if RHS is None",
+      () => {
+        const lhs = Some("thing");
+        const rhs = None as Option<number>;
+
+        const res = lhs.zip(rhs);
+
+        assertStrictEquals(res.isNone(), true);
+        assertStrictEquals(res.unwrap(), undefined);
+      },
+    );
   });
 
   await t.step("Some<T> -> Unwrap Methods", async (t) => {
@@ -1015,6 +1048,22 @@ Deno.test("grugway::Option::Some", async (t) => {
 
         assertStrictEquals(res.isOk(), true);
         assertStrictEquals(res.unwrap(), rec);
+      },
+    );
+
+    await t.step(
+      ".iter() -> yields the wrapped value once then exhausts",
+      () => {
+        const some = Some(42);
+
+        const iter = some.iter();
+        const first = iter.next();
+        const exhausted = iter.next();
+
+        assertStrictEquals(first.done, false);
+        assertStrictEquals(first.value, 42);
+        assertStrictEquals(exhausted.done, true);
+        assertStrictEquals(exhausted.value, undefined);
       },
     );
   });
@@ -1512,6 +1561,16 @@ Deno.test("grugway::Option::None", async (t) => {
       },
     );
 
+    await t.step(".zip() -> returns None regardless of RHS", () => {
+      const some = Some("thing");
+
+      const noneZipSome = None.zip(some);
+      const noneZipNone = None.zip(None);
+
+      assertStrictEquals(noneZipSome, None);
+      assertStrictEquals(noneZipNone, None);
+    });
+
     await t.step(
       ".filter() -> accepts a type guard and narrows type",
       () => {
@@ -1652,6 +1711,17 @@ Deno.test("grugway::Option::None", async (t) => {
         assertStrictEquals(res.unwrap(), typeErr);
       },
     );
+
+    await t.step(
+      ".iter() -> returns an exhausted iterator",
+      () => {
+        const iter = None.iter();
+        const first = iter.next();
+
+        assertStrictEquals(first.done, true);
+        assertStrictEquals(first.value, undefined);
+      },
+    );
   });
 
   await t.step("None -> Convenience Methods", async (t) => {
@@ -1690,6 +1760,20 @@ Deno.test("grugway::Option::None", async (t) => {
         assertStrictEquals(tag, objTag);
       },
     );
+
+    await t.step(".id() -> returns None", () => {
+      const same = None.id();
+
+      assertStrictEquals(same, None);
+      assertStrictEquals(same.isNone(), true);
+    });
+
+    await t.step(".clone() -> returns None", () => {
+      const cloned = None.clone();
+
+      assertStrictEquals(cloned, None);
+      assertStrictEquals(cloned.isNone(), true);
+    });
   });
 
   await t.step("None -> JS well-known Symbols and Methods", async (t) => {
