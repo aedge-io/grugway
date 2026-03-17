@@ -6,17 +6,14 @@
 import type { Empty, Fallible, NonNullish } from "./type_utils.ts";
 import { EMPTY } from "./type_utils.ts";
 import { None, Option } from "./option.ts";
-import { asInfallible, Panic } from "./errors.ts";
+import { asInfallible } from "./errors.ts";
 
-/**
- * ==============
- * BASE INTERFACE
- * ==============
+/*
+ ********************************************************************
+ * base interface
+ ********************************************************************
  */
 
-/**
- * Base interface implemented by `Ok<T>` and `Err<E>`
- */
 export interface IResult<T, E> {
   /**
    * Type predicate - use this to narrow `Result<T, E>` to `Ok<T>`
@@ -85,19 +82,7 @@ export interface IResult<T, E> {
   id(): Result<T, E>;
 
   /**
-   * Use this to obtain a deep clone of `Result<T, E>`
-   *
-   * Under the hood, this uses the `structuredClone` algorithm exposed via
-   * the global function of the same name
-   *
-   * May incur performance penalties, depending on the platform, size and type
-   * of the data to be cloned
-   *
-   * Can be handy if user-defined operations on reference types mutate the
-   * passed value and the original value should be retained
-   *
-   * CAUTION: Mutations in a chained series of operations are strongly
-   * discouraged
+   * Use this to obtain a deep clone of `Result<T, E>` via `structuredClone`
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
    *
@@ -106,19 +91,14 @@ export interface IResult<T, E> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert";
-   * import { Err, Ok, Result } from "./result.ts";
+   * import { Ok } from "./result.ts";
    *
-   * const record = { a: "thing" };
-   * const ok = Ok(record);
-   * const err = Err(record);
+   * const rec = { a: 1 };
+   * const ok = Ok(rec);
+   * const cloned = ok.clone();
    *
-   * const okClone = ok.clone();
-   * const errClone = err.clone();
-   *
-   * assert(okClone !== ok);
-   * assert(errClone !== err);
-   * assert(okClone.unwrap() !== record);
-   * assert(errClone.unwrap() !== record);
+   * assert(cloned.unwrap() !== rec);  // different reference
+   * assert(cloned.unwrap().a === 1);  // same value
    * ```
    */
   clone(): Result<T, E>;
@@ -253,25 +233,17 @@ export interface IResult<T, E> {
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
-   * const processString = function(str: string): Result<number, TypeError> {
-   *  if(str.length > 5) return Ok(str.length);
-   *  return Err(TypeError("String too short"));
+   * function toLength(str: string): Result<number, TypeError> {
+   *   if (str.length > 5) return Ok(str.length);
+   *   return Err(TypeError("Too short"));
    * }
    *
-   * const ok = Ok("Hello!");
-   * const err = Err(TypeError("Something went wrong"));
-   * const nested = Ok(Ok(42));
+   * const ok = Ok("Hello!").andThen(toLength);
+   * const err = Ok("Hi").andThen(toLength);
    *
-   * const chained = ok.andThen(processString);
-   * const chainedErr = err.andThen(processString);
-   * const flattened = nested.andThen((r) => r.id());
-   *
-   * assert(chained.isOk() === true);
-   * assert(chained.unwrap() === 6);
-   * assert(chainedErr.isErr() === true);
-   * assert(chainedErr === err);
-   * assert(flattened.isOk() === true);
-   * assert(flattened.unwrap() === 42);
+   * assert(ok.isOk() === true);
+   * assert(ok.unwrap() === 6);
+   * assert(err.isErr() === true);
    * ```
    */
   andThen<T2, E2>(
@@ -292,29 +264,17 @@ export interface IResult<T, E> {
    * @example
    * ```typescript
    * import { assert } from "@std/assert";
-   * import { Option } from "./option.ts";
-   * import { Err, Ok, Result } from "./result.ts"
+   * import { Err, Ok, Result } from "./result.ts";
    *
-   * function recover(e: Error): Result<string, Error> {
-   *   return Option(e.cause)
-   *     .filter((v): v is string => typeof v === "string")
-   *     .okOr(e);
+   * function recover(e: Error): Result<string, TypeError> {
+   *   return Ok(e.message);
    * }
    *
-   * const ok = Ok("ido!");
-   * const err = Err(Error("Panic!", { cause: "Fear" }));
-   * const nested = Err(Ok(42));
+   * const ok = Ok("fine").orElse(recover);       // short-circuits
+   * const recovered = Err(Error("boom")).orElse(recover);
    *
-   * const chained = ok.orElse(recover);
-   * const chainedErr = err.orElse(recover);
-   * const flattened = nested.orElse((r) => r.id());
-   *
-   * assert(chained.isOk() === true);
-   * assert(chained === ok);
-   * assert(chainedErr.isErr() === false);
-   * assert(chainedErr.asResult() !== err);
-   * assert(flattened.isOk() === true);
-   * assert(flattened.unwrap() === 42);
+   * assert(ok.unwrap() === "fine");
+   * assert(recovered.unwrap() === "boom");
    * ```
    */
   orElse<T2, E2>(elseFn: (err: E) => Result<T2, E2>): Ok<T> | Result<T2, E2>;
@@ -346,39 +306,17 @@ export interface IResult<T, E> {
    * ```typescript
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
-   * import { emptyDirSync } from "https://deno.land/std@0.207.0/fs/empty_dir.ts";
    *
-   * const { BadResource, NotFound, PermissionDenied } = Deno.errors;
-   * type BadResource = typeof BadResource;
-   * type NotFound = typeof NotFound;
-   * type PermissionDenied = typeof PermissionDenied;
-   *
-   * const castTo = function<E>(e: unknown): E {
-   *   return e as E;
+   * function isEven(n: number): Result<true, TypeError> {
+   *   return n % 2 === 0 ? Ok(true as const) : Err(TypeError("Odd"));
    * }
    *
-   * const getPath = function(): Result<string, NotFound> {
-   *   //perform a few checks...
-   *   return Ok(Deno.args[0]);
-   * }
+   * const even = Ok(42).andEnsure(isEven);   // Ok(42) — original retained
+   * const odd = Ok(41).andEnsure(isEven);    // Err(TypeError)
    *
-   * const prepareDir = Result.liftFallible(
-   *   emptyDirSync,
-   *   castTo<PermissionDenied>,
-   * );
-   *
-   * const writeBlobs = function(path: string): Result<number, BadResource> {
-   *   // create files and write something to them...
-   *   return Ok(0);
-   * }
-   *
-   * const res = getPath()  // here we try get a path...
-   *   .andEnsure(prepareDir)    // ...and if THIS works, we pass it on...
-   *   .andThen(writeBlobs) // ...so that we can process it here.
-   *   .inspect(() => console.log("done"))
-   *   .inspectErr(console.error);
-   *
-   * assert(res.unwrap() != null);
+   * assert(even.isOk() === true);
+   * assert(even.unwrap() === 42);
+   * assert(odd.isErr() === true);
    * ```
    */
   andEnsure<T2, E2>(
@@ -413,35 +351,17 @@ export interface IResult<T, E> {
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
-   * const { BadResource, NotFound, PermissionDenied } = Deno.errors;
-   * type BadResource = typeof BadResource;
-   * type NotFound = typeof NotFound;
-   * type PermissionDenied = typeof PermissionDenied;
-   *
-   * type Config = Record<string, string>;
-   *
-   * const readConfig = function(): Result<Config, NotFound> {
-   *   // Oh boy, that didn't work out...
-   *   return Err(NotFound("Config not found"));
+   * function tryRecover(e: Error): Result<number, TypeError> {
+   *   return Ok(0); // recovered with a default
    * }
    *
-   * const readFallbackConfig = function(): Result<Config, PermissionDenied> {
-   *   // ...also doesn't work
-   *   return Err(PermissionDenied());
-   * }
+   * const ok = Ok(42).orEnsure(tryRecover);             // short-circuits
+   * const recovered = Err(Error()).orEnsure(tryRecover); // Ok(0)
+   * const kept = Err(Error()).orEnsure(() => Err(TypeError())); // original Err
    *
-   * const doSomething = function(cfg: Config): Result<string, BadResource> {
-   *   // do some processing here...
-   *   return Ok(JSON.stringify(cfg));
-   * }
-   *
-   * const res = readConfig()      // Let's try to read the config...
-   *   .orEnsure(readFallbackConfig)   // ...try the fallback...
-   *   .andThen(doSomething)       // ...but we retain the original error
-   *   .inspect(console.log)       // Ok<string>
-   *   .inspectErr(console.error); // Err<NotFound> | Err<BadResource>
-   *
-   * assert(res.isErr() === true);
+   * assert(ok.unwrap() === 42);
+   * assert(recovered.unwrap() === 0);
+   * assert(kept.isErr() === true);
    */
   orEnsure<T2, E2>(ensureFn: (err: E) => Result<T2, E2>): Result<T, E> | Ok<T2>;
 
@@ -523,20 +443,15 @@ export interface IResult<T, E> {
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
-   * const sum = function(...nums: number[]): Result<number, TypeError> {
-   *   const sum = nums.reduce((acc, num) => acc + num, 0);
-   *   return Ok(sum);
-   * }
+   * const a = Ok(1);
+   * const b = Ok("two");
+   * const err = Err(Error()) as Result<number, Error>;
    *
-   * const summandOne = Ok(31);
-   * const summandTwo = Ok(11);
+   * const zipped = a.zip(b);
+   * const failed = a.zip(err);
    *
-   * const res = summandOne
-   *   .zip(summandTwo)
-   *   .andThen((nums) => sum(...nums));
-   *
-   * assert(res.isOk());
-   * assert(res.unwrap() === 42);
+   * assert(JSON.stringify(zipped.unwrap()) === '[1,"two"]');
+   * assert(failed.isErr() === true);
    * ```
    */
   zip<T2, E2>(rhs: Result<T2, E2>): Ok<[T, T2]> | Err<E> | Err<E2>;
@@ -560,24 +475,11 @@ export interface IResult<T, E> {
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
-   * const ok = Ok(42) as Result<number, string>;
-   * const err = Err("Oh no") as Result<number, string>;
+   * const ok = Ok(42);
+   * const err = Err("Oh no");
    *
-   * let num: number = 0;
-   * let str: string = "";
-   *
-   * if (ok.isOk()) {
-   *   num = ok.unwrap();
-   * }
-   *
-   * if (err.isErr()) {
-   *   str = err.unwrap();
-   * }
-   *
-   * const union: number | string = ok.unwrap();
-   *
-   * assert(num === 42);
-   * assert(str === "Oh no");
+   * assert(ok.unwrap() === 42);
+   * assert(err.unwrap() === "Oh no");
    * ```
    */
   unwrap(): T | E;
@@ -730,18 +632,10 @@ export interface IResult<T, E> {
    * ```typescript
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
-   * import { Task } from "../async/task.ts";
    *
-   * const futureNumber = Promise.resolve(2);
+   * const num = Ok(42).into((res) => res.unwrapOr(0));
    *
-   * const task = Ok(42).asResult()
-   *   .into((res) => Task.of(res))
-   *   .map(async (n) => n * await futureNumber);
-   *
-   * task
-   *   .then((res) => assert(res.unwrap() === 84))
-   *   .catch(() => "Unreachable")
-   *   .finally(() => console.log("Done"));
+   * assert(num === 42);
    * ```
    */
   into<T2>(intoFn: (res: Result<T, E>) => T2): T2;
@@ -761,34 +655,11 @@ export interface IResult<T, E> {
    * const ok = Ok(42);
    * const err = Err(Error());
    *
-   * let count = 0;
-   * let yieldedValue = undefined;
+   * const iter = ok.iter();
+   * assert(iter.next().value === 42);
+   * assert(iter.next().done === true);
    *
-   * for (const value of ok.iter()) {
-   *   count += 1;
-   *   yieldedValue = value;
-   * }
-   *
-   * let errCount = 0;
-   * let errYieldedValue = undefined;
-   *
-   * for (const value of err.iter()) {
-   *   count += 1;
-   *   errYieldedValue = value;
-   * }
-   *
-   * const fresh = ok.iter();
-   * const first = fresh.next();
-   * const exhausted = fresh.next();
-   *
-   * assert(count === 1);
-   * assert(yieldedValue === 42);
-   * assert(errCount === 0);
-   * assert(errYieldedValue === undefined);
-   * assert(first.done === false);
-   * assert(first.value === 42);
-   * assert(exhausted.done === true);
-   * assert(exhausted.value === undefined);
+   * assert(err.iter().next().done === true);
    * ```
    */
   iter(): IterableIterator<T>;
@@ -811,18 +682,13 @@ export interface IResult<T, E> {
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
-   * const record = { a: "thing" };
-   * const ok = Ok(record);
-   * let ref: Record<string, string> = {};
+   * let tapped = false;
+   * const ok = Ok(42);
    *
-   * const res = ok.tap((res) => {
-   *   ref = res.unwrap();
-   *   ref.a = "fling";
-   * });
+   * const same = ok.tap(() => { tapped = true; });
    *
-   * assert(res === ok);
-   * assert(ref !== record);
-   * assert(ref.a !== record.a);
+   * assert(same === ok);       // returns original instance
+   * assert(tapped);   // side-effect was performed
    * ```
    */
   tap(tapFn: (res: Result<T, E>) => void): Result<T, E>;
@@ -922,40 +788,11 @@ export interface IResult<T, E> {
    * import { assert } from "@std/assert";
    * import { Err, Ok, Result } from "./result.ts";
    *
-   * const simpleOk = Ok(42);            //`number` is not iterable
-   * const delegatingOk = Ok([1, 2, 3]); //`number[]` is iterable
+   * const ok = Ok([1, 2, 3]);
    * const err = Err(Error());
    *
-   * let simpleCount = 0;
-   * let simpleYieldedValue = undefined;
-   *
-   * for (const value of simpleOk) {
-   *   simpleCount += 1;
-   *   simpleYieldedValue = value;
-   * }
-   *
-   * let delegatingCount = 0;
-   * let delegatingYieldedValue = undefined;
-   *
-   * for (const value of delegatingOk) {
-   *   delegatingCount += 1;
-   *   delegatingYieldedValue = value;
-   * }
-   *
-   * let errCount = 0;
-   * let errYieldedValue = undefined;
-   *
-   * for (const value of err) {
-   *   errCount += 1;
-   *   errYieldedValue = value;
-   * }
-   *
-   * assert(simpleCount === 0);
-   * assert(simpleYieldedValue === undefined);
-   * assert(delegatingCount === 3);
-   * assert(delegatingYieldedValue === 3);
-   * assert(errCount === 0);
-   * assert(errYieldedValue === undefined);
+   * assert(JSON.stringify([...ok]) === "[1,2,3]");
+   * assert([...err].length === 0);
    * ```
    */
   [Symbol.iterator](): IterableIterator<
@@ -996,10 +833,10 @@ export interface IResult<T, E> {
   [Symbol.toStringTag]: string;
 }
 
-/**
- * ==============
- * IMPLEMENTATION
- * ==============
+/*
+ ********************************************************************
+ * implementation
+ ********************************************************************
  */
 
 class _Ok<T> implements IResult<T, never> {
@@ -1220,10 +1057,10 @@ class _Err<E> implements IResult<never, E> {
   }
 }
 
-/**
- * ==============
- *   MODULE API
- * ==============
+/*
+ ********************************************************************
+ * module API
+ ********************************************************************
  */
 
 /**
@@ -1355,23 +1192,12 @@ Object.defineProperty(Err, Symbol.toStringTag, {
  * import { assert } from "@std/assert";
  * import { Err, Ok, Result } from "./result.ts";
  *
- * type StrOrTypeError = string | TypeError;
- * const str = "thing" as StrOrTypeError;
- * const num = 42;
- * const rangeErr = RangeError();
- * const tag = Object.prototype.toString.call(Result);
+ * const ok = Result("thing" as string | TypeError);
+ * const err = Result(TypeError());
  *
- * const res: Result<string, TypeError> = Result(str);
- * const ok: Result<number, never> = Result(num);
- * const err: Result<never, RangeError> = Result(rangeErr);
- *
- * assert(res instanceof Result);
- * assert(res.isOk());
+ * assert(ok.isOk() === true);
+ * assert(err.isErr() === true);
  * assert(ok instanceof Result);
- * assert(ok.isOk());
- * assert(err instanceof Result);
- * assert(err.isErr());
- * assert(tag === "[object grugway.Result]");
  * ```
  */
 export type Result<T, E> = Ok<T> | Err<E>;

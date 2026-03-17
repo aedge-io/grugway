@@ -1,7 +1,7 @@
 import { assertEquals, assertStrictEquals } from "@std/assert";
 import type { IsExact } from "@std/testing/types";
 import { assertType } from "@std/testing/types";
-import { Err, Ok, Result } from "./result.ts";
+import { Err, Ok, type Result } from "./result.ts";
 import {
   all,
   any,
