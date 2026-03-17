@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.2.1
+
+- Simplified examples in jsdoc comments
+- Remove namespaces from result and option modules
+- Improve overall test converage
+- Move `Options` and `Results` into dedicated modules
+
+[-> Release overview](docs/changes/0.2.1.md)
+
 ## 0.2.0
 
 - BREAKING: remove adapters module from lib tree
@@ -26,4 +35,4 @@
 
 [-> Release overview](docs/changes/0.1.0.md)
 
-<!-- release-metadata: {"version":"0.2.0","sha":"5b77e01fcbcbad2b0fb383c2a25b54e011b308d8"} -->
+<!-- release-metadata: {"version":"0.2.1","sha":"0c560c37ea8c34949b007dff0f929f57180c9bab"} -->
