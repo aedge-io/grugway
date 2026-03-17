@@ -7,8 +7,22 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { assertType, type IsExact } from "@std/testing/types";
-import { None, Option, Options, Some } from "./option.ts";
+import {
+  assertType,
+  type Has,
+  type IsExact,
+  type IsNullable,
+} from "@std/testing/types";
+import {
+  type InferredOptionType,
+  type InferredSomeTuple,
+  type InferredSomeType,
+  None,
+  Option,
+  Options,
+  Some,
+} from "./option.ts";
+import type { NonNullish } from "./type_utils.ts";
 import { Panic } from "./errors.ts";
 
 /**
@@ -71,6 +85,13 @@ const allFallible = nullish.concat([err]);
 // @ts-ignore-lines These heterogenous arrays break type inference
 const allValues = allNonNullish.concat(nullish);
 
+/**
+ * Type-level helpers used in type assertions
+ */
+type IsOption<O> = O extends Option<unknown> ? true : false;
+type OptionType<O> = O extends Readonly<Option<infer T>> ? T : never;
+type SomeType<S> = S extends Readonly<Some<infer T>> ? T : never;
+
 Deno.test("grugway::Option", async (t) => {
   await t.step("() -> returns Some for NonNullish values", () => {
     allNonNullish.forEach((val) => {
@@ -89,15 +110,24 @@ Deno.test("grugway::Option", async (t) => {
       assertStrictEquals(none.unwrap(), undefined);
     });
   });
-  await t.step(".from() -> returns Some for NonNullish values", () => {
-    allNonNullish.forEach((val) => {
-      const some = Option.from(val);
+  await t.step(
+    ".from() -> returns Some for NonNullish values with Nullish types stripped",
+    () => {
+      allNonNullish.forEach((val) => {
+        const some = Option.from(val);
 
-      assertEquals(some.isSome(), true, `${String(val)} should be Some`);
-      assertEquals(some.isNone(), false, `${String(val)} should be Some`);
-      assertStrictEquals(some.unwrap(), val);
-    });
-  });
+        assertEquals(some.isSome(), true, `${String(val)} should be Some`);
+        assertEquals(some.isNone(), false, `${String(val)} should be Some`);
+        assertStrictEquals(some.unwrap(), val);
+      });
+
+      const input: string | undefined | null = "abc";
+      const option = Option.from(input);
+
+      assertType<IsNullable<SomeType<typeof option>>>(false);
+      assertStrictEquals(option.isSome(), true);
+    },
+  );
   await t.step(".from() -> returns None for Nullish values", () => {
     nullish.forEach((val) => {
       const none = Option.from(val);
@@ -108,7 +138,7 @@ Deno.test("grugway::Option", async (t) => {
     });
   });
   await t.step(
-    ".fromFallibe() -> returns Some for Truthy and FalsyNotNullish values",
+    ".fromFallible() -> returns Some for Truthy and FalsyNotNullish values with Nullish and Error types stripped",
     () => {
       allInfallible.forEach((val) => {
         const some = Option.fromFallible(val);
@@ -117,10 +147,16 @@ Deno.test("grugway::Option", async (t) => {
         assertEquals(some.isNone(), false, `${String(val)} should be Some`);
         assertStrictEquals(some.unwrap(), val);
       });
+
+      const input: string | null | undefined | Error = "abc";
+      const option = Option.fromFallible(input);
+
+      assertType<IsExact<typeof option, Option<string>>>(true);
+      assertStrictEquals(option.isSome(), true);
     },
   );
   await t.step(
-    ".fromFallibe() -> returns None for Nullish and Error values",
+    ".fromFallible() -> returns None for Nullish and Error values",
     () => {
       allFallible.forEach((val) => {
         const none = Option.fromFallible(val);
@@ -132,7 +168,7 @@ Deno.test("grugway::Option", async (t) => {
     },
   );
   await t.step(
-    ".fromCoercible() -> returns Some for Truthy values",
+    ".fromCoercible() -> returns Some for Truthy values with Falsy types stripped",
     () => {
       allTruthy.forEach((val) => {
         const some = Option.fromCoercible(val);
@@ -141,6 +177,12 @@ Deno.test("grugway::Option", async (t) => {
         assertEquals(some.isNone(), false, `${String(val)} should be Some`);
         assertStrictEquals(some.unwrap(), val);
       });
+
+      const input: number | "" | false | 0 = NaN;
+      const option = Option.fromCoercible(input);
+
+      assertType<IsExact<typeof option, Option<number>>>(true);
+      assertStrictEquals(option.isSome(), false);
     },
   );
   await t.step(
@@ -153,6 +195,33 @@ Deno.test("grugway::Option", async (t) => {
         assertEquals(none.isNone(), true, `${String(val)} should be None`);
         assertStrictEquals(none.unwrap(), undefined);
       });
+    },
+  );
+  await t.step(
+    ".fromCoercible() -> Falsy types stripped from inner union return type",
+    () => {
+      type LiteralUnion = "a" | "b" | "c" | "" | 0;
+      const input: LiteralUnion = "a";
+      const option = Option.fromCoercible(input as LiteralUnion);
+
+      assertType<IsExact<typeof option, Option<"a" | "b" | "c">>>(true);
+      assertStrictEquals(option.isSome(), true);
+    },
+  );
+  await t.step(
+    ".identity() -> identity type is correctly inferred",
+    () => {
+      const opt = Option("some");
+      const nested = Option(opt);
+      const strict = Option("some") as Readonly<Option<string>>;
+
+      const identity = Option.id(opt);
+      const nestedIdentity = Option.id(nested);
+      const strictIdentity = Option.id(strict);
+
+      assertType<IsExact<typeof identity, Option<string>>>(true);
+      assertType<IsExact<typeof nestedIdentity, Option<Option<string>>>>(true);
+      assertType<IsExact<typeof strictIdentity, Option<string>>>(true);
     },
   );
   await t.step(
@@ -225,13 +294,47 @@ Deno.test("grugway::Option", async (t) => {
     },
   );
   await t.step(
+    ".lift() -> Fn type is correctly inferred",
+    () => {
+      const isNonZeroInt = (n: number): boolean | undefined => {
+        if (Number.isSafeInteger(n) && n > 0) return true;
+        return false;
+      };
+
+      const isNotFortyTwo = function (
+        n: number,
+      ): boolean | undefined | Error | TypeError {
+        if (n === 42) return Error("Cannot be 42");
+        return isNonZeroInt(n);
+      };
+
+      const lifted = Option.lift(isNonZeroInt);
+      const liftedWithCoercible = Option.lift(
+        isNonZeroInt,
+        Option.fromCoercible,
+      );
+      const liftedWithFallible = Option.lift(
+        isNotFortyTwo,
+        Option.fromFallible,
+      );
+
+      assertType<IsExact<typeof lifted, (n: number) => Option<boolean>>>(true);
+      assertType<
+        IsExact<typeof liftedWithCoercible, (n: number) => Option<true>>
+      >(true);
+      assertType<
+        IsExact<typeof liftedWithFallible, (n: number) => Option<boolean>>
+      >(true);
+    },
+  );
+  await t.step(
     ".lift() -> allows for composition of custom Option constructors",
     () => {
       type Left<L> = { tag: "Left"; value: L };
       type Right<R> = { tag: "Right"; value: R };
       type Either<L, R> = Left<L> | Right<R>;
       type Numeric<T> = T extends number | bigint ? T : never;
-      type NonNumeric<T> = NonNullable<Exclude<T, Numeric<T>>>;
+      type NonNumeric<T> = NonNullish<Exclude<T, Numeric<T>>>;
       function isNonNumeric<T>(arg: T): arg is NonNumeric<T> {
         if (arg == null || typeof arg === "number" || typeof arg === "bigint") {
           return false;
@@ -257,6 +360,16 @@ Deno.test("grugway::Option", async (t) => {
       }
 
       const lifted = Option.lift(tupleToEither, fromEither);
+
+      assertType<
+        IsExact<Parameters<typeof lifted>, Parameters<typeof tupleToEither>>
+      >(true);
+      assertType<
+        IsExact<
+          ReturnType<typeof lifted>,
+          ReturnType<typeof fromEither<string, number | boolean>>
+        >
+      >(true);
 
       const res = Option.from(getTuple()).andThen(lifted);
 
@@ -295,6 +408,53 @@ Deno.test("grugway::Option", async (t) => {
         assertStrictEquals(isInstance, true);
         assertStrictEquals(isNotInstance, true);
       });
+    },
+  );
+});
+
+Deno.test("grugway::Option::InferredTypes", async (t) => {
+  await t.step(
+    "InferredSomeTuple<O> -> Infers T[] from Option<T>[]",
+    () => {
+      type StrictTuple = Readonly<[string, number, boolean]>;
+      const correctTuple = [
+        Option("some" as string),
+        Some(1 as number),
+        Option(true as boolean),
+      ] as const;
+
+      assertType<
+        IsExact<InferredSomeTuple<typeof correctTuple>, StrictTuple>
+      >(true);
+    },
+  );
+
+  await t.step("InferredSomeType<O> -> Infers T from Option<T>", () => {
+    const opt = Option(123);
+    type StrictOption = Readonly<Option<number[]>>;
+    type NormalOption = Option<Record<string, string>>;
+
+    assertType<IsExact<InferredSomeType<StrictOption>, number[]>>(true);
+    assertType<IsExact<InferredSomeType<NormalOption>, Record<string, string>>>(
+      true,
+    );
+    assertType<IsExact<InferredSomeType<typeof opt>, number>>(true);
+  });
+
+  await t.step(
+    "InferredOptionType<O> -> Infers Option<T> from union",
+    () => {
+      const thenFn = (b: boolean) => {
+        if (b) return Option("abc");
+        return Option(["a", "b", "c"]);
+      };
+
+      assertType<
+        Has<
+          InferredOptionType<ReturnType<typeof thenFn>>,
+          Option<string | string[]>
+        >
+      >(true);
     },
   );
 });
@@ -348,6 +508,63 @@ Deno.test("grugway::Options", async (t) => {
     },
   );
   await t.step(
+    ".all() -> Heterogenous tuple types are correctly inferred",
+    () => {
+      type TestTuple = Readonly<[string, number, { a: number[] }]>;
+      const optionTuple = [
+        Option("abc" as string),
+        Option(100 as number),
+        Option({ a: [] } as { a: number[] }),
+      ] as const;
+      const someTuple = [
+        Some("abc" as string),
+        Some(100 as number),
+        Some({ a: [] } as { a: number[] }),
+      ] as const;
+
+      const collectedOpts = Options.all(optionTuple);
+      const collectedSomes = Options.all(someTuple);
+
+      if (collectedOpts.isSome() && collectedSomes.isSome()) {
+        const unwrappedOpts = collectedOpts.unwrap();
+        const unwrappedSomes = collectedSomes.unwrap();
+
+        assertType<IsExact<typeof unwrappedOpts, TestTuple>>(true);
+        assertType<IsExact<typeof unwrappedSomes, TestTuple>>(true);
+      } else {
+        throw TypeError("Unreachable");
+      }
+    },
+  );
+  await t.step(
+    ".all() -> Array types are correctly inferred and retain constraints",
+    () => {
+      type TestArray = ReadonlyArray<string>;
+      type TestArrayMut = Array<string>;
+      const optArray: ReadonlyArray<Option<string>> = Array.of(..."option").map(
+        (
+          char,
+        ) => Option(char),
+      );
+      const optArrayMut: Array<Option<string>> = Array.of(..."option").map((
+        char,
+      ) => Option(char));
+
+      const collected = Options.all(optArray);
+      const collectedMut = Options.all(optArrayMut);
+
+      if (collected.isSome() && collectedMut.isSome()) {
+        const unwrapped = collected.unwrap();
+        const unwrappedMut = collectedMut.unwrap();
+
+        assertType<IsExact<typeof unwrapped, TestArray>>(true);
+        assertType<IsExact<typeof unwrappedMut, TestArrayMut>>(true);
+      } else {
+        throw TypeError("Unreachable");
+      }
+    },
+  );
+  await t.step(
     ".any() -> returns None for empty arrays or if all elements are None",
     () => {
       const emptyArr: Option<string>[] = [];
@@ -396,20 +613,64 @@ Deno.test("grugway::Options", async (t) => {
 
 Deno.test("grugway::Option::Some", async (t) => {
   await t.step("Some<T> -> Ctor", async (t) => {
-    await t.step("() -> throws if instantiated with nullish value", () => {
-      //deno-lint-ignore ban-types
-      const secretelyNullish = null as unknown as {};
+    await t.step(
+      "() -> throws if instantiated with nullish value",
+      () => {
+        //deno-lint-ignore ban-types
+        const secretelyNullish = null as unknown as {};
 
-      assertThrows(() => Some(secretelyNullish), Panic);
+        assertThrows(() => Some(secretelyNullish), Panic);
+      },
+    );
+
+    await t.step("() -> doesn't accept Nullish types", () => {
+      type NullishUnion = string | undefined | null;
+
+      /**
+       * These examples don't compile:
+       *
+       * const nullish = undefined;
+       * const maybeNullish = (): NullishUnion => undefined;
+       *
+       * const notSome = Some(nullish);
+       *                      ^^^^^^^
+       * const tryMaybe = Some(maybeNullish());
+       *                       ^^^^^^^^^^^^^^
+       */
+
+      const input = "abc";
+      const some = Some(input);
+
+      assertType<
+        IsNullable<Parameters<typeof Some>>
+      >(false);
+      assertType<
+        Has<Parameters<typeof Some>, NullishUnion>
+      >(false);
+
+      assertStrictEquals(some.isSome(), true);
     });
   });
   await t.step("Some<T> -> Type Predicates", async (t) => {
-    await t.step(".isSome() -> returns true", () => {
+    await t.step(".isSome() -> returns true and narrows to Some", () => {
       const some = Some("thing");
+      const opt = Option.from("abc" as string | undefined);
 
       const isSome = some.isSome();
 
       assertStrictEquals(isSome, true);
+
+      if (opt.isSome()) {
+        const str = opt.unwrap();
+
+        assertType<IsExact<typeof str, string>>(true);
+      }
+
+      const union = opt.unwrap();
+
+      assertType<IsExact<typeof union, string | undefined>>(true);
+
+      assertStrictEquals(opt.isSome(), true);
     });
 
     await t.step(".isNone() -> returns false", () => {
@@ -422,7 +683,7 @@ Deno.test("grugway::Option::Some", async (t) => {
   });
 
   await t.step("Some<T> -> Logical Combinators (&&, ||, ^)", async (t) => {
-    await t.step(".and() -> returns RHS", () => {
+    await t.step(".and() -> returns RHS with type inferred from RHS", () => {
       const lhs = Some("thing");
       const rhs = Some("thingelse");
 
@@ -430,9 +691,19 @@ Deno.test("grugway::Option::Some", async (t) => {
 
       assertStrictEquals(res, rhs);
       assertStrictEquals(res.unwrap(), rhs.unwrap());
+
+      const lhsTyped = Some("abc");
+      const rhsTyped = Some(123);
+      const resTyped = lhsTyped.and(rhsTyped);
+
+      assertType<
+        IsExact<SomeType<typeof rhsTyped>, SomeType<typeof resTyped>>
+      >;
+
+      assertStrictEquals(rhsTyped.unwrap(), resTyped.unwrap());
     });
 
-    await t.step(".or() -> returns LHS", () => {
+    await t.step(".or() -> returns LHS with type inferred from LHS", () => {
       const lhs = Some("thing");
       const rhs = Some("thingelse");
 
@@ -440,17 +711,48 @@ Deno.test("grugway::Option::Some", async (t) => {
 
       assertStrictEquals(res, lhs);
       assertStrictEquals(res.unwrap(), lhs.unwrap());
+
+      const lhsTyped = Some("abc");
+      const rhsTyped = Some(123);
+      const resTyped = lhsTyped.or(rhsTyped);
+
+      assertType<
+        IsExact<SomeType<typeof resTyped>, SomeType<typeof lhsTyped>>
+      >(true);
+
+      assertStrictEquals(lhsTyped.unwrap(), resTyped.unwrap());
     });
 
-    await t.step(".xor() -> returns LHS if RHS is None", () => {
-      const lhs = Some("thing");
-      const rhs = None;
+    await t.step(
+      ".xor() -> returns LHS if RHS is None with type inferred from LHS or union",
+      () => {
+        const lhs = Some("thing");
+        const rhs = None;
 
-      const res = lhs.xor(rhs);
+        const res = lhs.xor(rhs);
 
-      assertStrictEquals(res, lhs);
-      assertStrictEquals(res.unwrap(), lhs.unwrap());
-    });
+        assertStrictEquals(res, lhs);
+        assertStrictEquals(res.unwrap(), lhs.unwrap());
+
+        const lhsTyped = Some("abc");
+        const lhs2 = Option.from("abc");
+        const rhsTyped = Option.from(123);
+        const resTyped = lhsTyped.xor(rhsTyped);
+        const res2 = lhs2.xor(rhsTyped);
+
+        assertType<
+          IsExact<SomeType<typeof resTyped>, SomeType<typeof lhsTyped>>
+        >(true);
+        assertType<
+          IsExact<SomeType<typeof res2>, string | number>
+        >(true);
+        assertType<
+          IsExact<typeof res2, typeof lhs2 | typeof rhsTyped>
+        >(true);
+
+        assertStrictEquals(resTyped.isNone(), true);
+      },
+    );
 
     await t.step(".xor() -> returns None if LHS and RHS are Some", () => {
       const lhs = Some("thing");
@@ -459,7 +761,6 @@ Deno.test("grugway::Option::Some", async (t) => {
       const res = lhs.xor(rhs);
 
       assertStrictEquals(res, None);
-      assertStrictEquals(res.unwrap(), undefined);
     });
 
     await t.step(
@@ -483,11 +784,33 @@ Deno.test("grugway::Option::Some", async (t) => {
         assertStrictEquals(res.unwrap(), "thingelse");
       },
     );
+
+    await t.step(
+      ".and().or().xor() -> return type from chaining is inferred as union",
+      () => {
+        const lhs = Some({ a: 1, b: 2 });
+        const rhs = Some([1, 2, 3]);
+        const rhs2 = Some("abc");
+        const rhs3 = Option.from(null);
+        const rhs4 = Some(true);
+        const rhs5 = Some(123);
+        const res = lhs.and(rhs).or(rhs2).xor(rhs3).and(rhs4).xor(rhs5);
+
+        assertType<
+          IsExact<SomeType<typeof res>, boolean | number>
+        >(true);
+        assertType<
+          IsExact<typeof res, Option<boolean> | Option<number>>
+        >(true);
+
+        assertStrictEquals(res.isNone(), true);
+      },
+    );
   });
 
   await t.step("Some<T> -> Map Methods", async (t) => {
     await t.step(
-      ".map() -> returns new instance of Some with applied mapFn",
+      ".map() -> returns new instance of Some with applied mapFn, invariant over Nullish",
       () => {
         const double = (x: number) => x * 2;
         const toBeWrapped = 5;
@@ -497,11 +820,29 @@ Deno.test("grugway::Option::Some", async (t) => {
 
         assertNotStrictEquals(isDoubled, some);
         assertStrictEquals(isDoubled.unwrap(), double(toBeWrapped));
+
+        const mapFn = (n: number): string => n < 100 ? "lt" : "gte";
+        const someStr = some.map(mapFn);
+
+        type MapMethodReturnType = ReturnType<typeof some["map"]>;
+
+        assertType<
+          IsNullable<OptionType<MapMethodReturnType>>
+        >(false);
+
+        /**
+         * Example: This doesn't compile
+         * const mapFn = (n: number): string | undefined => n < 100 : "less" : undefined;
+         * const fails = Some(99).map(mapFn);
+         *                            ^^^^^
+         */
+
+        assertStrictEquals(someStr.unwrap(), "lt");
       },
     );
 
     await t.step(
-      ".mapOr() -> returns new instance of Some with applied mapFn",
+      ".mapOr() -> returns new instance of Some with applied mapFn, invariant over Nullish",
       () => {
         const double = (x: number) => x * 2;
         const toBeWrapped = 5;
@@ -513,11 +854,29 @@ Deno.test("grugway::Option::Some", async (t) => {
         assertNotStrictEquals(isDoubled, some);
         assertNotStrictEquals(isDoubled.unwrap(), defaultValue);
         assertStrictEquals(isDoubled.unwrap(), double(toBeWrapped));
+
+        const mapFn = (n: number): string => n < 100 ? "lt" : "gte";
+        const someStr = some.mapOr(mapFn, "never");
+
+        type MapOrMethodReturnType = ReturnType<typeof some["mapOr"]>;
+
+        assertType<
+          IsNullable<OptionType<MapOrMethodReturnType>>
+        >(false);
+
+        /**
+         * Example: This doesn't compile
+         * const mapFn = (n: number): string | undefined => n < 100 : "less" : undefined;
+         * const fails = Some(99).mapOr(mapFn, undefined);
+         *                              ^^^^^  ^^^^^^^^^
+         */
+
+        assertStrictEquals(someStr.unwrap(), "lt");
       },
     );
 
     await t.step(
-      ".mapOrElse() -> returns new instance of Some with applied mapFn",
+      ".mapOrElse() -> returns new instance of Some with applied mapFn, invariant over Nullish",
       () => {
         const double = (x: number) => x * 2;
         const toBeWrapped = 5;
@@ -529,42 +888,92 @@ Deno.test("grugway::Option::Some", async (t) => {
         assertNotStrictEquals(isDoubled, some);
         assertNotStrictEquals(isDoubled.unwrap(), defaultFn());
         assertStrictEquals(isDoubled.unwrap(), double(toBeWrapped));
+
+        const mapFn = (n: number): string => n < 100 ? "lt" : "gte";
+        const orFn = () => "never";
+        const someStr = some.mapOrElse(mapFn, orFn);
+
+        type MapOrElseMethodReturnType = ReturnType<typeof some["mapOrElse"]>;
+
+        assertType<
+          IsNullable<OptionType<MapOrElseMethodReturnType>>
+        >(false);
+
+        /**
+         * Example: This doesn't compile
+         * const mapFn = (n: number): string | undefined => n < 100 : "less" : undefined;
+         * const orFn = () => undefined;
+         * const fails = Some(99).mapOrElse(mapFn, orFn);
+         *                                  ^^^^^  ^^^^^
+         */
+
+        assertStrictEquals(someStr.unwrap(), "lt");
       },
     );
 
-    await t.step(".filter() -> refines wrapped value", () => {
-      const numOrStr = 5 as string | number;
-      const isNum = (value: unknown): value is number =>
-        typeof value === "number";
+    await t.step(
+      ".filter() -> refines wrapped value and narrows type with typeguard",
+      () => {
+        const numOrStr = 5 as string | number;
+        const isNum = (value: unknown): value is number =>
+          typeof value === "number";
 
-      const some = Option(numOrStr);
-      const same = some.filter(isNum);
+        const some = Option(numOrStr);
+        const same = some.filter(isNum);
 
-      assertStrictEquals(same, some);
-      assertStrictEquals(same.isSome(), true);
-    });
+        assertType<IsExact<typeof same, Option<number>>>(true);
 
-    await t.step(".filter() -> returns None if predicate fails", () => {
-      const num = 5;
-      const isEven = (value: number): boolean => value % 2 === 0;
+        assertStrictEquals(same, some);
+        assertStrictEquals(same.isSome(), true);
+      },
+    );
 
-      const some = Option(num);
-      const none = some.filter(isEven);
+    await t.step(
+      ".filter() -> returns None if predicate fails, type unchanged",
+      () => {
+        const num = 5;
+        const isEven = (value: number): boolean => value % 2 === 0;
 
-      assertNotStrictEquals(none, some);
-      assertStrictEquals(none.isSome(), false);
-    });
+        const some = Option(num);
+        const none = some.filter(isEven);
 
-    await t.step(".andThen() -> returns new instance of Option", () => {
-      const double = (x: number) => Option(x * 2);
-      const toBeWrapped = 5;
-      const some = Some(toBeWrapped);
+        assertType<IsExact<SomeType<typeof none>, number>>(true);
+        assertNotStrictEquals(none, some);
+        assertStrictEquals(none.isSome(), false);
+      },
+    );
 
-      const maybeDoubled = some.andThen(double);
+    await t.step(
+      ".andThen() -> returns new instance of Option, return type is always Option (invariant over Nullish)",
+      () => {
+        const double = (x: number) => Option(x * 2);
+        const toBeWrapped = 5;
+        const some = Some(toBeWrapped);
 
-      assertNotStrictEquals(maybeDoubled, some);
-      assertStrictEquals(maybeDoubled.unwrap(), double(toBeWrapped).unwrap());
-    });
+        const maybeDoubled = some.andThen(double);
+
+        assertNotStrictEquals(maybeDoubled, some);
+        assertStrictEquals(maybeDoubled.unwrap(), double(toBeWrapped).unwrap());
+
+        const mapFn = (n: number) => Math.max(n, 10);
+        const thenFn = (n: number) => Option.fromCoercible(0 * n / 0.00);
+        const res = some.map(mapFn).andThen(thenFn);
+
+        type AndThenParamReturnType = ReturnType<
+          Parameters<typeof some["andThen"]>[0]
+        >;
+
+        assertType<
+          IsOption<AndThenParamReturnType>
+        >(true);
+        assertType<
+          IsNullable<SomeType<AndThenParamReturnType>>
+        >(false);
+
+        assertStrictEquals(res.unwrap(), undefined);
+        assertStrictEquals(res.isNone(), true);
+      },
+    );
 
     await t.step(".andThen() -> flattens nested Options", () => {
       function greaterThanTen(n: number): Option<number> {
@@ -616,56 +1025,122 @@ Deno.test("grugway::Option::Some", async (t) => {
   });
 
   await t.step("Some<T> -> Unwrap Methods", async (t) => {
-    await t.step(".unwrap() -> returns the wrapped value", () => {
-      const toBeWrapped = { some: "thing" };
-      const some = Some(toBeWrapped);
-      const maybeStr = Option.from("something" as string | undefined);
+    await t.step(
+      ".unwrap() -> returns the wrapped value, type is T or Nullish union (T | undefined)",
+      () => {
+        const toBeWrapped = { some: "thing" };
+        const some = Some(toBeWrapped);
+        const maybeStr = Option.from("something" as string | undefined);
 
-      function expect<T>(o: Option<T>): T {
-        if (o.isNone()) {
-          throw TypeError("Expected Some. Received: None!");
+        function expect<T>(o: Option<T>): T {
+          if (o.isNone()) {
+            throw TypeError("Expected Some. Received: None!");
+          }
+          return o.unwrap();
         }
-        return o.unwrap();
-      }
 
-      function makeLoud(str: string): string {
-        return str.toUpperCase().concat("!!!");
-      }
+        function makeLoud(str: string): string {
+          return str.toUpperCase().concat("!!!");
+        }
 
-      const unwrapped = some.unwrap();
-      const res = makeLoud(expect(maybeStr));
+        const unwrapped = some.unwrap();
+        const res = makeLoud(expect(maybeStr));
 
-      assertExists(unwrapped);
-      assertExists(res);
-      assertStrictEquals(unwrapped, toBeWrapped);
-      assertStrictEquals(res, "SOMETHING!!!");
-    });
+        assertExists(unwrapped);
+        assertExists(res);
+        assertStrictEquals(unwrapped, toBeWrapped);
+        assertStrictEquals(res, "SOMETHING!!!");
 
-    await t.step(".unwrapOr() -> returns the wrapped value", () => {
-      const toBeWrapped = { some: "thing" };
-      const defaultValue = {};
-      const some = Some(toBeWrapped);
+        const someTyped = Some(123);
+        const someRes = someTyped.unwrap();
+        const opt = Option.from(123 as number | undefined);
+        const optRes = opt.unwrap();
 
-      const unwrapped = some.unwrapOr(defaultValue);
+        assertType<
+          IsNullable<typeof someRes>
+        >(false);
+        assertType<
+          IsNullable<typeof optRes>
+        >(true);
+        assertType<
+          IsExact<typeof optRes, number | undefined>
+        >(true);
 
-      assertExists(unwrapped);
-      assertNotEquals(unwrapped, defaultValue);
-      assertNotStrictEquals(unwrapped, defaultValue);
-      assertStrictEquals(unwrapped, toBeWrapped);
-    });
+        assertStrictEquals(someRes, optRes);
+      },
+    );
 
-    await t.step(".unwrapOrElse() -> returns the wrapped value", () => {
-      const toBeWrapped = { some: "thing" };
-      const defaultFn = () => ({});
-      const some = Some(toBeWrapped);
+    await t.step(
+      ".unwrapOr() -> returns the wrapped value, type is T or union (T | U)",
+      () => {
+        const toBeWrapped = { some: "thing" };
+        const defaultValue = {};
+        const some = Some(toBeWrapped);
 
-      const unwrapped = some.unwrapOrElse(defaultFn);
+        const unwrapped = some.unwrapOr(defaultValue);
 
-      assertExists(unwrapped);
-      assertNotEquals(unwrapped, defaultFn());
-      assertNotStrictEquals(unwrapped, defaultFn());
-      assertStrictEquals(unwrapped, toBeWrapped);
-    });
+        assertExists(unwrapped);
+        assertNotEquals(unwrapped, defaultValue);
+        assertNotStrictEquals(unwrapped, defaultValue);
+        assertStrictEquals(unwrapped, toBeWrapped);
+
+        const someTyped = Some(123);
+        const someRes = someTyped.unwrapOr("123" as string);
+        const opt = Option.from(123 as number | undefined);
+        const optRes = opt.unwrapOr("123" as string);
+
+        assertType<
+          IsNullable<typeof someRes>
+        >(false);
+        assertType<
+          IsExact<typeof someRes, number>
+        >(true);
+        assertType<
+          IsNullable<typeof optRes>
+        >(false);
+        assertType<
+          IsExact<typeof optRes, number | string>
+        >(true);
+
+        assertStrictEquals(someRes, optRes);
+      },
+    );
+
+    await t.step(
+      ".unwrapOrElse() -> returns the wrapped value, type is T or union (T | U)",
+      () => {
+        const toBeWrapped = { some: "thing" };
+        const defaultFn = () => ({});
+        const some = Some(toBeWrapped);
+
+        const unwrapped = some.unwrapOrElse(defaultFn);
+
+        assertExists(unwrapped);
+        assertNotEquals(unwrapped, defaultFn());
+        assertNotStrictEquals(unwrapped, defaultFn());
+        assertStrictEquals(unwrapped, toBeWrapped);
+
+        const someTyped = Some(123);
+        const someRes = someTyped.unwrapOrElse(() => "123" as string);
+        const opt = Option.from(123 as number | undefined);
+        const optRes = opt.unwrapOrElse(() => "123" as string);
+
+        assertType<
+          IsNullable<typeof someRes>
+        >(false);
+        assertType<
+          IsExact<typeof someRes, number>
+        >(true);
+        assertType<
+          IsNullable<typeof optRes>
+        >(false);
+        assertType<
+          IsExact<typeof optRes, number | string>
+        >(true);
+
+        assertStrictEquals(someRes, optRes);
+      },
+    );
   });
 
   await t.step("Some<T> -> Transformation Methods", async (t) => {
@@ -832,7 +1307,7 @@ Deno.test("grugway::Option::Some", async (t) => {
     );
 
     await t.step(
-      "[Symbol.iterator]() -> supports spread operator and conforms iterator protocol",
+      "[Symbol.iterator]() -> supports spread operator, conforms iterator protocol, and correctly infers delegation",
       () => {
         const num = Some(2);
         const arr = Some([1, 2, 3]);
@@ -857,6 +1332,34 @@ Deno.test("grugway::Option::Some", async (t) => {
         assertEquals(arrCopy, [1, 2, 3]);
         assertEquals(iterResNum, { done: true, value: undefined });
         assertEquals(iterResRec, { done: true, value: undefined });
+
+        // Type-level delegation tests
+        class MyIterable implements Iterable<number> {
+          #value: number;
+          constructor(value: number) {
+            this.#value = value;
+          }
+          *[Symbol.iterator]() {
+            yield this.#value;
+          }
+        }
+
+        const someArr = Some([1, 2, 3]);
+        const someStr = Some("thing");
+        const someNum = Some(42);
+        const someIter = Some(new MyIterable(123));
+
+        const someArrIter = someArr[Symbol.iterator]();
+        const someStrIter = someStr[Symbol.iterator]();
+        const someNumIter = someNum[Symbol.iterator]();
+        const someIterIter = someIter[Symbol.iterator]();
+
+        assertType<IsExact<typeof someArrIter, IterableIterator<number>>>(true);
+        assertType<IsExact<typeof someStrIter, IterableIterator<string>>>(true);
+        assertType<IsExact<typeof someNumIter, IterableIterator<never>>>(true);
+        assertType<IsExact<typeof someIterIter, IterableIterator<number>>>(
+          true,
+        );
       },
     );
 
@@ -1147,6 +1650,7 @@ Deno.test("grugway::Option::None", async (t) => {
 
         const maybeDoubled = None.map(double);
 
+        assertType<IsExact<typeof maybeDoubled, None>>(true);
         assertStrictEquals(maybeDoubled, None);
       },
     );
@@ -1178,17 +1682,27 @@ Deno.test("grugway::Option::None", async (t) => {
       },
     );
 
-    await t.step(".filter() -> accepts a type guard", () => {
-      const numOrStr = 0 as string | number;
-      const isNum = (value: unknown): value is number =>
-        typeof value === "number";
+    await t.step(
+      ".filter() -> accepts a type guard and narrows type",
+      () => {
+        const numOrStr = 0 as string | number;
+        const isNum = (value: unknown): value is number =>
+          typeof value === "number";
 
-      const none = Option.fromCoercible(numOrStr);
-      const same = none.filter(isNum);
+        const none = Option.fromCoercible(numOrStr);
+        const same = none.filter(isNum);
 
-      assertStrictEquals(same, none);
-      assertStrictEquals(same.isNone(), true);
-    });
+        assertType<
+          IsExact<typeof none, Option<string | number>>
+        >(true);
+        assertType<
+          IsExact<typeof same, Option<number>>
+        >(true);
+
+        assertStrictEquals(same, none);
+        assertStrictEquals(same.isNone(), true);
+      },
+    );
 
     await t.step(".filter() -> returns None", () => {
       const num = 0;
@@ -1199,6 +1713,12 @@ Deno.test("grugway::Option::None", async (t) => {
 
       assertStrictEquals(same, none);
       assertStrictEquals(same.isNone(), true);
+
+      const noneDirectFilter = None.filter(isEven);
+
+      assertType<IsExact<typeof noneDirectFilter, None>>(true);
+
+      assertStrictEquals(noneDirectFilter.isNone(), true);
     });
 
     await t.step(".andThen() -> returns None", () => {
