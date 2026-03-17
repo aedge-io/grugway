@@ -1,9 +1,63 @@
 import { assertStrictEquals } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
 import { None, Option, Some } from "./option.ts";
-import { all, any, type InferredSomeTuple } from "./options.ts";
+import {
+  all,
+  any,
+  areNone,
+  areSome,
+  type InferredSomeTuple,
+} from "./options.ts";
 
 Deno.test("grugway::Options", async (t) => {
+  await t.step(
+    ".areSome() -> returns true and narrows type if all elements are Some",
+    () => {
+      const opts: Option<string>[] = [Some("a"), Some("b"), Some("c")];
+
+      const result = areSome(opts);
+
+      assertStrictEquals(result, true);
+
+      if (result) {
+        assertType<IsExact<typeof opts, Some<string>[]>>(true);
+      }
+    },
+  );
+  await t.step(
+    ".areSome() -> returns false if any element is None",
+    () => {
+      const opts: Option<string>[] = [Some("a"), None, Some("c")];
+
+      const result = areSome(opts);
+
+      assertStrictEquals(result, false);
+    },
+  );
+  await t.step(
+    ".areNone() -> returns true and narrows type if all elements are None",
+    () => {
+      const opts: Option<string>[] = [None, None, None];
+
+      const result = areNone(opts);
+
+      assertStrictEquals(result, true);
+
+      if (result) {
+        assertType<IsExact<typeof opts, None[]>>(true);
+      }
+    },
+  );
+  await t.step(
+    ".areNone() -> returns false if any element is Some",
+    () => {
+      const opts: Option<string>[] = [None, Some("b"), None];
+
+      const result = areNone(opts);
+
+      assertStrictEquals(result, false);
+    },
+  );
   await t.step(".all() -> returns None for empty arrays", () => {
     const empty: Option<string>[] = [];
 
