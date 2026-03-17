@@ -1,18 +1,14 @@
 # grugway
 
 [![codecov](https://codecov.io/github/aedge-io/grugway/graph/badge.svg?token=9WTDQ8WOKW)](https://codecov.io/github/aedge-io/grugway)
+![NPM Version](https://img.shields.io/npm/v/%40aedge-io%2Fgrugway)
+![JSR Version](https://img.shields.io/jsr/v/%40aedge-io/grugway)
 
 > Safe abstractions for fallible flows — for humans, their clankers and foes.
-
-This is a ~~fork~~ rework of an old, personal project
-[eitherway](https://github.com/realpha/eitherway).
 
 ---
 
 ## Why grugway?
-
-This is for now mostly an experiment in human - agent collaboration and
-in-context learning. The basic assumptions are:
 
 - **Explicit error handling** makes code behavior predictable for both humans
   and agents
@@ -20,7 +16,7 @@ in-context learning. The basic assumptions are:
   hidden exceptions
 - **Type-safe operations** catch mistakes at compile time rather than runtime
 - **Callibrated documentation** provides context that agents can leverage for
-  better performance
+  better performance (see [`SKILL.md`](SKILL.md))
 
 ---
 
@@ -38,11 +34,19 @@ in-context learning. The basic assumptions are:
 
 ### Installation
 
-**Node.js:**
+**Node.js / Bun:**
 
 ```bash
-(bun | deno | (p)npm)  add @aedge-io/grugway
+(bun | (p)npm) add @aedge-io/grugway
 ```
+
+**Deno**:
+
+```bash
+deno add jsr:@aedge-io/grugway
+```
+
+### Usage
 
 ```typescript
 import { Err, None, Ok, Option, Result, Some, Task } from "@aedge-io/grugway";
@@ -50,7 +54,7 @@ import { Err, None, Ok, Option, Result, Some, Task } from "@aedge-io/grugway";
 
 ### Runtime Requirements
 
-- Bun: tbd
+- **Bun:** ≥1.0.0
 - **Deno:** ≥1.14
 - **Node.js:** ≥17.0.0
 - **Browsers:** Support for `Error.cause` and `structuredClone`
@@ -149,6 +153,9 @@ const version = Option(Deno.args[0])
   .okOr(new Error("No version provided"))
   .andThen(tryParse);
 ```
+
+Checkout the [examples](examples/adapters/web/) to see how to do this more
+granuarly.
 
 ---
 
@@ -357,7 +364,7 @@ import { Task } from "@aedge-io/grugway";
 import { ApiError } from "grugway/examples";
 
 // Lift an async library function
-// Check out the ready-made fetch adapter for a more thorough take on this
+// Check out the ready-made fetch adapter example for a more thorough take on this
 const tryFetch = Task.liftFallible(
   async (url: string) => {
     const res = await fetch(url);
@@ -487,6 +494,9 @@ Asynchronous: Task flow   ~1.0x (equivalent performance)
 `deno bench`
 
 ### License
+
+This is a ~~fork~~ rework of an old, personal project
+[eitherway](https://github.com/realpha/eitherway).
 
 MIT License — see [LICENSE.md](./LICENSE.md)
 

@@ -298,7 +298,7 @@ function groupIntoSummaries(commits: Commit[]): SummaryGroup {
 
 function toSummaryLine(c: Commit): string {
   // deno-fmt-ignore
-  return `${c.summary} ([${c.sha.slice(0, 7)}](${c.url} by [@${c.author}](${c.authorUrl}))`;
+  return `${c.summary} ([${c.sha.slice(0, 7)}](${c.url}) by [@${c.author}](${c.authorUrl}))`;
 }
 
 function toMdList(list: string[]) {
