@@ -6,7 +6,7 @@
 import type { Empty, Fallible, NonNullish } from "./type_utils.ts";
 import { EMPTY } from "./type_utils.ts";
 import { None, Option } from "./option.ts";
-import { Panic } from "./errors.ts";
+import { asInfallible, Panic } from "./errors.ts";
 
 /**
  * ==============
@@ -1224,15 +1224,10 @@ class _Err<E> implements IResult<never, E> {
  * ==============
  *   MODULE API
  * ==============
- *
- * By leveraging declaration merging and the fact that types and values
- * live in seperate namespaces, the API feels way more ergonomic
  */
 
 /**
- * # Ok<T>
- *
- * The success variant of a `Result<T, E>`
+ * `Ok<T> is the success variant of a `Result<T, E>`
  *
  * @category Result#Basic
  * @implements {IResult<T, never>}
@@ -1288,9 +1283,7 @@ Object.defineProperty(Ok, Symbol.toStringTag, {
 });
 
 /**
- * # Err<E>
- *
- * The failure variant of a `Result<T, E>`
+ * `Err<E> is the failure variant of a `Result<T, E>`
  *
  * @category Result#Basic
  * @implements {IResult<never, E>}
@@ -1346,8 +1339,6 @@ Object.defineProperty(Err, Symbol.toStringTag, {
 });
 
 /**
- * # Result<T, E>
- *
  * `Result<T, E>` is the composeable equivalent to the union `<T | E>`, where
  * `<T>` represents the success and `<E>` the failure case
  *
@@ -1358,7 +1349,6 @@ Object.defineProperty(Err, Symbol.toStringTag, {
  *
  * @implements {IResult<T, E>}
  * @category Result#Basic
- * @namespace
  *
  * @example
  * ```typescript
@@ -1400,153 +1390,155 @@ Object.defineProperty(Result, Symbol.toStringTag, {
   value: "grugway.Result",
 });
 
-//deno-lint-ignore no-namespace
-export namespace Result {
-  /**
-   * Use this to lift the result of an infallible function into a `Result`
-   * context.
-   *
-   * In case, the supplied function panics, an exception is thrown, wrapping
-   * the original exception.
-   *
-   * @throws {Panic}
-   *
-   * @category Result#Basic
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Err, Ok, Result } from "./result.ts";
-   *
-   * const produceArr = () => [1,2,3];
-   * const res = Result.from(produceArr);
-   *
-   * assert(res.isOk());
-   * ```
-   */
-  export function from<T>(fn: () => T): Result<T, never> {
-    return Result.fromFallible(fn, asInfallible);
-  }
+/**
+ * Use this to lift the result of an infallible function into a `Result`
+ * context.
+ *
+ * In case, the supplied function panics, an exception is thrown, wrapping
+ * the original exception.
+ *
+ * @throws {Panic}
+ *
+ * @category Result#Basic
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Err, Ok, Result } from "./result.ts";
+ *
+ * const produceArr = () => [1,2,3];
+ * const res = Result.from(produceArr);
+ *
+ * assert(res.isOk());
+ * ```
+ */
+Result.from = function from<T>(fn: () => T): Result<T, never> {
+  return Result.fromFallible(fn, asInfallible);
+};
 
-  /**
-   * Use this to lift the result of a fallible function into a `Result`
-   * context.
-   *
-   * @category Result#Basic
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Err, Ok, Result } from "./result.ts";
-   *
-   * const castToErr = <E>(e: unknown): E => e as E;
-   * const produceArr = () => [1,2,3];
-   *
-   * const res: Result<number[], TypeError> = Result.fromFallible(produceArr, castToErr<TypeError>);
-   *
-   * assert(res.isOk());
-   * ```
-   */
-  export function fromFallible<T, E>(
-    fn: () => T,
-    errMapFn: (e: unknown) => E,
-  ): Result<T, E> {
+/**
+ * Use this to lift the result of a fallible function into a `Result`
+ * context.
+ *
+ * @category Result#Basic
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Err, Ok, Result } from "./result.ts";
+ *
+ * const castToErr = <E>(e: unknown): E => e as E;
+ * const produceArr = () => [1,2,3];
+ *
+ * const res: Result<number[], TypeError> = Result.fromFallible(produceArr, castToErr<TypeError>);
+ *
+ * assert(res.isOk());
+ * ```
+ */
+Result.fromFallible = function fromFallible<T, E>(
+  fn: () => T,
+  errMapFn: (e: unknown) => E,
+): Result<T, E> {
+  try {
+    return Ok(fn());
+  } catch (e) {
+    return Err(errMapFn(e));
+  }
+};
+
+/**
+ * Use this to lift a function into a `Result` context, by composing
+ * the wrapped function with a `Result` constructor.
+ *
+ * If no constructor is provided, `Ok` is used as default.
+ *
+ * This is useful for integrating 3rd party code without the need to manually
+ * wrap it.
+ *
+ * @category Result#Advanced
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Err, Ok, Result } from "./result.ts";
+ *
+ * function powerOfTwo(n: number): number {
+ *   return Math.pow(2, n);
+ * }
+ *
+ * const lifted = Result.lift(powerOfTwo);
+ *
+ * const res = Ok(2).andThen(lifted);
+ *
+ * assert(res.isOk() === true);
+ * assert(res.unwrap() === 4);
+ */
+Result.lift = function lift<Args extends unknown[], R, T = R, E = never>(
+  fn: (...args: Args) => R,
+  ctor: (arg: R) => Result<T, E> = Ok as (arg: R) => Result<T, E>,
+): (...args: Args) => Result<T, E> {
+  return function (...args: Args) {
     try {
-      return Ok(fn());
+      return ctor(fn(...args));
+    } catch (e) {
+      throw asInfallible(e);
+    }
+  };
+};
+
+/**
+ * Use this to lift a fallible function into a `Result` context, by composing
+ * the wrapped function with a `Result` constructor and an error mapping
+ * function.
+ *
+ * If no constructor is provided, `Ok` is used as default.
+ *
+ * This is useful for integrating 3rd party code without the need to manually
+ * wrap it.
+ *
+ * @category Result#Advanced
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert";
+ * import { Err, Ok, Result } from "./result.ts";
+ *
+ * function toSpecialString(s: string): string {
+ *   if (s.length % 3 === 0) return s;
+ *   throw TypeError("Not conforming to schema");
+ * }
+ *
+ * function toTypeError(e: unknown): TypeError {
+ *   if (e instanceof TypeError) return e;
+ *   return TypeError("Unexpected error", { cause: e });
+ * }
+ *
+ * const lifted = Result.liftFallible(toSpecialString, toTypeError);
+ *
+ * const res: Result<string, TypeError> = Ok("abcd").andThen(lifted);
+ *
+ * assert(res.isOk() === false);
+ * assert(res.unwrap() instanceof TypeError === true);
+ * ```
+ */
+Result.liftFallible = function liftFallible<
+  Args extends unknown[],
+  R,
+  E,
+  T = R,
+>(
+  fn: (...args: Args) => R,
+  errMapFn: (e: unknown) => E,
+  ctor: (arg: R) => Result<T, E> = Ok as (arg: R) => Result<T, E>,
+): (...args: Args) => Result<T, E> {
+  return function (...args: Args) {
+    try {
+      return ctor(fn(...args));
     } catch (e) {
       return Err(errMapFn(e));
     }
-  }
-
-  /**
-   * Use this to lift a function into a `Result` context, by composing
-   * the wrapped function with a `Result` constructor.
-   *
-   * If no constructor is provided, `Ok` is used as default.
-   *
-   * This is useful for integrating 3rd party code without the need to manually
-   * wrap it.
-   *
-   * @category Result#Advanced
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Err, Ok, Result } from "./result.ts";
-   *
-   * function powerOfTwo(n: number): number {
-   *   return Math.pow(2, n);
-   * }
-   *
-   * const lifted = Result.lift(powerOfTwo);
-   *
-   * const res = Ok(2).andThen(lifted);
-   *
-   * assert(res.isOk() === true);
-   * assert(res.unwrap() === 4);
-   */
-  export function lift<Args extends unknown[], R, T = R, E = never>(
-    fn: (...args: Args) => R,
-    ctor: (arg: R) => Result<T, E> = Ok as (arg: R) => Result<T, E>,
-  ): (...args: Args) => Result<T, E> {
-    return function (...args: Args) {
-      try {
-        return ctor(fn(...args));
-      } catch (e) {
-        throw asInfallible(e);
-      }
-    };
-  }
-
-  /**
-   * Use this to lift a fallible function into a `Result` context, by composing
-   * the wrapped function with a `Result` constructor and an error mapping
-   * function.
-   *
-   * If no constructor is provided, `Ok` is used as default.
-   *
-   * This is useful for integrating 3rd party code without the need to manually
-   * wrap it.
-   *
-   * @category Result#Advanced
-   *
-   * @example
-   * ```typescript
-   * import { assert } from "@std/assert";
-   * import { Err, Ok, Result } from "./result.ts";
-   *
-   * function toSpecialString(s: string): string {
-   *   if (s.length % 3 === 0) return s;
-   *   throw TypeError("Not conforming to schema");
-   * }
-   *
-   * function toTypeError(e: unknown): TypeError {
-   *   if (e instanceof TypeError) return e;
-   *   return TypeError("Unexpected error", { cause: e });
-   * }
-   *
-   * const lifted = Result.liftFallible(toSpecialString, toTypeError);
-   *
-   * const res: Result<string, TypeError> = Ok("abcd").andThen(lifted);
-   *
-   * assert(res.isOk() === false);
-   * assert(res.unwrap() instanceof TypeError === true);
-   * ```
-   */
-  export function liftFallible<Args extends unknown[], R, E, T = R>(
-    fn: (...args: Args) => R,
-    errMapFn: (e: unknown) => E,
-    ctor: (arg: R) => Result<T, E> = Ok as (arg: R) => Result<T, E>,
-  ): (...args: Args) => Result<T, E> {
-    return function (...args: Args) {
-      try {
-        return ctor(fn(...args));
-      } catch (e) {
-        return Err(errMapFn(e));
-      }
-    };
-  }
-}
+  };
+};
 
 /**
  * Use this to infer the encapsulated `Ok<T>` types from a `Result<T,E>`
@@ -1564,34 +1556,3 @@ export type InferredOkType<R> = R extends Readonly<Result<infer T, unknown>> ? T
 export type InferredErrType<R> = R extends Readonly<Result<unknown, infer E>>
   ? E
   : never;
-
-/**
- * Use this as `errMapFn` to indicate that a function or Promise to be lifted
- * into a Result or Task context is infallible
- *
- * If the lifted function or Promise throws an exception, the error will be
- * propagated
- *
- * @throws {Panic}
- *
- * @category Result#Intermediate
- *
- * @example
- * ```typescript
- * import { assert } from "@std/assert"
- * import { Err, Ok, Result, asInfallible } from "./result.ts"
- *
- * //Let's re-implement `Result.from`
- *
- * const customFromImpl = <T>(fn: () => T) => Result.fromFallible(fn, asInfallible);
- * const getNumber = () => 42;
- *
- * const fromOriginal = Result.from(getNumber);
- * const fromCustom = customFromImpl(getNumber);
- *
- * assert(fromOriginal.isOk() === fromCustom.isOk());
- * ```
- */
-export function asInfallible(e: unknown): never {
-  throw Panic.causedBy(e, "A function you've passed as infallible panicked");
-}

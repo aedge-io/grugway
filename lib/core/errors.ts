@@ -65,6 +65,37 @@ export function panic<E>(err?: E): never {
 }
 
 /**
+ * Use this as `errMapFn` to indicate that a function or Promise to be lifted
+ * into a Result or Task context is infallible
+ *
+ * If the lifted function or Promise throws an exception, the error will be
+ * propagated
+ *
+ * @throws {Panic}
+ *
+ * @category Result#Intermediate
+ *
+ * @example
+ * ```typescript
+ * import { assert } from "@std/assert"
+ * import { Err, Ok, Result, asInfallible } from "./result.ts"
+ *
+ * //Let's re-implement `Result.from`
+ *
+ * const customFromImpl = <T>(fn: () => T) => Result.fromFallible(fn, asInfallible);
+ * const getNumber = () => 42;
+ *
+ * const fromOriginal = Result.from(getNumber);
+ * const fromCustom = customFromImpl(getNumber);
+ *
+ * assert(fromOriginal.isOk() === fromCustom.isOk());
+ * ```
+ */
+export function asInfallible(e: unknown): never {
+  throw Panic.causedBy(e, "A function you've passed as infallible panicked");
+}
+
+/**
  * Use this to cast a `unknown` value to a known type.
  *
  * This is mostly useful when integrating external, fallible code, where one
