@@ -102,6 +102,56 @@ export function any(tasks: any): any {
 }
 
 /**
+ * Use this to obtain the first resolving `Task<T, E>` from an `Iterable<PromiseLike<Result<T,E>>>` or `ArrayLike<PromiseLike<Result<T, E>>>`
+ *
+ * This function also works on variadic tuples and preserves the individual
+ * types of the tuple members.
+ *
+ * In case the provided tasks support cancellation, it's possible to provide
+ * an `AbortController` via the options parameter. The controller's `.abort()`
+ * method will be called after the first `Task` has resolved.
+ *
+ * @category Tasks#Intermediate
+ *
+ * @example
+ * ```typescript
+ * import { Task } from "./task.ts";
+ * import * as Tasks from "./tasks.ts";
+ * import { Result } from "../core/result.ts";
+ *
+ * const str = "thing" as string | TypeError;
+ * const num = 5 as number | RangeError;
+ * const bool = true as boolean | ReferenceError;
+ *
+ * const tuple = [
+ *   Task.of(Result(str)),
+ *   Task.of(Result(num)),
+ *   Task.of(Result(bool)),
+ * ] as const;
+ *
+ * const res: Result<
+ *   string | number | boolean,
+ *   TypeError | RangeError | ReferenceError
+ * > = await Tasks.race(tuple);
+ * ```
+ */
+export function race<
+  P extends Readonly<ArrayLike<PromiseLike<Result<unknown, unknown>>>>,
+>(
+  tasks: P,
+  options?: { controller: AbortController },
+): Task<InferredSuccessUnion<P>, InferredFailureUnion<P>>;
+export function race<T, E>(
+  tasks: Readonly<Iterable<PromiseLike<Result<T, E>>>>,
+  options?: { controller: AbortController },
+): Task<T, E> {
+  const abort = () => options?.controller?.abort();
+  const raced = Promise.race(tasks).finally(abort);
+
+  return Task.of(raced);
+}
+
+/**
  * Use this to infer the encapsulated `<T>` type from a `Task<T,E>`
  *
  * @category Task::Basic
