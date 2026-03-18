@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- BREAKING: remove implicit `.clone()` from `.tap()` methods
+
 ## 0.2.1
 
 - Simplified examples in jsdoc comments
