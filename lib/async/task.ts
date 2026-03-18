@@ -372,8 +372,8 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * assert(res.unwrap() !== clonedRes.unwrap())
    * ```
    */
-  clone(): Task<T, E> {
-    return new Task(this.#promise.then((res) => res.clone()));
+  clone(options?: StructuredSerializeOptions): Task<T, E> {
+    return new Task(this.#promise.then((res) => res.clone(options)));
   }
 
   /**
@@ -418,8 +418,8 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     orValue: T2 | PromiseLike<T2>,
   ): Task<T2, never> {
     return new Task(this.#promise.then(async (res) => {
-      const mapped = res.isErr() ? await orValue : await mapFn(res.unwrap());
-      return Ok(mapped);
+      const mapped = res.isErr() ? orValue : mapFn(res.unwrap());
+      return Ok(await mapped);
     }));
   }
 
@@ -444,10 +444,8 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     orFn: (e: E) => T2 | PromiseLike<T2>,
   ): Task<T2, never> {
     return new Task(this.#promise.then(async (res) => {
-      const mapped = res.isErr()
-        ? await orFn(res.unwrap())
-        : await mapFn(res.unwrap());
-      return Ok(mapped);
+      const mapped = res.isErr() ? orFn(res.unwrap()) : mapFn(res.unwrap());
+      return Ok(await mapped);
     }));
   }
 
