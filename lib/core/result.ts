@@ -669,14 +669,6 @@ export interface IResult<T, E> {
   /**
    * Use this to perform side-effects transparently.
    *
-   * The `tapFn` receives a deep clone of `Result<T, E>` {@linkcode IResult#clone}
-   *
-   * This may have performance implications, dependending on the size of
-   * the wrapped value `<T | E>`, but ensures that the `tapFn` can never
-   * change or invalidate the state of the `Result<T, E>` instance
-   *
-   * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
-   *
    * @category Result#Intermediate
    *
    * @example
@@ -926,7 +918,7 @@ class _Ok<T> implements IResult<T, never> {
     return this;
   }
   tap(tapFn: (value: Ok<T>) => void): Ok<T> {
-    tapFn(this.clone());
+    tapFn(this);
     return this;
   }
   inspect(inspectFn: (value: T) => void): Ok<T> {
@@ -1043,7 +1035,7 @@ class _Err<E> implements IResult<never, E> {
     return this;
   }
   tap(tapFn: (value: Result<never, E>) => void): Err<E> {
-    tapFn(this.clone());
+    tapFn(this);
     return this;
   }
   //deno-lint-ignore require-yield
