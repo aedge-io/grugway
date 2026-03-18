@@ -106,7 +106,7 @@ interface IOption<T> {
    * Use this to obtain a deep clone of `Option<T>`
    *
    * Under the hood, this uses the `structuredClone` algorithm exposed via
-   * the global function of the same name
+   * the global function of the same name. Primitives are returned by value
    *
    * May incur performance penalties, depending on the platform, size and type
    * of the data to be cloned
@@ -137,7 +137,7 @@ interface IOption<T> {
    * }
    * ```
    */
-  clone(): Option<T>;
+  clone(options?: StructuredSerializeOptions): Option<T>;
 
   /**
    * Use this to transform `Some<T>` to `Some<U>` by applying the supplied
@@ -912,7 +912,7 @@ class _None<T = never> implements IOption<never> {
   id(): None {
     return this;
   }
-  clone(): None {
+  clone(options?: StructuredSerializeOptions): None {
     return this;
   }
   map<U>(mapFn: (arg: never) => NonNullish<U>): None {
@@ -1015,7 +1015,7 @@ class _None<T = never> implements IOption<never> {
 }
 
 class _Some<T> implements IOption<T> {
-  #value: T;
+  #value: NonNullish<T>;
   constructor(value: T) {
     assertNotNullish(value);
     this.#value = value;
@@ -1030,8 +1030,9 @@ class _Some<T> implements IOption<T> {
   id(): Some<T> {
     return this;
   }
-  clone(): Some<T> {
-    return Some(structuredClone(this.#value as Exclude<T, Nullish>));
+  clone(options?: StructuredSerializeOptions): Some<T> {
+    if (isPrimitive(this.#value)) return Some(this.#value);
+    return Some(structuredClone(this.#value, options));
   }
   map<U>(mapFn: (arg: T) => NonNullish<U>): Some<NonNullish<U>> {
     return Some(mapFn(this.#value));

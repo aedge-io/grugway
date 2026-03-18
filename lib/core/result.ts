@@ -4,7 +4,7 @@
  * method parameter names are symetrical
  */
 import type { Empty, Fallible, NonNullish } from "./type_utils.ts";
-import { EMPTY } from "./type_utils.ts";
+import { EMPTY, isPrimitive } from "./type_utils.ts";
 import { None, Option } from "./option.ts";
 import { asInfallible } from "./errors.ts";
 
@@ -82,7 +82,9 @@ export interface IResult<T, E> {
   id(): Result<T, E>;
 
   /**
-   * Use this to obtain a deep clone of `Result<T, E>` via `structuredClone`
+   * Use this to obtain a deep clone of `Result<T, E>`
+   *
+   * Primitives are returned by value, all other types via `structuredClone`
    *
    * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
    *
@@ -101,7 +103,7 @@ export interface IResult<T, E> {
    * assert(cloned.unwrap().a === 1);  // same value
    * ```
    */
-  clone(): Result<T, E>;
+  clone(options?: StructuredSerializeOptions): Result<T, E>;
 
   /**
    * Use this to map the encapsulated value `<T>' to `<T2>`.
@@ -853,8 +855,9 @@ class _Ok<T> implements IResult<T, never> {
   id(): Ok<T> {
     return this;
   }
-  clone(): Ok<T> {
-    return Ok(structuredClone(this.#value));
+  clone(options?: StructuredSerializeOptions): Ok<T> {
+    if (isPrimitive(this.#value)) return Ok(this.#value);
+    return Ok(structuredClone(this.#value, options));
   }
   and<T2, E2>(rhs: Result<T2, E2>): Result<T2, E2> {
     return rhs;
@@ -965,8 +968,9 @@ class _Err<E> implements IResult<never, E> {
   id(): Err<E> {
     return this;
   }
-  clone(): Err<E> {
-    return Err(structuredClone(this.#err));
+  clone(options?: StructuredSerializeOptions): Err<E> {
+    if (isPrimitive(this.#err)) return Err(this.#err);
+    return Err(structuredClone(this.#err, options));
   }
   and<T2, E2>(rhs: Result<T2, E2>): Err<E> {
     return this;

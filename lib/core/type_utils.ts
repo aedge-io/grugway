@@ -1,7 +1,7 @@
-/**
- * ===============
- *      TYPES
- * ===============
+/*
+ ********************************************************************
+ * type predicates
+ ********************************************************************
  */
 
 /**
@@ -38,11 +38,15 @@ export type Nullish = null | undefined;
  * Ref: https://developer.mozilla.org/en-US/docs/Glossary/Falsy
  */
 export type Falsy = Nullish | false | "" | 0 | -0 | 0n;
+
 export type Fallible<E> = E extends Error ? E : never;
 
 export type Truthy<T> = Exclude<T, Falsy>;
+
 export type NonNullish<T> = Exclude<T, Nullish>;
+
 export type Infallible<T> = Exclude<T, Nullish | Fallible<T>>;
+
 export type HasToJSON<T> = T extends { toJSON(): JsonRepr<T> } ? T : never;
 
 export type NonReadonly<T> = T extends Readonly<infer U> ? U : T;
@@ -72,10 +76,10 @@ export type NonReadonly<T> = T extends Readonly<infer U> ? U : T;
 export type Empty = Readonly<{}>;
 export const EMPTY: Empty = Object.freeze(Object.create(null));
 
-/**
- * ===============
- * TYPE PREDICATES
- * ===============
+/*
+ ********************************************************************
+ * type predicates
+ ********************************************************************
  */
 
 export function isNotNullish<T>(arg: T): arg is NonNullish<T> {
