@@ -1,6 +1,4 @@
-// import { type Err, Ok, type Result } from "../core/result.ts";
-import { Ok, type Result } from "../core/result.ts";
-import * as Results from "../core/results.ts";
+import { Err, Ok, type Result } from "../core/result.ts";
 import { Task } from "./task.ts";
 
 /**
@@ -16,7 +14,7 @@ import { Task } from "./task.ts";
  * `Iterable<Task<T, E>>` into a `Task<T[],E>`. Preserves input order.
  *
  * In case of an `Err<E>`, it immediately returns it  by resolving early.
- * The remaining tasks are Abandoned.
+ * The remaining tasks are abandoned.
  *
  * Abandoned tasks continue running in the background but their results
  * are ignored. In case the provided tasks support cancellation, it's
@@ -25,6 +23,8 @@ import { Task } from "./task.ts";
  *
  * This function also works on variadic tuples and preserves the individual
  * types of the tuple members.
+ *
+ * See {@linkcode any} for the opposite case.
  *
  * @category Task#Intermediate
  *
@@ -110,15 +110,24 @@ export function all(
 }
 
 /**
- * Use this to obtain the first found `Ok<T>` from an `Array<Result<T,E>>` or
- * `Iterable<Result<T,E>>`.
- * If no `Ok<T>` value is found, the `Err<E>` values are collected into an
- * array and returned.
+ * Use this to obtain the first `Ok<T>` from an `ArrayLike<Task<T,E>>` or
+ * `Iterable<Task<T, E>>`. This is done by resolving early. The remaining
+ * tasks are abandoned.
+ *
+ * If all values are `Err<E>`, they are collected into a `Task<T, E[]>`.
+ * Input order is preserved.
+ *
+ * Abandoned tasks continue running in the background but their results
+ * are ignored. In case the provided tasks support cancellation, it's
+ * possible to provide an `AbortController` via the options parameter.
+ * The controller's `.abort()` method will be called upon early resolution.
  *
  * This function also works on variadic tuples and preserves the individual
  * types of the tuple members.
  *
- * @category Result::Intermediate
+ * See {@linkcode all} for the opposite case.
+ *
+ * @category Task#Intermediate
  *
  * @example
  * ```typescript
@@ -146,17 +155,63 @@ export function any<
   P extends Readonly<ArrayLike<PromiseLike<Result<unknown, unknown>>>>,
 >(
   tasks: P,
+  options?: { controller: AbortController },
 ): Task<InferredSuccessUnion<P>, InferredFailureTuple<P>>;
 export function any<T, E>(
   tasks: Readonly<Iterable<PromiseLike<Result<T, E>>>>,
+  options?: { controller: AbortController },
 ): Task<T, E[]>;
-//deno-lint-ignore no-explicit-any
-export function any(tasks: any): any {
-  return Task.of(Promise.all(tasks).then((res) => Results.any(res)));
+export function any(
+  //deno-lint-ignore no-explicit-any
+  tasks: any,
+  options?: { controller: AbortController },
+  //deno-lint-ignore no-explicit-any
+): any {
+  return Task.of(
+    new Promise<Result<unknown, unknown[]>>((resolve) => {
+      const errors: unknown[] = [];
+      let total = 0;
+      let completed = 0;
+      let settled = false;
+      let iterating = true;
+
+      function trySettle() {
+        if (settled || iterating) return;
+        if (completed === total) {
+          settled = true;
+          resolve(Err(errors));
+        }
+      }
+
+      for (const task of tasks) {
+        const idx = total;
+        total += 1;
+
+        task.then((res: Result<unknown, unknown>) => {
+          if (settled) return;
+
+          if (res.isOk()) {
+            settled = true;
+            options?.controller?.abort();
+            resolve(res);
+            return;
+          }
+
+          errors[idx] = res.unwrap();
+          completed += 1;
+
+          trySettle();
+        });
+      }
+
+      iterating = false;
+      trySettle();
+    }),
+  );
 }
 
 /**
- * Use this to obtain the first resolving `Task<T, E>` from an `Iterable<PromiseLike<Result<T,E>>>` or `ArrayLike<PromiseLike<Result<T, E>>>`
+ * Use this to obtain the first resolving `Task<T, E>` from an `Iterable<PromiseLike<Result<T,E>>>` or `ArrayLike<PromiseLike<Result<T, E>>>`.
  *
  * This function also works on variadic tuples and preserves the individual
  * types of the tuple members.
