@@ -1,4 +1,5 @@
-import type { Result } from "../core/result.ts";
+// import { type Err, Ok, type Result } from "../core/result.ts";
+import { Ok, type Result } from "../core/result.ts";
 import * as Results from "../core/results.ts";
 import { Task } from "./task.ts";
 
@@ -7,18 +8,25 @@ import { Task } from "./task.ts";
  *
  * Utilities to work with collections of Task<T, E>
  *
- * @category Task::Intermediate
+ * @category Task#Intermediate
  */
 
 /**
- * Use this to collect all `Ok<T>` values from an `Array<Task<T,E>>` or
- * `Iterable<Task<T,E>>` into an `Task<T[],E>`.
- * Upon encountring the first `Err<E>` value, this value is returned.
+ * Use this to collect all `Ok<T>` values from an `ArrayLike<Task<T,E>>` or
+ * `Iterable<Task<T, E>>` into a `Task<T[],E>`. Preserves input order.
+ *
+ * In case of an `Err<E>`, it immediately returns it  by resolving early.
+ * The remaining tasks are Abandoned.
+ *
+ * Abandoned tasks continue running in the background but their results
+ * are ignored. In case the provided tasks support cancellation, it's
+ * possible to provide an `AbortController` via the options parameter.
+ * The controller's `.abort()` method will be called upon early resolution.
  *
  * This function also works on variadic tuples and preserves the individual
  * types of the tuple members.
  *
- * @category Task::Intermediate
+ * @category Task#Intermediate
  *
  * @example
  * ```typescript
@@ -46,13 +54,59 @@ export function all<
   P extends Readonly<ArrayLike<PromiseLike<Result<unknown, unknown>>>>,
 >(
   tasks: P,
+  options?: { controller: AbortController },
 ): Task<InferredSuccessTuple<P>, InferredFailureUnion<P>>;
 export function all<T, E>(
   tasks: Readonly<Iterable<PromiseLike<Result<T, E>>>>,
+  options?: { controller: AbortController },
 ): Task<T[], E>;
-//deno-lint-ignore no-explicit-any
-export function all(tasks: any): any {
-  return Task.of(Promise.all(tasks).then((res) => Results.all(res)));
+export function all(
+  //deno-lint-ignore no-explicit-any
+  tasks: any,
+  options?: { controller: AbortController },
+  //deno-lint-ignore no-explicit-any
+): any {
+  return Task.of(
+    new Promise<Result<unknown[], unknown>>((resolve) => {
+      const results: unknown[] = [];
+      let total = 0;
+      let completed = 0;
+      let settled = false;
+      let iterating = true;
+
+      function trySettle() {
+        if (settled || iterating) return;
+        if (completed === total) {
+          settled = true;
+          resolve(Ok(results));
+        }
+      }
+
+      for (const task of tasks) {
+        const idx = total;
+        total += 1;
+
+        task.then((res: Result<unknown, unknown>) => {
+          if (settled) return;
+
+          if (res.isErr()) {
+            settled = true;
+            options?.controller?.abort();
+            resolve(res);
+            return;
+          }
+
+          results[idx] = res.unwrap();
+          completed += 1;
+
+          trySettle();
+        });
+      }
+
+      iterating = false;
+      trySettle();
+    }),
+  );
 }
 
 /**
