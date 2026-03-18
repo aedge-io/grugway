@@ -12,8 +12,8 @@
 
 - **Explicit error handling** makes code behavior predictable for both humans
   and agents
-- **Composable abstractions** allow agents to reason about data flow without
-  hidden exceptions
+- **Composable abstractions** allow to reason about data flow mostly without the
+  noise of exceptions
 - **Type-safe operations** catch mistakes at compile time rather than runtime
 - **Callibrated documentation** provides context that agents can leverage for
   better performance (see [`SKILL.md`](SKILL.md))
@@ -155,7 +155,7 @@ const version = Option(Deno.args[0])
 ```
 
 Checkout the [examples](examples/adapters/web/) to see how to do this more
-granuarly.
+granularly.
 
 ---
 
