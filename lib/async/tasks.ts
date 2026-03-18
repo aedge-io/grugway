@@ -6,6 +6,8 @@ import { Task } from "./task.ts";
  *
  * Utilities to work with collections of Task<T, E>
  *
+ * Supports the main concurrency primitives and optionally cancellation
+ *
  * @category Task#Intermediate
  */
 
@@ -263,7 +265,7 @@ export function race<T, E>(
 /**
  * Use this to infer the encapsulated `<T>` type from a `Task<T,E>`
  *
- * @category Task::Basic
+ * @category Task#Basic
  */
 export type InferredSuccessType<P> = P extends
   PromiseLike<Result<infer T, unknown>> ? T
@@ -272,7 +274,7 @@ export type InferredSuccessType<P> = P extends
 /**
  * Use this to infer the encapsulated `<E>` type from a `Task<T,E>`
  *
- * @category Task::Basic
+ * @category Task#Basic
  */
 export type InferredFailureType<P> = P extends
   PromiseLike<Result<unknown, infer E>> ? E
@@ -281,7 +283,7 @@ export type InferredFailureType<P> = P extends
 /**
  * Use this to infer the encapsulated `<T>` types from a tuple of `Task<T,E>`
  *
- * @category Task::Intermediate
+ * @category Task#Intermediate
  */
 export type InferredSuccessTuple<
   P extends Readonly<ArrayLike<PromiseLike<Result<unknown, unknown>>>>,
@@ -293,7 +295,7 @@ export type InferredSuccessTuple<
 /**
  * Use this to infer the encapsulated `<E>` types from a tuple of `Task<T,E>`
  *
- * @category Task::Intermediate
+ * @category Task#Intermediate
  */
 export type InferredFailureTuple<
   P extends Readonly<ArrayLike<PromiseLike<Result<unknown, unknown>>>>,
@@ -305,7 +307,7 @@ export type InferredFailureTuple<
 /**
  * Use this to infer a union of all encapsulated `<T>` types from a tuple of `Task<T,E>`
  *
- * @category Task::Intermediate
+ * @category Task#Intermediate
  */
 export type InferredSuccessUnion<
   P extends Readonly<ArrayLike<PromiseLike<Result<unknown, unknown>>>>,
@@ -314,7 +316,7 @@ export type InferredSuccessUnion<
 /**
  * Use this to infer a union of all encapsulated `<E>` types from a tuple of `Task<T,E>`
  *
- * @category Task::Intermediate
+ * @category Task#Intermediate
  */
 export type InferredFailureUnion<
   P extends Readonly<ArrayLike<PromiseLike<Result<unknown, unknown>>>>,

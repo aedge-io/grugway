@@ -22,7 +22,8 @@ export interface DeferredTask<T, E> {
  * the same composition patterns as {@linkcode Result}
  *
  * Furthermore, {@linkcode Tasks} exposes a few functions to ease working
- * with collections (indexed and plain `Iterable`s)
+ * with collections (indexed and plain `Iterable`s) and supports the main
+ * concurrency primitives
  *
  * @category Task#Basic
  */
@@ -34,18 +35,16 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   }
 
   /**
-   * This is done to provide drop-in parity with native Promises, as some libraries
-   * are (IMO needlessly) invariant over `PromiseLike` types and test for `thenability`
-   * via `value instanceof Promise`
+   * This is done to provide full parity with native Promises
    */
   static {
     Object.setPrototypeOf(Task.prototype, Promise.prototype);
   }
 
-  /**
-   * =======================
-   *   PROMISE INTERFACE
-   * =======================
+  /*
+   ********************************************************************
+   * Promise interface
+   ********************************************************************
    */
 
   then<TResult1 = Result<T, E>, TResult2 = never>(
@@ -78,10 +77,10 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     return this.#promise.finally(onfinally);
   }
 
-  /**
-   * =======================
-   *    TASK CONSTRUCTORS
-   * =======================
+  /*
+   ********************************************************************
+   * Task constructors / factories
+   ********************************************************************
    */
 
   /**
@@ -332,10 +331,10 @@ export class Task<T, E> implements Promise<Result<T, E>> {
     };
   }
 
-  /**
-   * ======================
-   * TASK INSTANCE METHODS
-   * ======================
+  /*
+   ********************************************************************
+   * instance methods
+   ********************************************************************
    */
 
   /**
