@@ -662,9 +662,6 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   /**
    * Use this to perform asynchronous side-effects transparently.
    *
-   * The `tapFn` receives a deep clone of the `Result<T, E>` to ensure
-   * the original value cannot be mutated.
-   *
    * @category Task#Intermediate
    *
    * @example
@@ -677,7 +674,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    */
   tap(tapFn: (v: Result<T, E>) => void | PromiseLike<void>): Task<T, E> {
     return new Task(this.#promise.then(async (res) => {
-      await tapFn(res.clone());
+      await tapFn(res);
       return res;
     }));
   }
