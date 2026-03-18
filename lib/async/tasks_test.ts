@@ -285,6 +285,80 @@ Deno.test("grugway::Tasks", async (t) => {
   );
 
   await t.step(
+    ".any() -> short-circuits on first Ok",
+    async () => {
+      const success = Ok(42);
+      let slowResolved = false;
+      let timerId: number;
+
+      const fast = Task.of(success) as Task<number, TypeError>;
+      const slow: Task<number, TypeError> = Task.fromPromise(
+        new Promise<number>((_, reject) => {
+          timerId = setTimeout(() => {
+            slowResolved = true;
+            reject(TypeError("slow"));
+          }, 128);
+        }),
+        (e) => e instanceof TypeError ? e : TypeError("Unknown", { cause: e }),
+      );
+
+      const task = Tasks.any([fast, slow]);
+      const ok = await task;
+
+      clearTimeout(timerId!);
+
+      assertType<IsExact<typeof task, Task<number, TypeError[]>>>(true);
+      assertStrictEquals(ok.isOk(), true);
+      assertStrictEquals(ok.unwrap(), 42);
+      assertStrictEquals(slowResolved, false);
+    },
+  );
+
+  await t.step(
+    ".any() -> calls abort on the provided AbortController on first Ok",
+    async () => {
+      const controller = new AbortController();
+      const success = Ok(42);
+
+      const fast = Task.of(success) as Task<number, TypeError>;
+      const slow: Task<number, TypeError> = Task.fromPromise(
+        new Promise<number>((_, reject) => {
+          const timerId = setTimeout(reject, 128, TypeError("slow"));
+          controller.signal.addEventListener("abort", () => {
+            clearTimeout(timerId);
+          });
+        }),
+        (e) => e instanceof TypeError ? e : TypeError("Unknown", { cause: e }),
+      );
+
+      assertStrictEquals(controller.signal.aborted, false);
+
+      const task = Tasks.any([fast, slow], { controller });
+      const ok = await task;
+
+      assertStrictEquals(ok.isOk(), true);
+      assertStrictEquals(controller.signal.aborted, true);
+    },
+  );
+
+  await t.step(
+    ".any() -> does not abort when all tasks fail",
+    async () => {
+      const controller = new AbortController();
+
+      const task = Tasks.any(
+        [Task.fail(1), Task.fail(2), Task.fail(3)],
+        { controller },
+      );
+      const err = await task;
+
+      assertStrictEquals(err.isErr(), true);
+      assertEquals(err.unwrap(), [1, 2, 3]);
+      assertStrictEquals(controller.signal.aborted, false);
+    },
+  );
+
+  await t.step(
     ".race() -> returns the first resolving Task instance",
     async () => {
       const first = Ok(42);
