@@ -602,18 +602,15 @@ Deno.test("grugway::Result::Ok", async (t) => {
     );
 
     await t.step(
-      ".tap() -> calls tapFn with a deep copy of the encapsulated value",
+      ".tap() -> calls tapFn with calling instance",
       () => {
-        /**
-         * HOF to capture changes to the original value
-         */
         const createTapFn = function <T>(
           originalValue: T,
           originalResult: Ok<T>,
         ): (res: Result<T, unknown>) => void {
           return (res: Result<T, unknown>) => {
-            assertNotStrictEquals(originalValue, res.unwrap());
-            assertNotStrictEquals(originalResult, res);
+            assertStrictEquals(originalValue, res.unwrap());
+            assertStrictEquals(originalResult, res);
             assertEquals(originalValue, res.unwrap());
           };
         };
@@ -1114,18 +1111,15 @@ Deno.test("grugway::Result::Err", async (t) => {
     );
 
     await t.step(
-      ".tap() -> calls the tapFn with a deep clone of the encapsulated value",
+      ".tap() -> calls the tapFn with calling instance",
       () => {
-        /**
-         * HOF to capture changes to the original value
-         */
         const createTapFn = function <E>(
           originalValue: E,
           originalResult: Err<E>,
         ): (res: Result<unknown, E>) => void {
           return (res: Result<unknown, E>) => {
-            assertNotStrictEquals(originalValue, res.unwrap());
-            assertNotStrictEquals(originalResult, res);
+            assertStrictEquals(originalValue, res.unwrap());
+            assertStrictEquals(originalResult, res);
             assertEquals(originalValue, res.unwrap());
           };
         };
