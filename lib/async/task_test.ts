@@ -774,7 +774,7 @@ Deno.test("grugway::Task", async (t) => {
       );
 
       await t.step(
-        ".tap() -> invokes tapFn with the Result and returns the original",
+        ".tap() -> invokes tapFn with calling instance's Ok value",
         async () => {
           let tapped: Result<number, never> | undefined;
           const task = Task.succeed(42);
@@ -785,7 +785,7 @@ Deno.test("grugway::Task", async (t) => {
           const res = await tappedTask;
 
           assertType<IsExact<typeof tappedTask, Task<number, never>>>(true);
-          assertStrictEquals(res !== tapped, true);
+          assertStrictEquals(res == tapped, true);
           assertStrictEquals(res.isOk(), true);
           assertStrictEquals(res.unwrap(), 42);
           assertStrictEquals(tapped?.unwrap(), 42);
@@ -793,7 +793,7 @@ Deno.test("grugway::Task", async (t) => {
       );
 
       await t.step(
-        ".tap() -> invokes tapFn with the Err Result in case of failure",
+        ".tap() -> invokes tapFn with calling instance's Err value",
         async () => {
           const te = TypeError("fail");
           let tapped: Result<number, TypeError> | undefined;
@@ -805,7 +805,7 @@ Deno.test("grugway::Task", async (t) => {
           const res = await tappedTask;
 
           assertType<IsExact<typeof tappedTask, Task<number, TypeError>>>(true);
-          assertStrictEquals(res !== tapped, true);
+          assertStrictEquals(res === tapped, true);
           assertStrictEquals(res.isErr(), true);
           assertInstanceOf(res.unwrap(), TypeError);
           assertStrictEquals(tapped?.isErr(), true);
