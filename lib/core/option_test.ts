@@ -1070,24 +1070,15 @@ Deno.test("grugway::Option::Some", async (t) => {
 
   await t.step("Some<T> -> Convenience Methods", async (t) => {
     await t.step(
-      ".tap() -> tapFn receives cloned value wrapped in new instance of Option",
+      ".tap() -> tapFn calling instance of Option",
       () => {
-        /**
-         * HOF to capture original value and option.
-         *
-         * The returned function performs the assertions
-         * when called by the .tap() method.
-         *
-         * Maybe oldschool, but IMO preferable to a mock in
-         * this situation.
-         */
         const createTapFn = function <T>(
           originalValue: T,
           originalOption: Option<T>,
         ): (opt: Option<T>) => void {
           return (opt: Option<T>) => {
-            assertNotStrictEquals(originalValue, opt.unwrap());
-            assertNotStrictEquals(originalOption, opt);
+            assertStrictEquals(originalValue, opt.unwrap());
+            assertStrictEquals(originalOption, opt);
             assertEquals(originalValue, opt.unwrap());
           };
         };

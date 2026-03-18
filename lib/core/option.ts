@@ -8,7 +8,6 @@ import type {
   Infallible,
   JsonRepr,
   NonNullish,
-  Nullish,
   StringRepr,
   Truthy,
   ValueRepr,
@@ -626,14 +625,6 @@ interface IOption<T> {
   /**
    * Use this to perform side-effects transparently
    *
-   * The `tapFn` receives a deep clone of `Option<T>` {@linkcode IOption#clone}
-   *
-   * This may have performance implications, dependending on the size of
-   * the wrapped value `<T>`, but ensures that the `tapFn` can never
-   * change or invalidate the state of the `Option<T>` instance
-   *
-   * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
-   *
    * @category Option#Intermediate
    *
    * @example
@@ -671,9 +662,9 @@ interface IOption<T> {
    * }
    *
    * const maybeEven = Option.from("thing")
-   *                    .map(str => str.length)
-   *                    .inspect(console.log)
-   *                    .andThen(toEven);
+   *   .map(str => str.length)
+   *   .inspect(console.log)
+   *   .andThen(toEven);
    *
    * assert(maybeEven.isNone() === true);
    * ```
@@ -1099,7 +1090,7 @@ class _Some<T> implements IOption<T> {
     return this;
   }
   tap(tapFn: (arg: Option<T>) => void): Option<T> {
-    tapFn(this.clone());
+    tapFn(this);
     return this;
   }
   inspect(inspectFn: (value: T) => void): Some<T> {
