@@ -12,7 +12,7 @@ import { Err, Ok } from "../core/result.ts";
 import { assertEquals, assertStrictEquals } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
 
-Deno.test("grugway::Task::InferredTypes", async (t) => {
+Deno.test("grugway::Tasks::InferredTypes", async (t) => {
   await t.step(
     "InferredSuccessType<P> -> infers encapsulated type <T> correctly",
     () => {
@@ -149,6 +149,80 @@ Deno.test("grugway::Tasks", async (t) => {
       >(true);
       assertStrictEquals(ok.isOk(), true);
       assertEquals(ok.unwrap(), ["str", 123, true]);
+    },
+  );
+
+  await t.step(
+    ".all() -> short-circuits on first Err",
+    async () => {
+      const error = Err(TypeError("fast failure"));
+      let slowResolved = false;
+      let timerId: number;
+
+      const fast = Task.of(error) as Task<number, TypeError>;
+      const slow: Task<number, TypeError> = Task.fromPromise(
+        new Promise<number>((resolve) => {
+          timerId = setTimeout(() => {
+            slowResolved = true;
+            resolve(99);
+          }, 128);
+        }),
+        (e) => e instanceof TypeError ? e : TypeError("Unknown", { cause: e }),
+      );
+
+      const task = Tasks.all([fast, slow]);
+      const err = await task;
+
+      clearTimeout(timerId!);
+
+      assertType<IsExact<typeof task, Task<number[], TypeError>>>(true);
+      assertStrictEquals(err.isErr(), true);
+      assertStrictEquals(err.unwrap(), error.unwrap());
+      assertStrictEquals(slowResolved, false);
+    },
+  );
+
+  await t.step(
+    ".all() -> calls abort on the provided AbortController on first Err",
+    async () => {
+      const controller = new AbortController();
+      const error = Err(TypeError("boom"));
+
+      const fast = Task.of(error) as Task<number, TypeError>;
+      const slow: Task<number, TypeError> = Task.fromPromise(
+        new Promise<number>((resolve) => {
+          const timerId = setTimeout(resolve, 128, 99);
+          controller.signal.addEventListener("abort", () => {
+            clearTimeout(timerId);
+          });
+        }),
+        (e) => e instanceof TypeError ? e : TypeError("Unknown", { cause: e }),
+      );
+
+      assertStrictEquals(controller.signal.aborted, false);
+
+      const task = Tasks.all([fast, slow], { controller });
+      const err = await task;
+
+      assertStrictEquals(err.isErr(), true);
+      assertStrictEquals(controller.signal.aborted, true);
+    },
+  );
+
+  await t.step(
+    ".all() -> does not abort when all tasks succeed",
+    async () => {
+      const controller = new AbortController();
+
+      const task = Tasks.all(
+        [Task.succeed(1), Task.succeed(2), Task.succeed(3)],
+        { controller },
+      );
+      const ok = await task;
+
+      assertStrictEquals(ok.isOk(), true);
+      assertEquals(ok.unwrap(), [1, 2, 3]);
+      assertStrictEquals(controller.signal.aborted, false);
     },
   );
 
