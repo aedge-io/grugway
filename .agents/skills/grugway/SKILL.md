@@ -8,7 +8,31 @@ description: Use the grugway library for type-safe error handling in TypeScript/
 TypeScript library for safe, composable error handling.
 
 **Import:**
-`import { Option, Some, None, Result, Ok, Err, Task, Options, Results, Tasks, asInfallible } from "@aedge-io/grugway";`
+
+```typescript
+import {
+  asInfallible,
+  Err, // Result types
+  None, // Option types
+  Ok,
+  Option,
+  Options,
+  Panic, // Error utilities
+  panic,
+  Result,
+  Results,
+  Some,
+  Task, // Async Result
+  Tasks, // Collection helpers
+  unsafeCastTo, // Unsafe cast (prototyping only)
+} from "@aedge-io/grugway";
+```
+
+**Subpath export — typed deep clone:**
+
+```typescript
+import { clone } from "@aedge-io/grugway/clone";
+```
 
 ## Rules
 
@@ -19,8 +43,10 @@ TypeScript library for safe, composable error handling.
    logic, unwrap at API boundaries.
 4. **All map/chain ops are closed** — they always return the same abstraction
    type.
-5. **Don't over do it** - strike a sensible balance between functional chaining
+5. **Don't over do it** — strike a sensible balance between functional chaining
    and an imperative style.
+6. **Never use `.trip()` or `.rise()`** — they are deprecated. Use
+   `.andEnsure()` and `.orEnsure()` instead.
 
 ---
 
@@ -35,6 +61,7 @@ TypeScript library for safe, composable error handling.
 | `Option.fromCoercible(value)` | Falsy (`0`, `""`, `false`, `NaN`) → `None`   |
 | `Option.fromFallible(value)`  | `Error` instances → `None`                   |
 | `Some(value)`                 | Wraps non-nullish value (panics on nullish!) |
+| `Some.empty()`                | `Some<Empty>` — signal success without value |
 | `None`                        | Singleton absent value                       |
 
 ### Methods on Option\<T\>
@@ -48,7 +75,8 @@ TypeScript library for safe, composable error handling.
 
 - `.map(fn)` — `T → U`, returns `Option<U>`
 - `.andThen(fn)` — `T → Option<U>`, returns `Option<U>` (flatMap)
-- `.filter(pred)` — keeps `Some` if predicate passes, else `None`
+- `.filter(pred)` — keeps `Some` if predicate passes, else `None`. Supports type
+  narrowing via type predicates.
 - `.andEnsure(fn)` — `T → Option<U>`: if `Some`, keep original; if `None`,
   become `None`
 
@@ -66,6 +94,7 @@ TypeScript library for safe, composable error handling.
 - `.and(other)` — returns `other` if both `Some`, else `None`
 - `.or(other)` — returns first `Some`
 - `.xor(other)` — returns `Some` if exactly one is `Some`
+- `.zip(other)` — both `Some` → `Some<[T, U]>`, else `None`
 
 **Unwrap:**
 
@@ -78,24 +107,36 @@ TypeScript library for safe, composable error handling.
 - `.okOr(err)` — `Some→Ok`, `None→Err(err)`
 - `.okOrElse(fn)` — `Some→Ok`, `None→Err(fn())`
 
+**Identity & cloning:**
+
+- `.id()` — returns self; useful for flattening `Option<Option<T>>` via
+  `.andThen(o => o.id())`
+- `.clone()` — deep clone via `typed-clone`
+
 **Side effects:**
 
 - `.inspect(fn)` — calls fn with value on `Some`, no-op on `None`
-- `.tap(fn)` — calls fn with cloned `Option`
+- `.tap(fn)` — calls fn with the `Option` instance, returns self
 - `.into(fn)` — passes `Option` to fn, returns fn's result
 
 **JS interop:** `String(some)` delegates to inner value, `JSON.stringify(some)`
 calls inner `.toJSON()`, spread `[...some]` delegates to inner iterator.
+`.iter()` yields the inner value once (or nothing for `None`).
 
 ### Collection Helpers
 
 - `Options.all(opts)` → all `Some` → `Some<T[]>`, any `None` → `None`
 - `Options.any(opts)` → first `Some`, or `None`
+- `Options.areSome(opts)` → type predicate: all are `Some`
+- `Options.areNone(opts)` → type predicate: all are `None`
 
 ### Composability
 
-- `Option.lift(fn)` — wrap fn to return `Option` (nullish results → `None`)
-- `Option.liftFallible(fn)` — wrap fn, exceptions → `None`
+- `Option.lift(fn, ctor?)` — wrap fn to return `Option` (default ctor:
+  `Option.from`; use `Option.fromCoercible` to treat falsy as `None`)
+- `Option.liftFallible(fn, ctor?)` — same as `lift`, but exceptions → `None`
+- `Option.apply(fn, arg)` — apply `Option<Fn>` to `Option<Arg>` (applicative)
+- `Option.id(opt)` — identity function, returns `opt.id()`
 
 ---
 
@@ -103,13 +144,15 @@ calls inner `.toJSON()`, spread `[...some]` delegates to inner iterator.
 
 ### Constructors
 
-| Constructor                         | Behavior                                         |
-| ----------------------------------- | ------------------------------------------------ |
-| `Ok(value)`                         | Explicit success                                 |
-| `Err(error)`                        | Explicit failure                                 |
-| `Result(value)`                     | `Error` instances → `Err`, else `Ok`             |
-| `Result.from(fn)`                   | Call fn, return `Ok(result)` (throws propagate!) |
-| `Result.fromFallible(fn, errMapFn)` | Call fn, exceptions → `Err(errMapFn(e))`         |
+| Constructor                         | Behavior                                       |
+| ----------------------------------- | ---------------------------------------------- |
+| `Ok(value)`                         | Explicit success                               |
+| `Err(error)`                        | Explicit failure                               |
+| `Ok.empty()`                        | `Ok<Empty>` — signal success without a value   |
+| `Err.empty()`                       | `Err<Empty>` — signal failure without details  |
+| `Result(value)`                     | `Error` instances → `Err`, else `Ok`           |
+| `Result.from(fn)`                   | Call fn, return `Ok(result)` (throws → Panic!) |
+| `Result.fromFallible(fn, errMapFn)` | Call fn, exceptions → `Err(errMapFn(e))`       |
 
 ### Methods on Result\<T, E\>
 
@@ -124,7 +167,6 @@ calls inner `.toJSON()`, spread `[...some]` delegates to inner iterator.
 - `.andThen(fn)` — `T → Result<U, E2>`, returns `Result<U, E|E2>` (flatMap)
 - `.andEnsure(fn)` — `T → Result<any, E2>`: if `Ok`, keep original `Ok<T>`; if
   `Err`, return `Err<E2>`
-- `.trip(fn)` — **deprecated**, same as `.andEnsure()`
 
 **Transform (only runs on Err):**
 
@@ -133,7 +175,6 @@ calls inner `.toJSON()`, spread `[...some]` delegates to inner iterator.
   Err)
 - `.orEnsure(fn)` — `E → Result<T2, any>`: if `Ok`, return new `Ok<T2>`; if
   `Err`, keep original `Err<E>`
-- `.rise(fn)` — **deprecated**, same as `.orEnsure()`
 
 **Fallback:**
 
@@ -160,14 +201,14 @@ calls inner `.toJSON()`, spread `[...some]` delegates to inner iterator.
 - `.asResult()` — safe type cast to `Result<T, E>` (from `Ok`/`Err`)
 - `.id()` — identity, returns self (useful for flattening)
 - `.into(fn)` — passes `Result` to fn, returns fn's result
-- `.clone()` — deep clone via `structuredClone`
+- `.clone()` — deep clone via `typed-clone`
 - `.iter()` — `Ok` → `IterableIterator<T>`, `Err` → empty iterator
 
 **Side effects:**
 
 - `.inspect(fn)` — calls fn with value on `Ok`
 - `.inspectErr(fn)` — calls fn with error on `Err`
-- `.tap(fn)` — calls fn with cloned `Result`
+- `.tap(fn)` — calls fn with the `Result` instance, returns self
 
 ### Collection Helpers
 
@@ -176,8 +217,9 @@ calls inner `.toJSON()`, spread `[...some]` delegates to inner iterator.
 
 ### Composability
 
-- `Result.lift(fn)` — wrap fn to return `Result` (panics propagate)
-- `Result.liftFallible(fn, errMapFn)` — wrap fn, exceptions → `Err(errMapFn(e))`
+- `Result.lift(fn, ctor?)` — wrap fn to return `Result` (panics propagate)
+- `Result.liftFallible(fn, errMapFn, ctor?)` — wrap fn, exceptions →
+  `Err(errMapFn(e))`
 - `asInfallible` — error mapper that re-throws (marks fn as "should never fail")
 
 ---
@@ -185,7 +227,7 @@ calls inner `.toJSON()`, spread `[...some]` delegates to inner iterator.
 ## Task\<T, E\> — represents `Promise<Result<T, E>>`
 
 Subclass of `Promise`. Same API as `Result` for chaining, but async. Sync and
-async fns can be mixed freely in `.map()` / `.andThen()`.
+async fns can be mixed freely in `.map()` / `.andThen()` / `.andEnsure()` etc.
 
 ### Constructors
 
@@ -199,17 +241,35 @@ async fns can be mixed freely in `.map()` / `.andThen()`.
 | `Task.fromFallible(fn, errMapFn)`     | From async fn that might throw                        |
 | `Task.deferred()`                     | Returns `{ task, succeed, fail }` for push-based APIs |
 
-### Key difference from Result
+### Key differences from Result
 
 - `.isOk()` / `.isErr()` not available (must await first)
 - `await task` returns `Result<T, E>`
 - Can return `Task<T, E>` as `Promise<Result<T, E>>` from async functions
+- `.andEnsure()`, `.orEnsure()`, `.zip()` all accept async fns
 
 ### Composability
 
-- `Task.liftFallible(fn, errMapFn)` — wrap async fn, exceptions → `Err`
-- `Tasks.all(tasks)` → all succeed → `Ok<T[]>`, first failure short-circuits
-- `Tasks.any(tasks)` → first success, or all failures collected
+- `Task.liftFallible(fn, errMapFn, ctor?)` — wrap async fn, exceptions → `Err`
+- `Tasks.all(tasks, opts?)` → all succeed → `Ok<T[]>`, first failure
+  short-circuits
+- `Tasks.any(tasks, opts?)` → first success, or all failures collected
+- `Tasks.race(tasks, opts?)` → first to settle wins (like `Promise.race` but
+  returns `Task`)
+
+All three accept optional `{ controller: AbortController }` for cancellation of
+abandoned tasks.
+
+---
+
+## Error Utilities
+
+- `panic(err)` — throws `err` if it's an `Error`, otherwise wraps in `Panic`.
+  Use as `unwrapOrElse(panic)` to emulate throwing unwrap.
+- `asInfallible` — error mapper that wraps in `Panic`. Use with
+  `liftFallible`/`fromFallible` to assert a fn should never fail.
+- `Panic<E>` — internal error class. `Panic.isPanic(err)` to detect.
+- `unsafeCastTo<E>` — cast `unknown` to `E`. Unsafe, prototyping only.
 
 ---
 
@@ -272,7 +332,7 @@ const version = Option(Deno.args[0])
 const value: unknown = untypedApi.get("value");
 
 Option.fromCoercible(value) // all falsy values are `None`
-  .filter((value) => Array.isArray) // also performs type narrowing
+  .filter((value): value is unknown[] => Array.isArray(value))
   .okOrElse(() => Error("Expected an array value"));
 ```
 
