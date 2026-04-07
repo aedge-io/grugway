@@ -4,6 +4,7 @@
 
 - BREAKING: remove implicit `.clone()` from `.tap()` methods
 - BREAKING: integrate `typed-clone` and support clone protocol
+- Updated SKILL.md file
 - Support cancellation in `Tasks.*` concurrency helpers
 
 ## 0.2.1
