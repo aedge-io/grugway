@@ -22,6 +22,7 @@ import {
 } from "./option.ts";
 import type { NonNullish } from "./type_utils.ts";
 import { Panic } from "./errors.ts";
+import { Clone, clone } from "./clone.ts";
 
 /**
  * Setup test value collections
@@ -1125,6 +1126,40 @@ Deno.test("grugway::Option::Some", async (t) => {
         assertStrictEquals(tag, objTag);
       },
     );
+
+    await t.step(
+      ".clone() -> clones container and value",
+      () => {
+        const some = Some(42);
+
+        const cloned = some.clone();
+
+        assertNotStrictEquals(cloned, some);
+        assertStrictEquals(cloned.isSome(), true);
+        if (cloned.isSome()) {
+          assertStrictEquals(cloned.unwrap(), 42);
+        }
+      },
+    );
+
+    await t.step(
+      ".clone() -> handles degenerate protocol implementations",
+      () => {
+        class Point {
+          constructor(private x: number, private y: number) {}
+          [Clone]() {
+            return undefined as unknown as Point;
+          }
+        }
+        const somePoint = Some(new Point(2, 2));
+
+        const cloned = somePoint.clone();
+
+        assertNotStrictEquals(cloned, somePoint);
+        assertStrictEquals(cloned.isSome(), false);
+        assertStrictEquals(cloned.unwrap(), undefined);
+      },
+    );
   });
 
   await t.step("Some<T> -> JS well-known Symbols and Methods", async (t) => {
@@ -1258,6 +1293,45 @@ Deno.test("grugway::Option::Some", async (t) => {
             }
           },
         );
+      },
+    );
+
+    await t.step(
+      "[Clone]() -> supports the typed-clone protocol for deep cloning",
+      () => {
+        const inner = { a: 1, b: { c: [2, 3] } };
+        const some = Some(inner);
+
+        const cloned = clone(some);
+
+        assertStrictEquals(cloned.isSome(), true);
+        if (cloned.isSome()) {
+          assertNotStrictEquals(cloned, some);
+          assertNotStrictEquals(cloned.unwrap(), inner);
+          assertNotStrictEquals(cloned.unwrap().b, inner.b);
+          assertNotStrictEquals(cloned.unwrap().b.c, inner.b.c);
+          assertEquals(cloned.unwrap(), inner);
+        }
+      },
+    );
+
+    await t.step(
+      "[Clone]() -> clones nested Options through protocol delegation",
+      () => {
+        const nested = Some(Some({ x: 42 }));
+
+        const cloned = clone(nested);
+
+        assertStrictEquals(cloned.isSome(), true);
+        if (cloned.isSome()) {
+          const inner = cloned.unwrap();
+          assertNotStrictEquals(inner, nested.unwrap());
+          assertStrictEquals(inner.isSome(), true);
+          if (inner.isSome()) {
+            assertNotStrictEquals(inner.unwrap(), nested.unwrap().unwrap());
+            assertEquals(inner.unwrap(), { x: 42 });
+          }
+        }
       },
     );
 
@@ -1845,6 +1919,16 @@ Deno.test("grugway::Option::None", async (t) => {
         assertStrictEquals(str, "");
         assertStrictEquals(num, 0);
         assertStrictEquals(def, false);
+      },
+    );
+
+    await t.step(
+      "[Clone]() -> supports the typed-clone protocol and returns None",
+      () => {
+        const cloned = clone(None);
+
+        assertStrictEquals(cloned, None);
+        assertStrictEquals(cloned.isNone(), true);
       },
     );
 
