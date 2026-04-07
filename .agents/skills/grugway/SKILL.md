@@ -7,32 +7,27 @@ description: Use the grugway library for type-safe error handling in TypeScript/
 
 TypeScript library for safe, composable error handling.
 
-**Import:**
+**Import:** `from "@aedge-io/grugway"`
 
-```typescript
-import {
-  asInfallible,
-  Err, // Result types
-  None, // Option types
-  Ok,
-  Option,
-  Options,
-  Panic, // Error utilities
-  panic,
-  Result,
-  Results,
-  Some,
-  Task, // Async Result
-  Tasks, // Collection helpers
-  unsafeCastTo, // Unsafe cast (prototyping only)
-} from "@aedge-io/grugway";
-```
+| Export         | Purpose                                                |
+| -------------- | ------------------------------------------------------ |
+| `Option`       | Constructor & namespace for optional values            |
+| `Some`         | Wrap a non-nullish value (panics on nullish)           |
+| `None`         | Singleton absent value                                 |
+| `Options`      | Collection helpers: `all`, `any`, `areSome`, `areNone` |
+| `Result`       | Constructor & namespace for success/failure            |
+| `Ok`           | Explicit success                                       |
+| `Err`          | Explicit failure                                       |
+| `Results`      | Collection helpers: `all`, `any`                       |
+| `Task`         | Async Result (`Promise<Result<T, E>>`)                 |
+| `Tasks`        | Collection helpers: `all`, `any`, `race`               |
+| `asInfallible` | Error mapper that re-throws as `Panic`                 |
+| `panic`        | Throw helper: `unwrapOrElse(panic)`                    |
+| `Panic`        | Internal error class, `Panic.isPanic(err)` to detect   |
+| `unsafeCastTo` | Cast `unknown` to `E` — unsafe, prototyping only       |
 
-**Subpath export — typed deep clone:**
-
-```typescript
-import { clone } from "@aedge-io/grugway/clone";
-```
+**Subpath export:** `import { clone } from "@aedge-io/grugway/clone"` — typed
+deep clone via `typed-clone`.
 
 ## Rules
 
