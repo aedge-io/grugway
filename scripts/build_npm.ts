@@ -11,7 +11,7 @@ const $ = $builder.withLogPrefix("[Build Npm]>");
 
 $.enableShutdownHooks();
 
-const { npmDir, libEntryPoints, readme, license } = paths;
+const { npmDir, libEntryPoints, readme, license, skillMd } = paths;
 
 function main() {
   return parse(Deno.args[0])
@@ -80,6 +80,7 @@ async function buildPackage(next: SemVer): Promise<Result<void, Error>> {
           provenance: true,
         },
         keywords: [
+          "agent-skill",
           "async",
           "clanker",
           "clankers",
@@ -93,10 +94,14 @@ async function buildPackage(next: SemVer): Promise<Result<void, Error>> {
           "maybe",
           "monad",
           "option",
+          "pi-package",
           "result",
           "task",
           "typescript",
         ],
+        pi: {
+          skills: ["./skills"],
+        },
       },
       compilerOptions: {
         lib: ["DOM", "ES2022"], /* needed for structuredClone */
@@ -106,6 +111,10 @@ async function buildPackage(next: SemVer): Promise<Result<void, Error>> {
         license.copyFileSync(npmDir.join("LICENSE.md"));
         readme.copyFileSync(npmDir.join("README.md"));
         npmDir.join("src").removeSync({ recursive: true });
+
+        const skillDir = npmDir.join("skills/grugway");
+        skillDir.mkdirSync({ recursive: true });
+        skillMd.copyFileSync(skillDir.join("SKILL.md"));
       },
     });
     return Ok(undefined);
