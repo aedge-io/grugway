@@ -1,5 +1,6 @@
 import { asInfallible } from "../core/errors.ts";
 import { Err, Ok, type Result } from "../core/result.ts";
+import type { Cloned, CloneOptions } from "../core/clone.ts";
 
 /**
  * This is the interface of the return value of {@linkcode Task.deferred}
@@ -353,7 +354,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
   /**
    * Use this to obtain a deep clone of `Task<T, E>`
    *
-   * Under the hood, this uses the `structuredClone` algorithm
+   * Under the hood, this uses [`typed-clone`](https://github.com/aedge-io/typed-clone#readme)
    *
    * @category Task#Basic
    *
@@ -371,7 +372,7 @@ export class Task<T, E> implements Promise<Result<T, E>> {
    * assert(res.unwrap() !== clonedRes.unwrap())
    * ```
    */
-  clone(options?: StructuredSerializeOptions): Task<T, E> {
+  clone(options?: CloneOptions): Task<Cloned<T>, Cloned<E>> {
     return new Task(this.#promise.then((res) => res.clone(options)));
   }
 

@@ -2,9 +2,14 @@
 import { Err, Ok, Result } from "../core/result.ts";
 import { asInfallible } from "../core/errors.ts";
 import { Task } from "./task.ts";
-import { assertInstanceOf, assertStrictEquals } from "@std/assert";
+import {
+  assertInstanceOf,
+  assertNotStrictEquals,
+  assertStrictEquals,
+} from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
 import type { Empty } from "../core/type_utils.ts";
+import type { Cloned, Ref } from "../core/clone.ts";
 
 Deno.test("grugway::Task", async (t) => {
   await t.step("Task<T, E> -> Constructors", async (t) => {
@@ -359,8 +364,10 @@ Deno.test("grugway::Task", async (t) => {
           const cloned = task.clone();
           const res = await cloned;
 
-          assertType<IsExact<typeof cloned, Task<number, TypeError>>>(true);
-          assertStrictEquals(cloned === task, false);
+          assertType<IsExact<typeof cloned, Task<number, Ref<TypeError>>>>(
+            true,
+          );
+          assertNotStrictEquals(cloned, task);
           assertStrictEquals(res.isOk(), true);
           assertStrictEquals(res.unwrap(), 42);
         },
@@ -375,10 +382,12 @@ Deno.test("grugway::Task", async (t) => {
           const cloned = task.clone();
           const res = await cloned;
 
-          assertType<IsExact<typeof cloned, Task<number, TypeError>>>(true);
-          assertStrictEquals(cloned === task, false);
+          assertType<IsExact<typeof cloned, Task<number, Ref<TypeError>>>>(
+            true,
+          );
+          assertNotStrictEquals(cloned, task);
           assertStrictEquals(res.isErr(), true);
-          assertStrictEquals((res.unwrap() as TypeError).message, te.message);
+          assertStrictEquals(res.unwrap() as TypeError, te);
         },
       );
     });
