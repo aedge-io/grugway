@@ -22,6 +22,8 @@ import {
 } from "./type_utils.ts";
 import { Err, Ok, type Result } from "./result.ts";
 import { assertNotNullish } from "./assert.ts";
+import type { Cloned, CloneOptions } from "./clone.ts";
+import { Clone, clone } from "./clone.ts";
 
 /*
  ********************************************************************
@@ -104,19 +106,13 @@ interface IOption<T> {
   /**
    * Use this to obtain a deep clone of `Option<T>`
    *
-   * Under the hood, this uses the `structuredClone` algorithm exposed via
-   * the global function of the same name. Primitives are returned by value
-   *
-   * May incur performance penalties, depending on the platform, size and type
-   * of the data to be cloned
-   *
    * Can be handy if user-defined operations on reference types mutate the
    * passed value and the original value should be retained
    *
    * CAUTION: Mutations in a chained series of operations are strongly
    * discouraged
    *
-   * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
+   * Under the hood, this uses [`typed-clone`](https://github.com/aedge-io/typed-clone#readme)
    *
    * @category Option#Basic
    *
@@ -136,7 +132,7 @@ interface IOption<T> {
    * }
    * ```
    */
-  clone(options?: StructuredSerializeOptions): Option<T>;
+  clone(options?: CloneOptions): Option<Cloned<T>>;
 
   /**
    * Use this to transform `Some<T>` to `Some<U>` by applying the supplied
@@ -673,7 +669,6 @@ interface IOption<T> {
 
   /**
    * Use this to get the full string tag
-   * Short-hand for `Object.prototype.toString.call(option)`
    *
    * @category Option#Basic
    *
@@ -805,6 +800,26 @@ interface IOption<T> {
   iter(): IterableIterator<T>;
 
   /**
+   * Implementation of the `typed-clone` protocol
+   *
+   * See the [docs](https://github.com/aedge-io/typed-clone/tree/main/docs/clone_protocol.md)
+   *
+   * @example
+   * ```typescript
+   * import { assert } from "@std/assert";
+   * import { clone } from "@aedge-io/typed-clone";
+   * import { Option } from "@aedge-io/grugway";
+   *
+   * const someStr = Option("some");
+   * const cloned = clone(someStr);
+   *
+   * assert(cloned !== someStr);
+   * assert(cloned.unwrap() === someStr.unwrap());
+   * ```
+   */
+  [Clone](opts?: CloneOptions): Option<Cloned<T>>;
+
+  /**
    * Delegates to the implementation of the wrapped value `<T>` or exhausts
    * the iterator by returning `{ done: true, value: undefined }` if `<T>` doesn't
    * implement the iterator protocol
@@ -903,7 +918,7 @@ class _None<T = never> implements IOption<never> {
   id(): None {
     return this;
   }
-  clone(options?: StructuredSerializeOptions): None {
+  clone(options?: CloneOptions): None {
     return this;
   }
   map<U>(mapFn: (arg: never) => NonNullish<U>): None {
@@ -987,6 +1002,9 @@ class _None<T = never> implements IOption<never> {
   *iter(): IterableIterator<never> {
     return;
   }
+  [Clone](opts?: CloneOptions): None {
+    return this;
+  }
   //deno-lint-ignore require-yield
   *[Symbol.iterator](): IterableIterator<never> {
     /**
@@ -1021,9 +1039,8 @@ class _Some<T> implements IOption<T> {
   id(): Some<T> {
     return this;
   }
-  clone(options?: StructuredSerializeOptions): Some<T> {
-    if (isPrimitive(this.#value)) return Some(this.#value);
-    return Some(structuredClone(this.#value, options));
+  clone(options?: CloneOptions): Option<Cloned<T>> {
+    return this[Clone](options);
   }
   map<U>(mapFn: (arg: T) => NonNullish<U>): Some<NonNullish<U>> {
     return Some(mapFn(this.#value));
@@ -1123,6 +1140,10 @@ class _Some<T> implements IOption<T> {
   }
   *iter(): IterableIterator<T> {
     yield this.#value;
+  }
+  [Clone](opts?: CloneOptions): Option<Cloned<T>> {
+    const cloned = clone(this.#value as T, opts);
+    return Option(cloned);
   }
   *[Symbol.iterator](): IterableIterator<
     T extends Iterable<infer U> ? U : never
@@ -1558,7 +1579,8 @@ Option.liftFallible = function liftFallible<
  *
  * @category Option#Basic
  */
-export type InferredSomeType<O extends Readonly<Option<unknown>>> = O extends
+//deno-lint-ignore no-explicit-any
+export type InferredSomeType<O extends Readonly<Option<any>>> = O extends
   Readonly<Some<infer T>> ? T : never;
 
 /**
