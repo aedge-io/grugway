@@ -3,6 +3,7 @@
 ## Unreleased
 
 - BREAKING: remove implicit `.clone()` from `.tap()` methods
+- BREAKING: integrate `typed-clone` and support clone protocol
 - Support cancellation in `Tasks.*` concurrency helpers
 
 ## 0.2.1
