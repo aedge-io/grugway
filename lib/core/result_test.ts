@@ -11,7 +11,8 @@ import type { None, Option } from "./option.ts";
 import { Err, Ok, Result } from "./result.ts";
 import type { InferredErrType, InferredOkType } from "./result.ts";
 import type { Empty } from "./type_utils.ts";
-import { Clone, clone, Ref, unref } from "./clone.ts";
+import type { Ref } from "./clone.ts";
+import { clone, unref } from "./clone.ts";
 
 Deno.test("grugway::Result", async (t) => {
   await t.step("() -> produces an instance of Result for union types", () => {
@@ -767,6 +768,7 @@ Deno.test("grugway::Result::Ok", async (t) => {
 
         const cloned = clone(nested);
 
+        assertType<IsExact<typeof cloned, Ok<Ok<{ x: number }>>>>(true);
         assertStrictEquals(cloned.isOk(), true);
         if (cloned.isOk()) {
           const inner = cloned.unwrap();
@@ -1307,6 +1309,9 @@ Deno.test("grugway::Result::Err", async (t) => {
 
         const cloned = clone(err);
 
+        assertType<IsExact<typeof cloned, Result<number, Ref<TypeError>>>>(
+          true,
+        );
         assertStrictEquals(cloned.isErr(), true);
         if (cloned.isErr()) {
           assertStrictEquals(cloned.unwrap(), error);

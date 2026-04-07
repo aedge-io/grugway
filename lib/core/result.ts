@@ -1393,6 +1393,7 @@ Result.liftFallible = function liftFallible<
  */
 //deno-lint-ignore no-explicit-any
 export type InferredOkType<R> = R extends Result<infer T, any> ? T
+  //deno-lint-ignore no-explicit-any
   : R extends Readonly<Result<infer T, any>> ? T
   : never;
 
@@ -1403,5 +1404,6 @@ export type InferredOkType<R> = R extends Result<infer T, any> ? T
  */
 //deno-lint-ignore no-explicit-any
 export type InferredErrType<R> = R extends Result<any, infer E> ? E
+  //deno-lint-ignore no-explicit-any
   : R extends Readonly<Result<any, infer E>> ? E
   : never;
