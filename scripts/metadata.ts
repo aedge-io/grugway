@@ -13,6 +13,10 @@ export const paths = {
   changesDir: root.join("docs/changes"),
   denoJsonc,
   libEntryPoint: root.join("lib/mod.ts"),
+  libEntryPoints: [
+    "lib/mod.ts",
+    { name: "./clone", path: "lib/core/clone.ts" },
+  ],
   license: root.join("LICENSE.md"),
   npmDir: root.join("npm"),
   readme: root.join("README.md"),
