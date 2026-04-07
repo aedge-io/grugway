@@ -3,7 +3,10 @@
   "description": "Safe abstractions for fallible flows - for humans, their clankers and foes",
   "version": "0.2.1",
   "license": "MIT",
-  "exports": "./lib/mod.ts",
+  "exports": {
+    ".": "./lib/mod.ts",
+    "./clone": "./lib/core/clone.ts"
+  },
   "exclude": ["cov/", "npm/"],
   "publish": {
     "include": ["LICENSE.md", "README.md", "lib/**/*.ts"],
@@ -27,6 +30,7 @@
     "release": "./scripts/release.ts"
   },
   "imports": {
+    "@aedge-io/typed-clone": "npm:@aedge-io/typed-clone@1.0.0",
     "@david/dax": "jsr:@david/dax@0.45.0", //dev
     "@david/jsonc-morph": "jsr:@david/jsonc-morph@0.3.1", //dev
     "@deno/dnt": "jsr:@deno/dnt@0.42.3", //dev

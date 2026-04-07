@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run -A
 
 import { Err, Ok, type Result, Task } from "@aedge-io/grugway";
-import { build } from "@deno/dnt";
+import { build, type EntryPoint } from "@deno/dnt";
 import { dirIsEmpty } from "grugway/fs";
 import { git, manifest, paths } from "grugway/metadata";
 import { $ as $builder } from "grugway/shell";
@@ -11,7 +11,7 @@ const $ = $builder.withLogPrefix("[Build Npm]>");
 
 $.enableShutdownHooks();
 
-const { root, npmDir, libEntryPoint, readme, license } = paths;
+const { npmDir, libEntryPoints, readme, license } = paths;
 
 function main() {
   return parse(Deno.args[0])
@@ -51,7 +51,7 @@ function releaseVersionsMatch(v: SemVer) {
 async function buildPackage(next: SemVer): Promise<Result<void, Error>> {
   try {
     await build({
-      entryPoints: [root.relative(libEntryPoint).toString()],
+      entryPoints: libEntryPoints as unknown as (string | EntryPoint)[],
       outDir: npmDir.toString(),
       declaration: "separate",
       scriptModule: false,
