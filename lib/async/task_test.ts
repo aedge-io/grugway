@@ -9,7 +9,7 @@ import {
 } from "@std/assert";
 import { assertType, type IsExact } from "@std/testing/types";
 import type { Empty } from "../core/type_utils.ts";
-import type { Cloned, Ref } from "../core/clone.ts";
+import type { Ref } from "../core/clone.ts";
 
 Deno.test("grugway::Task", async (t) => {
   await t.step("Task<T, E> -> Constructors", async (t) => {
