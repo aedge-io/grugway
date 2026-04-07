@@ -16,7 +16,7 @@
   noise of exceptions
 - **Type-safe operations** catch mistakes at compile time rather than runtime
 - **Callibrated documentation** provides context that agents can leverage for
-  better performance (see [`SKILL.md`](SKILL.md))
+  better performance (see [`SKILL.md`](.agents/skills/grugway/SKILL.md))
 
 ---
 
