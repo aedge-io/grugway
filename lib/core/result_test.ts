@@ -11,6 +11,7 @@ import type { None, Option } from "./option.ts";
 import { Err, Ok, Result } from "./result.ts";
 import type { InferredErrType, InferredOkType } from "./result.ts";
 import type { Empty } from "./type_utils.ts";
+import { Clone, clone, Ref, unref } from "./clone.ts";
 
 Deno.test("grugway::Result", async (t) => {
   await t.step("() -> produces an instance of Result for union types", () => {
@@ -602,6 +603,21 @@ Deno.test("grugway::Result::Ok", async (t) => {
     );
 
     await t.step(
+      ".clone() -> clones primitive values by value",
+      () => {
+        const ok = Ok(42);
+
+        const cloned = ok.clone();
+
+        assertNotStrictEquals(cloned, ok);
+        assertStrictEquals(cloned.isOk(), true);
+        if (cloned.isOk()) {
+          assertStrictEquals(cloned.unwrap(), 42);
+        }
+      },
+    );
+
+    await t.step(
       ".tap() -> calls tapFn with calling instance",
       () => {
         const createTapFn = function <T>(
@@ -722,6 +738,45 @@ Deno.test("grugway::Result::Ok", async (t) => {
         assertType<IsExact<typeof okIter, IterableIterator<never>>>(true);
         assertStrictEquals(count, 0);
         assertStrictEquals(lastValue, undefined);
+      },
+    );
+
+    await t.step(
+      "[Clone]() -> supports the typed-clone protocol for deep cloning",
+      () => {
+        const inner = { a: 1, b: { c: [2, 3] } };
+        const ok = Ok(inner);
+
+        const cloned = clone(ok);
+
+        assertStrictEquals(cloned.isOk(), true);
+        if (cloned.isOk()) {
+          assertNotStrictEquals(cloned, ok);
+          assertNotStrictEquals(cloned.unwrap(), inner);
+          assertNotStrictEquals(cloned.unwrap().b, inner.b);
+          assertNotStrictEquals(cloned.unwrap().b.c, inner.b.c);
+          assertEquals(cloned.unwrap(), inner);
+        }
+      },
+    );
+
+    await t.step(
+      "[Clone]() -> clones nested Results through protocol delegation",
+      () => {
+        const nested = Ok(Ok({ x: 42 }));
+
+        const cloned = clone(nested);
+
+        assertStrictEquals(cloned.isOk(), true);
+        if (cloned.isOk()) {
+          const inner = cloned.unwrap();
+          assertNotStrictEquals(inner, nested.unwrap());
+          assertStrictEquals(inner.isOk(), true);
+          if (inner.isOk()) {
+            assertNotStrictEquals(inner.unwrap(), nested.unwrap().unwrap());
+            assertEquals(inner.unwrap(), { x: 42 });
+          }
+        }
       },
     );
   });
@@ -1111,6 +1166,21 @@ Deno.test("grugway::Result::Err", async (t) => {
     );
 
     await t.step(
+      ".clone() -> clones primitive error values by value",
+      () => {
+        const err = Err("something went wrong");
+
+        const cloned = err.clone();
+
+        assertNotStrictEquals(cloned, err);
+        assertStrictEquals(cloned.isErr(), true);
+        if (cloned.isErr()) {
+          assertStrictEquals(cloned.unwrap(), "something went wrong");
+        }
+      },
+    );
+
+    await t.step(
       ".tap() -> calls the tapFn with calling instance",
       () => {
         const createTapFn = function <E>(
@@ -1209,6 +1279,47 @@ Deno.test("grugway::Result::Err", async (t) => {
         assertType<IsExact<typeof errIter, IterableIterator<never>>>(true);
         assertStrictEquals(count, 0);
         assertStrictEquals(lastValue, undefined);
+      },
+    );
+
+    await t.step(
+      "[Clone]() -> supports the typed-clone protocol for deep cloning",
+      () => {
+        const inner = { code: 42, detail: { msg: "failed" } };
+        const err = Err(inner);
+
+        const cloned = clone(err);
+
+        assertStrictEquals(cloned.isErr(), true);
+        if (cloned.isErr()) {
+          assertNotStrictEquals(cloned, err);
+          assertNotStrictEquals(cloned.unwrap(), inner);
+          assertEquals(cloned.unwrap(), inner);
+        }
+      },
+    );
+
+    await t.step(
+      "[Clone]() -> Error values are returned by reference (Ref<E>) and can be recovered via .mapErr(unref)",
+      () => {
+        const error = new TypeError("something went wrong");
+        const err = Err(error) as Result<number, TypeError>;
+
+        const cloned = clone(err);
+
+        assertStrictEquals(cloned.isErr(), true);
+        if (cloned.isErr()) {
+          assertStrictEquals(cloned.unwrap(), error);
+
+          const recovered = cloned.mapErr((e) => unref(e));
+
+          assertType<IsExact<typeof recovered, Err<TypeError>>>(true);
+          assertStrictEquals(recovered.isErr(), true);
+          if (recovered.isErr()) {
+            assertStrictEquals(recovered.unwrap(), error);
+            assertInstanceOf(recovered.unwrap(), TypeError);
+          }
+        }
       },
     );
   });

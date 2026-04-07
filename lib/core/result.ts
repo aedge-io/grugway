@@ -4,9 +4,11 @@
  * method parameter names are symetrical
  */
 import type { Empty, Fallible, NonNullish } from "./type_utils.ts";
-import { EMPTY, isPrimitive } from "./type_utils.ts";
+import { EMPTY } from "./type_utils.ts";
 import { None, Option } from "./option.ts";
 import { asInfallible } from "./errors.ts";
+import type { Cloned, CloneOptions } from "./clone.ts";
+import { Clone, clone } from "./clone.ts";
 
 /*
  ********************************************************************
@@ -84,9 +86,7 @@ export interface IResult<T, E> {
   /**
    * Use this to obtain a deep clone of `Result<T, E>`
    *
-   * Primitives are returned by value, all other types via `structuredClone`
-   *
-   * See the [reference](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone)
+   * Under the hood, this uses [`typed-clone`](https://github.com/aedge-io/typed-clone#readme)
    *
    * @category Result#Basic
    *
@@ -103,7 +103,7 @@ export interface IResult<T, E> {
    * assert(cloned.unwrap().a === 1);  // same value
    * ```
    */
-  clone(options?: StructuredSerializeOptions): Result<T, E>;
+  clone(options?: CloneOptions): Result<Cloned<T>, Cloned<E>>;
 
   /**
    * Use this to map the encapsulated value `<T>' to `<T2>`.
@@ -766,6 +766,26 @@ export interface IResult<T, E> {
   toString(): string;
 
   /**
+   * Implementation of the `typed-clone` protocol
+   *
+   * See the [docs](https://github.com/aedge-io/typed-clone/tree/main/docs/clone_protocol.md)
+   *
+   * @example
+   * ```typescript
+   * import { assert } from "@std/assert";
+   * import { clone } from "@aedge-io/typed-clone";
+   * import { Ok } from "@aedge-io/grugway";
+   *
+   * const ok = Ok({ a: 1 });
+   * const cloned = clone(ok);
+   *
+   * assert(cloned !== ok);
+   * assert(cloned.unwrap().a === ok.unwrap().a);
+   * ```
+   */
+  [Clone](opts?: CloneOptions): Result<Cloned<T>, Cloned<E>>;
+
+  /**
    * Delegates to the implementation of the wrapped value `<T>` or exhausts
    * the iterator by returning `{ done: true, value: undefined }` if `<T>` doesn't
    * implement the iterator protocol
@@ -847,9 +867,11 @@ class _Ok<T> implements IResult<T, never> {
   id(): Ok<T> {
     return this;
   }
-  clone(options?: StructuredSerializeOptions): Ok<T> {
-    if (isPrimitive(this.#value)) return Ok(this.#value);
-    return Ok(structuredClone(this.#value, options));
+  clone(options?: CloneOptions): Ok<Cloned<T>> {
+    return this[Clone](options);
+  }
+  [Clone](opts?: CloneOptions): Ok<Cloned<T>> {
+    return Ok(clone(this.#value, opts));
   }
   and<T2, E2>(rhs: Result<T2, E2>): Result<T2, E2> {
     return rhs;
@@ -960,9 +982,11 @@ class _Err<E> implements IResult<never, E> {
   id(): Err<E> {
     return this;
   }
-  clone(options?: StructuredSerializeOptions): Err<E> {
-    if (isPrimitive(this.#err)) return Err(this.#err);
-    return Err(structuredClone(this.#err, options));
+  clone(options?: CloneOptions): Err<Cloned<E>> {
+    return this[Clone](options);
+  }
+  [Clone](opts?: CloneOptions): Err<Cloned<E>> {
+    return Err(clone(this.#err, opts));
   }
   and<T2, E2>(rhs: Result<T2, E2>): Err<E> {
     return this;
@@ -1367,7 +1391,9 @@ Result.liftFallible = function liftFallible<
  *
  * @category Result#Basic
  */
-export type InferredOkType<R> = R extends Readonly<Result<infer T, unknown>> ? T
+//deno-lint-ignore no-explicit-any
+export type InferredOkType<R> = R extends Result<infer T, any> ? T
+  : R extends Readonly<Result<infer T, any>> ? T
   : never;
 
 /**
@@ -1375,6 +1401,7 @@ export type InferredOkType<R> = R extends Readonly<Result<infer T, unknown>> ? T
  *
  * @category Result#Basic
  */
-export type InferredErrType<R> = R extends Readonly<Result<unknown, infer E>>
-  ? E
+//deno-lint-ignore no-explicit-any
+export type InferredErrType<R> = R extends Result<any, infer E> ? E
+  : R extends Readonly<Result<any, infer E>> ? E
   : never;
